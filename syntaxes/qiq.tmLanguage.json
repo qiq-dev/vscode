@@ -1,0 +1,193 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "qiq",
+  "scopeName": "source.qiq",
+  "patterns": [
+    { "include": "#comment" },
+    { "include": "#import" },
+    { "include": "#extern" },
+    { "include": "#class-declaration" },
+    { "include": "#function-declaration" },
+    { "include": "#code" }
+  ],
+  "repository": {
+    "code": {
+      "patterns": [
+        { "include": "#comment" },
+        { "include": "#string" },
+        { "include": "#char" },
+        { "include": "#number" },
+        { "include": "#closure" },
+        { "include": "#function-declaration" },
+        { "include": "#function-type" },
+        { "include": "#keyword" },
+        { "include": "#new" },
+        { "include": "#static-access" },
+        { "include": "#member" },
+        { "include": "#named-argument" },
+        { "include": "#call" },
+        { "include": "#type" },
+        { "include": "#operator" },
+        { "include": "#punctuation" }
+      ]
+    },
+    "comment": {
+      "match": "//.*$",
+      "name": "comment.line.double-slash.qiq"
+    },
+    "string": {
+      "begin": "\"",
+      "beginCaptures": { "0": { "name": "punctuation.definition.string.begin.qiq" } },
+      "end": "\"|$",
+      "endCaptures": { "0": { "name": "punctuation.definition.string.end.qiq" } },
+      "name": "string.quoted.double.qiq",
+      "patterns": [
+        { "match": "\\\\[nrt\"\\\\]", "name": "constant.character.escape.qiq" },
+        { "match": "\\\\.", "name": "invalid.illegal.escape.qiq" }
+      ]
+    },
+    "char": {
+      "match": "'(?:\\\\[nrt'\"\\\\]|[^'\\\\])'",
+      "name": "string.quoted.single.qiq",
+      "captures": {}
+    },
+    "number": {
+      "patterns": [
+        { "match": "\\b[0-9]+\\.[0-9]+\\b", "name": "constant.numeric.float.qiq" },
+        { "match": "\\b[0-9]+\\b", "name": "constant.numeric.integer.qiq" }
+      ]
+    },
+    "import": {
+      "comment": "import Name, Other as Alias from \"path\";  (import, from, and as are only keywords here)",
+      "begin": "^\\s*(import)\\b(?=\\s+[A-Za-z_])",
+      "beginCaptures": { "1": { "name": "keyword.control.import.qiq" } },
+      "end": ";|$",
+      "endCaptures": { "0": { "name": "punctuation.terminator.qiq" } },
+      "name": "meta.import.qiq",
+      "patterns": [
+        { "include": "#comment" },
+        { "match": "\\b(from|as)\\b", "name": "keyword.control.import.qiq" },
+        { "include": "#string" },
+        { "match": "\\b[A-Z][A-Za-z0-9_]*\\b", "name": "entity.name.type.qiq" },
+        { "match": "\\b[a-z_][A-Za-z0-9_]*\\b", "name": "entity.name.function.qiq" },
+        { "match": ",", "name": "punctuation.separator.comma.qiq" }
+      ]
+    },
+    "extern": {
+      "match": "^\\s*(extern)\\b",
+      "captures": { "1": { "name": "storage.modifier.extern.qiq" } }
+    },
+    "class-declaration": {
+      "match": "\\b(?:(abstract|final)\\s+)*(class|interface)\\s+([A-Za-z_][A-Za-z0-9_]*)(?:\\s+(extends)\\s+([A-Za-z_][A-Za-z0-9_]*(?:\\s*,\\s*[A-Za-z_][A-Za-z0-9_]*)*))?(?:\\s+(implements)\\s+([A-Za-z_][A-Za-z0-9_]*(?:\\s*,\\s*[A-Za-z_][A-Za-z0-9_]*)*))?",
+      "captures": {
+        "1": { "name": "storage.modifier.qiq" },
+        "2": { "name": "storage.type.class.qiq" },
+        "3": { "name": "entity.name.type.class.qiq" },
+        "4": { "name": "storage.modifier.extends.qiq" },
+        "5": { "name": "entity.other.inherited-class.qiq" },
+        "6": { "name": "storage.modifier.implements.qiq" },
+        "7": { "name": "entity.other.inherited-class.qiq" }
+      }
+    },
+    "function-declaration": {
+      "match": "\\b(function)\\s+([A-Za-z_][A-Za-z0-9_]*)\\s*(?=\\()",
+      "captures": {
+        "1": { "name": "storage.type.function.qiq" },
+        "2": { "name": "entity.name.function.qiq" }
+      }
+    },
+    "closure": {
+      "comment": "An anonymous function: function(...) {...} or fn(...) => expr",
+      "match": "\\b(fn)\\s*(?=\\()",
+      "captures": { "1": { "name": "storage.type.function.arrow.qiq" } }
+    },
+    "function-type": {
+      "match": "\\bfunction\\b(?=\\s*\\()",
+      "name": "storage.type.function.qiq"
+    },
+    "keyword": {
+      "patterns": [
+        { "match": "\\b(if|else|foreach|while|switch|case|default|break|continue|return|try|catch|finally|throw|as)\\b", "name": "keyword.control.qiq" },
+        { "match": "\\b(public|private|protected|static|final|abstract)\\b", "name": "storage.modifier.qiq" },
+        { "match": "\\b(class|interface)\\b", "name": "storage.type.class.qiq" },
+        { "match": "\\b(extends|implements)\\b", "name": "storage.modifier.qiq" },
+        { "match": "\\b(true|false|null)\\b", "name": "constant.language.qiq" },
+        { "match": "\\b(this)\\b", "name": "variable.language.this.qiq" },
+        { "match": "\\b(self|parent|static)\\b(?=\\s*::)", "name": "variable.language.qiq" },
+        { "match": "\\b(print)\\b", "name": "support.function.builtin.qiq" },
+        { "match": "\\b(int|double|bool|byte|string|char|void|map)\\b", "name": "storage.type.primitive.qiq" }
+      ]
+    },
+    "new": {
+      "match": "\\b(new)\\s+([A-Za-z_][A-Za-z0-9_]*)",
+      "captures": {
+        "1": { "name": "keyword.other.new.qiq" },
+        "2": { "name": "entity.name.type.class.qiq" }
+      }
+    },
+    "static-access": {
+      "match": "\\b([A-Za-z_][A-Za-z0-9_]*)\\s*(::)\\s*([A-Za-z_][A-Za-z0-9_]*)",
+      "captures": {
+        "1": { "patterns": [
+          { "match": "\\b(self|parent|static)\\b", "name": "variable.language.qiq" },
+          { "match": ".+", "name": "entity.name.type.class.qiq" }
+        ] },
+        "2": { "name": "punctuation.separator.static.qiq" },
+        "3": { "name": "entity.name.function.member.qiq" }
+      }
+    },
+    "member": {
+      "patterns": [
+        {
+          "match": "(->)\\s*([A-Za-z_][A-Za-z0-9_]*)(?=\\s*\\()",
+          "captures": {
+            "1": { "name": "punctuation.accessor.arrow.qiq" },
+            "2": { "name": "entity.name.function.member.qiq" }
+          }
+        },
+        {
+          "match": "(->)\\s*([A-Za-z_][A-Za-z0-9_]*)",
+          "captures": {
+            "1": { "name": "punctuation.accessor.arrow.qiq" },
+            "2": { "name": "variable.other.property.qiq" }
+          }
+        }
+      ]
+    },
+    "named-argument": {
+      "match": "(?<=[(,])\\s*([a-z_][A-Za-z0-9_]*)\\s*(:)(?!:)",
+      "captures": {
+        "1": { "name": "variable.parameter.named.qiq" },
+        "2": { "name": "punctuation.separator.colon.qiq" }
+      }
+    },
+    "call": {
+      "match": "\\b([a-z_][A-Za-z0-9_]*)\\s*(?=\\()",
+      "captures": { "1": { "name": "entity.name.function.call.qiq" } }
+    },
+    "type": {
+      "comment": "Class and interface names are capitalized by convention.",
+      "match": "\\b[A-Z][A-Za-z0-9_]*\\b",
+      "name": "entity.name.type.qiq"
+    },
+    "operator": {
+      "patterns": [
+        { "match": "=>", "name": "keyword.operator.arrow.qiq" },
+        { "match": "\\?\\?", "name": "keyword.operator.null-coalescing.qiq" },
+        { "match": "==|!=|<=|>=|<(?!<)|>(?!>)", "name": "keyword.operator.comparison.qiq" },
+        { "match": "&&|\\|\\||!", "name": "keyword.operator.logical.qiq" },
+        { "match": "<<|>>|&|\\||\\^|~", "name": "keyword.operator.bitwise.qiq" },
+        { "match": "\\*\\*|[-+*/%]", "name": "keyword.operator.arithmetic.qiq" },
+        { "match": "=", "name": "keyword.operator.assignment.qiq" }
+      ]
+    },
+    "punctuation": {
+      "patterns": [
+        { "match": ";", "name": "punctuation.terminator.qiq" },
+        { "match": ",", "name": "punctuation.separator.comma.qiq" },
+        { "match": "::", "name": "punctuation.separator.static.qiq" },
+        { "match": ":", "name": "punctuation.separator.colon.qiq" }
+      ]
+    }
+  }
+}

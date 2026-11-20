@@ -1,0 +1,2422 @@
+{
+ "modules": [
+  "std/file",
+  "std/time",
+  "std/memory",
+  "std/os",
+  "std/net",
+  "std/http",
+  "std/http/server"
+ ],
+ "functions": {
+  "len": {
+   "name": "len",
+   "params": [
+    {
+     "name": "value",
+     "type": "string|array|map",
+     "default": null,
+     "doc": "The value to measure."
+    }
+   ],
+   "returns": "int",
+   "summary": "The length of a string, array, or map",
+   "doc": "Returns the number of characters in a string, the number of elements in an array, or the number of entries in a map, like Python's `len`. For a string, characters are Unicode characters, not bytes, so `len(\"héllo\")` is `5`.",
+   "module": null,
+   "category": "General"
+  },
+  "gc_collect_cycles": {
+   "name": "gc_collect_cycles",
+   "params": [],
+   "returns": "int",
+   "summary": "Free garbage reference cycles now",
+   "doc": "Runs the cycle collector immediately. Values are normally freed as soon as nothing refers to them, but objects that refer to each other in a cycle are only freed by the collector, which also runs automatically as possible cycles accumulate. See Memory management.",
+   "module": "std/memory",
+   "category": "General"
+  },
+  "substr": {
+   "name": "substr",
+   "params": [
+    {
+     "name": "text",
+     "type": "string",
+     "default": null,
+     "doc": "The input string."
+    },
+    {
+     "name": "start",
+     "type": "int",
+     "default": null,
+     "doc": "The character position to start at, counting from `0`. A negative `start` counts from the end: `-1` is the last character."
+    },
+    {
+     "name": "length",
+     "type": "int",
+     "default": "9223372036854775807",
+     "doc": "The maximum number of characters to return. A negative `length` leaves that many characters off the end. By default, everything to the end of the string."
+    }
+   ],
+   "returns": "string",
+   "summary": "Return part of a string",
+   "doc": "Returns the characters of `text` starting at `start`, at most `length` of them. Positions and lengths count characters, not bytes, following PHP's rules for negative values.",
+   "module": null,
+   "category": "Strings"
+  },
+  "strpos": {
+   "name": "strpos",
+   "params": [
+    {
+     "name": "haystack",
+     "type": "string",
+     "default": null,
+     "doc": "The string to search in."
+    },
+    {
+     "name": "needle",
+     "type": "string",
+     "default": null,
+     "doc": "The string to search for."
+    },
+    {
+     "name": "offset",
+     "type": "int",
+     "default": "0",
+     "doc": "The character position to start searching from. A negative offset counts from the end."
+    }
+   ],
+   "returns": "int",
+   "summary": "Find the position of the first occurrence of a substring",
+   "doc": "Returns the character position of the first occurrence of `needle` in `haystack`, at or after `offset`.",
+   "module": null,
+   "category": "Strings"
+  },
+  "str_contains": {
+   "name": "str_contains",
+   "params": [
+    {
+     "name": "haystack",
+     "type": "string",
+     "default": null,
+     "doc": "The string to search in."
+    },
+    {
+     "name": "needle",
+     "type": "string",
+     "default": null,
+     "doc": "The substring to search for."
+    }
+   ],
+   "returns": "bool",
+   "summary": "Determine if a string contains a substring",
+   "doc": "Checks whether `needle` occurs anywhere in `haystack`. The comparison is case-sensitive.",
+   "module": null,
+   "category": "Strings"
+  },
+  "str_starts_with": {
+   "name": "str_starts_with",
+   "params": [
+    {
+     "name": "haystack",
+     "type": "string",
+     "default": null,
+     "doc": "The string to check."
+    },
+    {
+     "name": "needle",
+     "type": "string",
+     "default": null,
+     "doc": "The prefix to look for."
+    }
+   ],
+   "returns": "bool",
+   "summary": "Check if a string starts with a given substring",
+   "doc": "Checks whether `haystack` begins with `needle`. The comparison is case-sensitive.",
+   "module": null,
+   "category": "Strings"
+  },
+  "str_ends_with": {
+   "name": "str_ends_with",
+   "params": [
+    {
+     "name": "haystack",
+     "type": "string",
+     "default": null,
+     "doc": "The string to check."
+    },
+    {
+     "name": "needle",
+     "type": "string",
+     "default": null,
+     "doc": "The suffix to look for."
+    }
+   ],
+   "returns": "bool",
+   "summary": "Check if a string ends with a given substring",
+   "doc": "Checks whether `haystack` ends with `needle`. The comparison is case-sensitive.",
+   "module": null,
+   "category": "Strings"
+  },
+  "str_replace": {
+   "name": "str_replace",
+   "params": [
+    {
+     "name": "search",
+     "type": "string",
+     "default": null,
+     "doc": "The value to look for."
+    },
+    {
+     "name": "replace",
+     "type": "string",
+     "default": null,
+     "doc": "The replacement for each occurrence of `search`."
+    },
+    {
+     "name": "subject",
+     "type": "string",
+     "default": null,
+     "doc": "The string to search and replace in."
+    }
+   ],
+   "returns": "string",
+   "summary": "Replace all occurrences of a substring",
+   "doc": "Returns `subject` with every occurrence of `search` replaced by `replace`, scanning from left to right. The argument order is PHP's: what to find, what to put, where.",
+   "module": null,
+   "category": "Strings"
+  },
+  "htmlspecialchars": {
+   "name": "htmlspecialchars",
+   "params": [
+    {
+     "name": "text",
+     "type": "string",
+     "default": null,
+     "doc": "The text to escape."
+    }
+   ],
+   "returns": "string",
+   "summary": "Escape text for HTML",
+   "doc": "Replaces `&`, `<`, `>`, `\"`, and `'` with HTML entities, as PHP's `htmlspecialchars` does by default, so text from users can be put in an HTML page or attribute without being read as markup.",
+   "module": null,
+   "category": "Strings"
+  },
+  "sprintf": {
+   "name": "sprintf",
+   "params": [
+    {
+     "name": "format",
+     "type": "string",
+     "default": null,
+     "doc": "Text with placeholders, described below."
+    },
+    {
+     "name": "values",
+     "type": "int|double|bool|byte|string|char...",
+     "default": null,
+     "doc": "The values the placeholders use, in order."
+    }
+   ],
+   "returns": "string",
+   "summary": "Format values into a string",
+   "doc": "Returns `format` with each placeholder replaced by a formatted value, as PHP's `sprintf` does. A placeholder is written `%[argnum$][flags][width][.precision]specifier`; `%%` is a literal percent sign.\n\n\nSpecifierFormats the value asExample\n\n`s`A string; `.precision` is the maximum number of characters`sprintf(\"%.3s\", \"abcdef\")` is `abc`\n`d`An int`-42`\n`u`An int as unsigned`sprintf(\"%u\", -1)` is `18446744073709551615`\n`f`, `F`A double with `.precision` decimals (default 6)`sprintf(\"%.2f\", 3.14159)` is `3.14`\n`e`, `E`Scientific notation with `.precision` decimals`sprintf(\"%.2e\", 1234.5)` is `1.23e+3`\n`g`, `G`Plain or scientific notation, whichever is shorter, with `.precision` significant digits`sprintf(\"%g\", 0.00001234)` is `1.234e-5`\n`x`, `X`An int in hexadecimal`sprintf(\"%x\", 255)` is `ff`\n`o`An int in octal`sprintf(\"%o\", 8)` is `10`\n`b`An int in binary`sprintf(\"%b\", 5)` is `101`\n`c`The character with that Unicode code point; width doesn't apply`sprintf(\"%c\", 233)` is `é`\n\n\n\nBefore the widthEffect\n\n`-`Left-justify within the width (the default is right)\n`+`Show a `+` sign on positive numbers\n`0`Pad with zeros instead of spaces; a sign stays in front\n`'`charPad with any character, such as `'*` or `'·`\n\n\nThe width is the minimum number of characters. `argnum$` picks a value by position, from 1, so `%2$s` uses the second value and a value can be used more than once.\n\nValues are converted as PHP converts them: `%d` truncates a double and reads the number at the start of a string (`\"12abc\"` is 12); `%f` reads a double from a string. With `%s`, bools are `1` and `0`, and doubles are written like to_string (`%g`, so `1e+20`), where PHP would write `1.0E+20`.",
+   "module": null,
+   "category": "Strings"
+  },
+  "str_repeat": {
+   "name": "str_repeat",
+   "params": [
+    {
+     "name": "text",
+     "type": "string",
+     "default": null,
+     "doc": "The string to repeat."
+    },
+    {
+     "name": "times",
+     "type": "int",
+     "default": null,
+     "doc": "How many times to repeat it. `0` gives an empty string."
+    }
+   ],
+   "returns": "string",
+   "summary": "Repeat a string",
+   "doc": "Returns `text` repeated `times` times.",
+   "module": null,
+   "category": "Strings"
+  },
+  "strtoupper": {
+   "name": "strtoupper",
+   "params": [
+    {
+     "name": "text",
+     "type": "string",
+     "default": null,
+     "doc": "The input string."
+    }
+   ],
+   "returns": "string",
+   "summary": "Make a string uppercase",
+   "doc": "Returns `text` with its letters converted to uppercase. Latin (ASCII, Latin-1, and Latin Extended-A), Greek, and Cyrillic letters are converted; other characters are unchanged.",
+   "module": null,
+   "category": "Strings"
+  },
+  "strtolower": {
+   "name": "strtolower",
+   "params": [
+    {
+     "name": "text",
+     "type": "string",
+     "default": null,
+     "doc": "The input string."
+    }
+   ],
+   "returns": "string",
+   "summary": "Make a string lowercase",
+   "doc": "Returns `text` with its letters converted to lowercase. Latin, Greek, and Cyrillic letters are converted; other characters are unchanged.",
+   "module": null,
+   "category": "Strings"
+  },
+  "ucfirst": {
+   "name": "ucfirst",
+   "params": [
+    {
+     "name": "text",
+     "type": "string",
+     "default": null,
+     "doc": "The input string."
+    }
+   ],
+   "returns": "string",
+   "summary": "Make a string's first character uppercase",
+   "doc": "Returns `text` with its first character converted to uppercase, using the same rules as `strtoupper`.",
+   "module": null,
+   "category": "Strings"
+  },
+  "strrev": {
+   "name": "strrev",
+   "params": [
+    {
+     "name": "text",
+     "type": "string",
+     "default": null,
+     "doc": "The string to reverse."
+    }
+   ],
+   "returns": "string",
+   "summary": "Reverse a string",
+   "doc": "Returns the characters of `text` in reverse order. Unlike PHP's byte-wise `strrev`, multi-byte UTF-8 characters stay intact.",
+   "module": null,
+   "category": "Strings"
+  },
+  "trim": {
+   "name": "trim",
+   "params": [
+    {
+     "name": "text",
+     "type": "string",
+     "default": null,
+     "doc": "The string to trim."
+    },
+    {
+     "name": "characters",
+     "type": "string",
+     "default": "\" \\t\\n\\r\"",
+     "doc": "The characters to strip. Each character in this string, including multi-byte ones, is stripped wherever it appears at either end. By default: space, tab, newline, and carriage return."
+    }
+   ],
+   "returns": "string",
+   "summary": "Strip characters from the beginning and end of a string",
+   "doc": "Returns `text` with leading and trailing characters from `characters` removed.",
+   "module": null,
+   "category": "Strings"
+  },
+  "explode": {
+   "name": "explode",
+   "params": [
+    {
+     "name": "separator",
+     "type": "string",
+     "default": null,
+     "doc": "The string to split at. It must not be empty."
+    },
+    {
+     "name": "text",
+     "type": "string",
+     "default": null,
+     "doc": "The string to split."
+    },
+    {
+     "name": "limit",
+     "type": "int",
+     "default": "9223372036854775807",
+     "doc": "With a positive `limit`, at most that many pieces are returned, the last holding the rest of the string. With a negative `limit`, all pieces except the last `-limit` are returned. `0` counts as `1`."
+    }
+   ],
+   "returns": "string[]",
+   "summary": "Split a string by a separator",
+   "doc": "Splits `text` at each occurrence of `separator`, following PHP's rules.",
+   "module": null,
+   "category": "Strings"
+  },
+  "implode": {
+   "name": "implode",
+   "params": [
+    {
+     "name": "separator",
+     "type": "string",
+     "default": null,
+     "doc": "The string to put between elements."
+    },
+    {
+     "name": "pieces",
+     "type": "string[]",
+     "default": null,
+     "doc": "The strings to join."
+    }
+   ],
+   "returns": "string",
+   "summary": "Join array elements with a string",
+   "doc": "Joins the strings in `pieces` with `separator` between each pair.",
+   "module": null,
+   "category": "Strings"
+  },
+  "string_to_bytes": {
+   "name": "string_to_bytes",
+   "params": [
+    {
+     "name": "text",
+     "type": "string",
+     "default": null,
+     "doc": "The string to encode."
+    }
+   ],
+   "returns": "byte[]",
+   "summary": "Get a string's UTF-8 bytes",
+   "doc": "Returns the UTF-8 encoding of `text`, one element per byte.",
+   "module": null,
+   "category": "Strings"
+  },
+  "bytes_to_string": {
+   "name": "bytes_to_string",
+   "params": [
+    {
+     "name": "bytes",
+     "type": "byte[]",
+     "default": null,
+     "doc": "The UTF-8 bytes to decode."
+    }
+   ],
+   "returns": "string",
+   "summary": "Decode UTF-8 bytes into a string",
+   "doc": "Decodes `bytes` as UTF-8 text.",
+   "module": null,
+   "category": "Strings"
+  },
+  "range": {
+   "name": "range",
+   "params": [
+    {
+     "name": "start",
+     "type": "int|double|char",
+     "default": null,
+     "doc": "The first value."
+    },
+    {
+     "name": "end",
+     "type": "int|double|char",
+     "default": null,
+     "doc": "The last value, which is included if the steps land on it."
+    },
+    {
+     "name": "step",
+     "type": "int|double",
+     "default": "1",
+     "doc": "The distance between values: positive, and for chars an int."
+    }
+   ],
+   "returns": "int[]|double[]|char[]",
+   "summary": "An array of numbers or characters from start to end",
+   "doc": "Returns the values from `start` to `end`, as PHP's `range` does:\n\n\n- The result is `int[]` for ints, `double[]` if any argument is a double, and `char[]` for two chars, which count by Unicode code point (`range('a', 'e')`, `range('α', 'ε')`).\n\n- The end is included: `range(1, 3)` is `[1, 2, 3]`. When `end` is less than `start`, the values count down: `range(3, 1)` is `[3, 2, 1]`.\n\n- For doubles, value i is `start + i * step`, stopping at `end`, so rounding can leave the end out: `range(0.0, 0.3, 0.1)` has three values.\n\n\nIn `foreach (range(...) as i)` over ints, no array is built: the loop just counts.",
+   "module": null,
+   "category": "Arrays"
+  },
+  "array_push": {
+   "name": "array_push",
+   "params": [
+    {
+     "name": "array",
+     "type": "T[]",
+     "default": null,
+     "doc": "The array to change."
+    },
+    {
+     "name": "values",
+     "type": "T...",
+     "default": null,
+     "doc": "One or more values to add, in order."
+    }
+   ],
+   "returns": "void",
+   "summary": "Add values to the end of an array",
+   "doc": "Appends the values to the end of the array. Appending is fast: the array keeps spare room, doubling it when it runs out.",
+   "module": null,
+   "category": "Arrays"
+  },
+  "array_pop": {
+   "name": "array_pop",
+   "params": [
+    {
+     "name": "array",
+     "type": "T[]",
+     "default": null,
+     "doc": "The array to change."
+    }
+   ],
+   "returns": "T",
+   "summary": "Remove and return the last element",
+   "doc": "Removes the last element and returns it.",
+   "module": null,
+   "category": "Arrays"
+  },
+  "array_shift": {
+   "name": "array_shift",
+   "params": [
+    {
+     "name": "array",
+     "type": "T[]",
+     "default": null,
+     "doc": "The array to change."
+    }
+   ],
+   "returns": "T",
+   "summary": "Remove and return the first element",
+   "doc": "Removes the first element and returns it. The other elements move down one place, so the old element 1 becomes element 0. This takes time proportional to the array's length.",
+   "module": null,
+   "category": "Arrays"
+  },
+  "array_unshift": {
+   "name": "array_unshift",
+   "params": [
+    {
+     "name": "array",
+     "type": "T[]",
+     "default": null,
+     "doc": "The array to change."
+    },
+    {
+     "name": "values",
+     "type": "T...",
+     "default": null,
+     "doc": "One or more values; they end up in the order given."
+    }
+   ],
+   "returns": "void",
+   "summary": "Add values to the front of an array",
+   "doc": "Inserts the values at the front of the array, moving the existing elements up. This takes time proportional to the array's length.",
+   "module": null,
+   "category": "Arrays"
+  },
+  "array_splice": {
+   "name": "array_splice",
+   "params": [
+    {
+     "name": "array",
+     "type": "T[]",
+     "default": null,
+     "doc": "The array to change."
+    },
+    {
+     "name": "offset",
+     "type": "int",
+     "default": null,
+     "doc": "Where the range starts. A negative offset counts from the end."
+    },
+    {
+     "name": "length",
+     "type": "int",
+     "default": null,
+     "doc": "How many elements to remove; by default, all from `offset` to the end. A negative length leaves that many elements at the end."
+    },
+    {
+     "name": "replacement",
+     "type": "T[]",
+     "default": null,
+     "doc": "Elements to put in place of the removed ones; by default, none."
+    }
+   ],
+   "returns": "T[]",
+   "summary": "Remove or replace a range of elements",
+   "doc": "Removes `length` elements starting at `offset`, inserts the elements of `replacement` in their place, and moves the rest of the array to close or open the gap, as PHP's `array_splice` does. Offsets and lengths beyond the array's ends are clipped rather than errors. With a length of `0`, it only inserts.",
+   "module": null,
+   "category": "Arrays"
+  },
+  "map_key_exists": {
+   "name": "map_key_exists",
+   "params": [
+    {
+     "name": "key",
+     "type": "K",
+     "default": null,
+     "doc": "The key to look for, of the map's key type."
+    },
+    {
+     "name": "map",
+     "type": "map[K, V]",
+     "default": null,
+     "doc": "The map."
+    }
+   ],
+   "returns": "bool",
+   "summary": "Check whether a map has a key",
+   "doc": "Returns whether `map` has an entry for `key`. An entry whose value is `null` still counts.",
+   "module": null,
+   "category": "Maps"
+  },
+  "map_keys": {
+   "name": "map_keys",
+   "params": [
+    {
+     "name": "map",
+     "type": "map[K, V]",
+     "default": null,
+     "doc": "The map."
+    }
+   ],
+   "returns": "K[]",
+   "summary": "The keys of a map, as an array",
+   "doc": "Returns a new array of the map's keys, in the order they were added.",
+   "module": null,
+   "category": "Maps"
+  },
+  "map_values": {
+   "name": "map_values",
+   "params": [
+    {
+     "name": "map",
+     "type": "map[K, V]",
+     "default": null,
+     "doc": "The map."
+    }
+   ],
+   "returns": "V[]",
+   "summary": "The values of a map, as an array",
+   "doc": "Returns a new array of the map's values, in the order their keys were added. The array refers to the same arrays, maps, and objects as the map; it doesn't copy them.",
+   "module": null,
+   "category": "Maps"
+  },
+  "in_map": {
+   "name": "in_map",
+   "params": [
+    {
+     "name": "value",
+     "type": "V",
+     "default": null,
+     "doc": "The value to look for, of the map's value type."
+    },
+    {
+     "name": "map",
+     "type": "map[K, V]",
+     "default": null,
+     "doc": "The map."
+    }
+   ],
+   "returns": "bool",
+   "summary": "Check whether a map has a value",
+   "doc": "Returns whether any entry of `map` has `value`. Numbers and bools compare by value, strings and chars by content, and arrays, maps, and objects by identity: the same instance, not an equal one.",
+   "module": null,
+   "category": "Maps"
+  },
+  "unset": {
+   "name": "unset",
+   "params": [
+    {
+     "name": "entry",
+     "type": "map[key]",
+     "default": null,
+     "doc": "The entry to remove, written as an index: `unset(ages[\"ada\"])`."
+    }
+   ],
+   "returns": "void",
+   "summary": "Remove an entry from a map",
+   "doc": "Removes the entry for the key, if there is one; removing a key that isn't there does nothing, as in PHP. The other entries keep their order. For arrays, use array_splice, which moves the later elements down.",
+   "module": null,
+   "category": "Maps"
+  },
+  "file_get_contents": {
+   "name": "file_get_contents",
+   "params": [
+    {
+     "name": "path",
+     "type": "string",
+     "default": null,
+     "doc": "The file to read."
+    }
+   ],
+   "returns": "string",
+   "summary": "Read an entire file into a string",
+   "doc": "Reads the whole file at `path` as text.",
+   "module": "std/file",
+   "category": "Files"
+  },
+  "file_put_contents": {
+   "name": "file_put_contents",
+   "params": [
+    {
+     "name": "path",
+     "type": "string",
+     "default": null,
+     "doc": "The file to write. It's created if it doesn't exist."
+    },
+    {
+     "name": "data",
+     "type": "string",
+     "default": null,
+     "doc": "The text to write."
+    },
+    {
+     "name": "append",
+     "type": "bool",
+     "default": "false",
+     "doc": "When `true`, add to the end of the file instead of replacing its contents."
+    }
+   ],
+   "returns": "int",
+   "summary": "Write a string to a file",
+   "doc": "Writes `data` to the file at `path`.",
+   "module": "std/file",
+   "category": "Files"
+  },
+  "file": {
+   "name": "file",
+   "params": [
+    {
+     "name": "path",
+     "type": "string",
+     "default": null,
+     "doc": "The file to read."
+    }
+   ],
+   "returns": "string[]",
+   "summary": "Read a file into an array of lines",
+   "doc": "Reads the file at `path` and splits it into lines. Line endings (`\\n` or `\\r\\n`) are removed, and a final line ending doesn't add an empty line.",
+   "module": "std/file",
+   "category": "Files"
+  },
+  "file_exists": {
+   "name": "file_exists",
+   "params": [
+    {
+     "name": "path",
+     "type": "string",
+     "default": null,
+     "doc": "The path to check."
+    }
+   ],
+   "returns": "bool",
+   "summary": "Check whether a file or directory exists",
+   "doc": "Checks whether anything exists at `path`.",
+   "module": "std/file",
+   "category": "Files"
+  },
+  "is_file": {
+   "name": "is_file",
+   "params": [
+    {
+     "name": "path",
+     "type": "string",
+     "default": null,
+     "doc": "The path to check."
+    }
+   ],
+   "returns": "bool",
+   "summary": "Check whether a path is a regular file",
+   "doc": "Checks whether `path` exists and is a regular file.",
+   "module": "std/file",
+   "category": "Files"
+  },
+  "is_dir": {
+   "name": "is_dir",
+   "params": [
+    {
+     "name": "path",
+     "type": "string",
+     "default": null,
+     "doc": "The path to check."
+    }
+   ],
+   "returns": "bool",
+   "summary": "Check whether a path is a directory",
+   "doc": "Checks whether `path` exists and is a directory.",
+   "module": "std/file",
+   "category": "Files"
+  },
+  "scandir": {
+   "name": "scandir",
+   "params": [
+    {
+     "name": "path",
+     "type": "string",
+     "default": null,
+     "doc": "The directory to list."
+    }
+   ],
+   "returns": "string[]",
+   "summary": "List the names in a directory",
+   "doc": "Lists the files and directories inside `path`.",
+   "module": "std/file",
+   "category": "Files"
+  },
+  "file_get_bytes": {
+   "name": "file_get_bytes",
+   "params": [
+    {
+     "name": "path",
+     "type": "string",
+     "default": null,
+     "doc": "The file to read."
+    }
+   ],
+   "returns": "byte[]",
+   "summary": "Read an entire file as raw bytes",
+   "doc": "Reads the file at `path` without interpreting it, so it works for any file, including images, archives, and text that isn't UTF-8.",
+   "module": "std/file",
+   "category": "Files"
+  },
+  "file_put_bytes": {
+   "name": "file_put_bytes",
+   "params": [
+    {
+     "name": "path",
+     "type": "string",
+     "default": null,
+     "doc": "The file to write. It's created if it doesn't exist."
+    },
+    {
+     "name": "data",
+     "type": "byte[]",
+     "default": null,
+     "doc": "The bytes to write."
+    },
+    {
+     "name": "append",
+     "type": "bool",
+     "default": "false",
+     "doc": "When `true`, add to the end of the file instead of replacing it."
+    }
+   ],
+   "returns": "int",
+   "summary": "Write raw bytes to a file",
+   "doc": "Writes `data` to the file at `path` exactly as given.",
+   "module": "std/file",
+   "category": "Files"
+  },
+  "time": {
+   "name": "time",
+   "params": [],
+   "returns": "int",
+   "summary": "The current timestamp",
+   "doc": "Returns the current time as a timestamp. A *timestamp* is an `int` counting seconds since 1970-01-01 00:00:00 UTC.",
+   "module": "std/time",
+   "category": "Date and time"
+  },
+  "microtime": {
+   "name": "microtime",
+   "params": [],
+   "returns": "double",
+   "summary": "The current time with microseconds",
+   "doc": "Returns the current time in seconds since the Unix epoch, with microseconds, like PHP's `microtime(true)`.",
+   "module": "std/time",
+   "category": "Date and time"
+  },
+  "hrtime": {
+   "name": "hrtime",
+   "params": [],
+   "returns": "int",
+   "summary": "A monotonic clock in nanoseconds",
+   "doc": "Returns nanoseconds from a monotonic clock. The value has no fixed starting point, so only the difference between two readings is meaningful, and it never jumps when the system clock is changed.",
+   "module": "std/time",
+   "category": "Date and time"
+  },
+  "date": {
+   "name": "date",
+   "params": [
+    {
+     "name": "format",
+     "type": "string",
+     "default": null,
+     "doc": "The format, made of the format characters."
+    },
+    {
+     "name": "timestamp",
+     "type": "int",
+     "default": "-9223372036854775808",
+     "doc": "Defaults to the current time. The default value, the smallest int, stands for \"now\", because qiq defaults must be literals."
+    }
+   ],
+   "returns": "string",
+   "summary": "Format a timestamp in the current timezone",
+   "doc": "Formats `timestamp` as local time in the current timezone, using PHP's format letters. Characters that aren't format letters are copied unchanged.",
+   "module": "std/time",
+   "category": "Date and time"
+  },
+  "gmdate": {
+   "name": "gmdate",
+   "params": [
+    {
+     "name": "format",
+     "type": "string",
+     "default": null,
+     "doc": "The format, made of the format characters."
+    },
+    {
+     "name": "timestamp",
+     "type": "int",
+     "default": "-9223372036854775808",
+     "doc": "Defaults to the current time. The default value, the smallest int, stands for \"now\", because qiq defaults must be literals."
+    }
+   ],
+   "returns": "string",
+   "summary": "Format a timestamp in UTC",
+   "doc": "Like `date`, but always formats the time in UTC: `e` prints `UTC`, `T` prints `GMT`, and offsets are zero.",
+   "module": "std/time",
+   "category": "Date and time"
+  },
+  "mktime": {
+   "name": "mktime",
+   "params": [
+    {
+     "name": "hour",
+     "type": "int",
+     "default": null,
+     "doc": "The hour, 0 to 23."
+    },
+    {
+     "name": "minute",
+     "type": "int",
+     "default": "0",
+     "doc": "The minute."
+    },
+    {
+     "name": "second",
+     "type": "int",
+     "default": "0",
+     "doc": "The second."
+    },
+    {
+     "name": "month",
+     "type": "int",
+     "default": "1",
+     "doc": "The month, 1 to 12."
+    },
+    {
+     "name": "day",
+     "type": "int",
+     "default": "1",
+     "doc": "The day of the month."
+    },
+    {
+     "name": "year",
+     "type": "int",
+     "default": "1970",
+     "doc": "The year, such as `2026`."
+    }
+   ],
+   "returns": "int",
+   "summary": "Build a timestamp from a local date and time",
+   "doc": "Returns the timestamp of a date and time in the current timezone. Values outside their usual range roll over into the next field, as in PHP: month 13 is January of the next year, and day 0 is the last day of the previous month. The argument order is PHP's; named arguments make calls clearer.",
+   "module": "std/time",
+   "category": "Date and time"
+  },
+  "gmmktime": {
+   "name": "gmmktime",
+   "params": [
+    {
+     "name": "hour",
+     "type": "int",
+     "default": null,
+     "doc": "The hour, 0 to 23."
+    },
+    {
+     "name": "minute",
+     "type": "int",
+     "default": "0",
+     "doc": "The minute."
+    },
+    {
+     "name": "second",
+     "type": "int",
+     "default": "0",
+     "doc": "The second."
+    },
+    {
+     "name": "month",
+     "type": "int",
+     "default": "1",
+     "doc": "The month, 1 to 12."
+    },
+    {
+     "name": "day",
+     "type": "int",
+     "default": "1",
+     "doc": "The day of the month."
+    },
+    {
+     "name": "year",
+     "type": "int",
+     "default": "1970",
+     "doc": "The year, such as `2026`."
+    }
+   ],
+   "returns": "int",
+   "summary": "Build a timestamp from a UTC date and time",
+   "doc": "Like `mktime`, but the date and time are in UTC. Out-of-range values roll over the same way.",
+   "module": "std/time",
+   "category": "Date and time"
+  },
+  "checkdate": {
+   "name": "checkdate",
+   "params": [
+    {
+     "name": "month",
+     "type": "int",
+     "default": null,
+     "doc": "The month, 1 to 12."
+    },
+    {
+     "name": "day",
+     "type": "int",
+     "default": null,
+     "doc": "The day of the month."
+    },
+    {
+     "name": "year",
+     "type": "int",
+     "default": null,
+     "doc": "The year, 1 to 32767."
+    }
+   ],
+   "returns": "bool",
+   "summary": "Check whether a date exists",
+   "doc": "Checks that the date exists in the Gregorian calendar, taking leap years into account.",
+   "module": "std/time",
+   "category": "Date and time"
+  },
+  "strtotime": {
+   "name": "strtotime",
+   "params": [
+    {
+     "name": "text",
+     "type": "string",
+     "default": null,
+     "doc": "An ISO 8601 date, or date and time."
+    }
+   ],
+   "returns": "int",
+   "summary": "Parse an ISO 8601 date",
+   "doc": "Parses a date in one of these ISO 8601 forms:\n\n- a date: `2026-11-19` (midnight)\n\n- a date and time, separated by `T` or a space: `2026-11-19 14:30`, `2026-11-19T14:30:00`; fractions of a second (`14:30:00.250`) are accepted and dropped\n\n- either of those followed by `Z` or an offset: `2026-11-19T14:30:00Z`, `+02:00`, `-0500`, `+05`\n\n\nWithout `Z` or an offset, the time is local, in the current timezone.",
+   "module": "std/time",
+   "category": "Date and time"
+  },
+  "date_default_timezone_set": {
+   "name": "date_default_timezone_set",
+   "params": [
+    {
+     "name": "zone",
+     "type": "string",
+     "default": null,
+     "doc": "A zone name from the tz database, such as `\"Europe/London\"`, `\"America/New_York\"`, or `\"UTC\"`."
+    }
+   ],
+   "returns": "void",
+   "summary": "Set the timezone for local times",
+   "doc": "Sets the timezone used by `date`, `mktime`, and `strtotime` for the rest of the program. Without a call, the system timezone is used.",
+   "module": "std/time",
+   "category": "Date and time"
+  },
+  "date_default_timezone_get": {
+   "name": "date_default_timezone_get",
+   "params": [],
+   "returns": "string",
+   "summary": "The current timezone's name",
+   "doc": "Returns the zone set with `date_default_timezone_set`. Otherwise it returns the system's zone: the `TZ` environment variable if it's set, else the zone `/etc/localtime` links to, else `\"UTC\"`.",
+   "module": "std/time",
+   "category": "Date and time"
+  },
+  "sleep": {
+   "name": "sleep",
+   "params": [
+    {
+     "name": "seconds",
+     "type": "int",
+     "default": null,
+     "doc": "How long to pause."
+    }
+   ],
+   "returns": "void",
+   "summary": "Pause for whole seconds",
+   "doc": "Pauses the program for `seconds` seconds.",
+   "module": "std/time",
+   "category": "Date and time"
+  },
+  "usleep": {
+   "name": "usleep",
+   "params": [
+    {
+     "name": "microseconds",
+     "type": "int",
+     "default": null,
+     "doc": "How long to pause; one second is `1000000`."
+    }
+   ],
+   "returns": "void",
+   "summary": "Pause for microseconds",
+   "doc": "Pauses the program for `microseconds` microseconds.",
+   "module": "std/time",
+   "category": "Date and time"
+  },
+  "json_encode": {
+   "name": "json_encode",
+   "params": [
+    {
+     "name": "value",
+     "type": "any",
+     "default": null,
+     "doc": "The value to encode: any type."
+    },
+    {
+     "name": "pretty",
+     "type": "bool",
+     "default": "false",
+     "doc": "Whether to indent the output (4 spaces per level, one value per line), like PHP's `JSON_PRETTY_PRINT`."
+    }
+   ],
+   "returns": "string",
+   "summary": "Convert a value to JSON",
+   "doc": "Returns the JSON text for `value`. Objects are written with their public properties, in the order they're declared (inherited properties first); private and protected properties are left out. Maps are written in insertion order, as PHP writes arrays.",
+   "module": null,
+   "category": "JSON"
+  },
+  "json_decode": {
+   "name": "json_decode",
+   "params": [
+    {
+     "name": "text",
+     "type": "string",
+     "default": null,
+     "doc": "The JSON text."
+    }
+   ],
+   "returns": "the type it's used as",
+   "summary": "Convert JSON to a typed value",
+   "doc": "Parses `text` and builds a value of the type the result is used as, checking that the JSON matches it:\n\n\n- The type comes from where the call is used: `User user = json_decode(text);`, an assignment, a property, an argument, or a return value. Without one, such as in `print(json_decode(text))`, it's a compile error.\n\n- For a class, the JSON object's keys are matched to public properties by name. Keys the class doesn't have are ignored, and properties the JSON doesn't mention keep their default (zero, `false`, or `null`). The constructor isn't called. The class, and every class reachable through its public properties, must be concrete, which the compiler checks.\n\n- `null` is accepted wherever a string, char, array, map, or object is expected. If a key appears twice, the last value wins.",
+   "module": null,
+   "category": "JSON"
+  },
+  "http_request": {
+   "name": "http_request",
+   "params": [
+    {
+     "name": "method",
+     "type": "string",
+     "default": null,
+     "doc": "The method, such as `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, or `HEAD`; any case."
+    },
+    {
+     "name": "url",
+     "type": "string",
+     "default": null,
+     "doc": "An `http://` or `https://` URL."
+    },
+    {
+     "name": "body",
+     "type": "string",
+     "default": "null",
+     "doc": "The request body, sent as is; `null` for none."
+    },
+    {
+     "name": "headers",
+     "type": "map[string, string]",
+     "default": "null",
+     "doc": "Headers to send, added to the defaults."
+    },
+    {
+     "name": "timeout",
+     "type": "int",
+     "default": "30",
+     "doc": "Seconds to wait for each connect, read, and write."
+    }
+   ],
+   "returns": "Response",
+   "summary": "Send an HTTP request",
+   "doc": "Sends the request, follows redirects, and returns the final Response. Set a `Content-Type` header to describe a body, such as `application/json`.",
+   "module": "std/http",
+   "category": "HTTP"
+  },
+  "http_get": {
+   "name": "http_get",
+   "params": [
+    {
+     "name": "url",
+     "type": "string",
+     "default": null,
+     "doc": "An `http://` or `https://` URL."
+    },
+    {
+     "name": "headers",
+     "type": "map[string, string]",
+     "default": "null",
+     "doc": "Headers to send."
+    },
+    {
+     "name": "timeout",
+     "type": "int",
+     "default": "30",
+     "doc": "Seconds to wait for each connect, read, and write."
+    }
+   ],
+   "returns": "Response",
+   "summary": "Send a GET request",
+   "doc": "Same as `http_request(\"GET\", url, null, headers, timeout)`.",
+   "module": "std/http",
+   "category": "HTTP"
+  },
+  "http_post": {
+   "name": "http_post",
+   "params": [
+    {
+     "name": "url",
+     "type": "string",
+     "default": null,
+     "doc": "An `http://` or `https://` URL."
+    },
+    {
+     "name": "body",
+     "type": "string",
+     "default": "\"\"",
+     "doc": "The request body."
+    },
+    {
+     "name": "headers",
+     "type": "map[string, string]",
+     "default": "null",
+     "doc": "Headers to send."
+    },
+    {
+     "name": "timeout",
+     "type": "int",
+     "default": "30",
+     "doc": "Seconds to wait for each connect, read, and write."
+    }
+   ],
+   "returns": "Response",
+   "summary": "Send a POST request",
+   "doc": "Same as `http_request(\"POST\", url, body, headers, timeout)`.",
+   "module": "std/http",
+   "category": "HTTP"
+  },
+  "urlencode": {
+   "name": "urlencode",
+   "params": [
+    {
+     "name": "text",
+     "type": "string",
+     "default": null,
+     "doc": "The text to encode."
+    }
+   ],
+   "returns": "string",
+   "summary": "Percent-encode text for a query string",
+   "doc": "Encodes the text's UTF-8 bytes as `%XX`, except letters, digits, and `-_.`, and writes spaces as `+`, as PHP's `urlencode` does. Use it for query strings and form bodies; for path segments, use rawurlencode.",
+   "module": "std/http",
+   "category": "HTTP"
+  },
+  "rawurlencode": {
+   "name": "rawurlencode",
+   "params": [
+    {
+     "name": "text",
+     "type": "string",
+     "default": null,
+     "doc": "The text to encode."
+    }
+   ],
+   "returns": "string",
+   "summary": "Percent-encode text for a URL path",
+   "doc": "Encodes the text's UTF-8 bytes as `%XX`, except letters, digits, and `-_.~` (RFC 3986), as PHP's `rawurlencode` does. Spaces become `%20`.",
+   "module": "std/http",
+   "category": "HTTP"
+  },
+  "urldecode": {
+   "name": "urldecode",
+   "params": [
+    {
+     "name": "text",
+     "type": "string",
+     "default": null,
+     "doc": "The encoded text."
+    }
+   ],
+   "returns": "string",
+   "summary": "Decode percent-encoded text",
+   "doc": "Decodes `%XX` sequences, and `+` as a space, as PHP's `urldecode` does. A `%` that isn't followed by two hex digits is kept as is.",
+   "module": "std/http",
+   "category": "HTTP"
+  },
+  "rawurldecode": {
+   "name": "rawurldecode",
+   "params": [
+    {
+     "name": "text",
+     "type": "string",
+     "default": null,
+     "doc": "The encoded text."
+    }
+   ],
+   "returns": "string",
+   "summary": "Decode a percent-encoded URL path",
+   "doc": "Decodes `%XX` sequences like urldecode, but leaves `+` as is, as PHP's `rawurldecode` does. Use it for URL paths, where `+` is an ordinary character.",
+   "module": "std/http",
+   "category": "HTTP"
+  },
+  "http_build_query": {
+   "name": "http_build_query",
+   "params": [
+    {
+     "name": "fields",
+     "type": "map[string, string]",
+     "default": null,
+     "doc": "The names and values."
+    }
+   ],
+   "returns": "string",
+   "summary": "Build a query string from a map",
+   "doc": "Returns `name=value` pairs joined with `&`, with names and values encoded by urlencode, in the map's order, as PHP's `http_build_query` does for a flat array.",
+   "module": "std/http",
+   "category": "HTTP"
+  },
+  "http_serve": {
+   "name": "http_serve",
+   "params": [
+    {
+     "name": "address",
+     "type": "string",
+     "default": null,
+     "doc": "Where to listen: `\":8080\"` for every network interface (IPv4 and IPv6), `\"127.0.0.1:8080\"` for this machine only, `\"[::1]:8080\"` for an IPv6 address, or `\"unix:/run/app.sock\"` for a Unix socket file, to sit behind a proxy such as nginx."
+    },
+    {
+     "name": "handler",
+     "type": "function(Request, ResponseWriter): void",
+     "default": null,
+     "doc": "Called for each request; usually `router->handler()`."
+    },
+    {
+     "name": "workers",
+     "type": "int",
+     "default": "0",
+     "doc": "The number of worker processes; `0` means one per CPU. With `1`, the server runs in this process without forking."
+    },
+    {
+     "name": "trustProxy",
+     "type": "bool",
+     "default": "false",
+     "doc": "Whether the server is behind a proxy such as nginx. If so, `Request::remoteAddress` is the client address the proxy forwarded (the last entry of `X-Forwarded-For`, or `X-Real-IP`), and `Request::scheme` comes from `X-Forwarded-Proto`. Only set it when clients can't reach the server except through the proxy, because anyone else could send those headers."
+    }
+   ],
+   "returns": "void",
+   "summary": "Run an HTTP server",
+   "doc": "Listens on the address, starts the workers, and serves requests until the program gets SIGINT (Ctrl-C) or SIGTERM. Each worker serves one connection at a time; see How the server works.",
+   "module": "std/http/server",
+   "category": "HTTP server"
+  },
+  "http_file_server": {
+   "name": "http_file_server",
+   "params": [
+    {
+     "name": "directory",
+     "type": "string",
+     "default": null,
+     "doc": "The directory to serve."
+    }
+   ],
+   "returns": "function(Request, ResponseWriter): void",
+   "summary": "A handler that serves files from a directory",
+   "doc": "Returns a handler that serves the file at the request's path inside `directory`, with a `Content-Type` from its extension (see http_content_type). For a directory, it serves its `index.html`, or a listing of its files; a directory path without a trailing `/` is redirected to one. Only `GET` and `HEAD` are allowed (405 otherwise), and a path containing a `..` segment gets 404, so files outside the directory can't be reached. Files are read whole into memory.",
+   "module": "std/http/server",
+   "category": "HTTP server"
+  },
+  "http_strip_prefix": {
+   "name": "http_strip_prefix",
+   "params": [
+    {
+     "name": "prefix",
+     "type": "string",
+     "default": null,
+     "doc": "The start of the path to remove, such as `\"/static\"`."
+    },
+    {
+     "name": "handler",
+     "type": "function(Request, ResponseWriter): void",
+     "default": null,
+     "doc": "The handler to call with the shorter path."
+    }
+   ],
+   "returns": "function(Request, ResponseWriter): void",
+   "summary": "Remove a prefix from the path before calling a handler",
+   "doc": "Returns a handler that removes `prefix` from the request's `path` and `rawPath` and calls `handler`, like Go's `http.StripPrefix`. A request whose path doesn't start with the prefix gets 404.",
+   "module": "std/http/server",
+   "category": "HTTP server"
+  },
+  "http_log": {
+   "name": "http_log",
+   "params": [
+    {
+     "name": "handler",
+     "type": "function(Request, ResponseWriter): void",
+     "default": null,
+     "doc": "The handler to wrap."
+    }
+   ],
+   "returns": "function(Request, ResponseWriter): void",
+   "summary": "Log each request to stderr",
+   "doc": "Returns a handler that calls `handler` and then writes a line to stderr in the style of `php -S`: the time, the client's address, the status, the method, the path, and how long the handler took. A handler of this shape that wraps another is often called *middleware*; write your own the same way.",
+   "module": "std/http/server",
+   "category": "HTTP server"
+  },
+  "http_content_type": {
+   "name": "http_content_type",
+   "params": [
+    {
+     "name": "name",
+     "type": "string",
+     "default": null,
+     "doc": "A file name or path."
+    }
+   ],
+   "returns": "string",
+   "summary": "The Content-Type for a file name",
+   "doc": "Looks up the file's extension, in any case, among common web types: HTML, CSS, JavaScript, JSON, text, images, fonts, audio, video, PDF, archives, and WebAssembly. Text types include `; charset=utf-8`.",
+   "module": "std/http/server",
+   "category": "HTTP server"
+  },
+  "argv": {
+   "name": "argv",
+   "params": [],
+   "returns": "string[]",
+   "summary": "The command-line arguments",
+   "doc": "Returns the command line as a new array: element 0 is the program, and the arguments follow, as with PHP's `$argv`, Python's `sys.argv`, and Go's `os.Args`. With `qiq run app.qiq a b`, the program is `app.qiq`; with an executable built by `qiq build`, it's the path the executable was started with.",
+   "module": "std/os",
+   "category": "Program"
+  },
+  "exit": {
+   "name": "exit",
+   "params": [
+    {
+     "name": "status",
+     "type": "int",
+     "default": "0",
+     "doc": "The exit status, from 0 (success) to 255."
+    }
+   ],
+   "returns": "void",
+   "summary": "End the program with an exit status",
+   "doc": "Flushes output and ends the program immediately with `status`, which the shell sees as `$?`. Without `exit`, a program exits with 0, or with 1 after an uncaught exception.",
+   "module": "std/os",
+   "category": "Program"
+  },
+  "getenv": {
+   "name": "getenv",
+   "params": [
+    {
+     "name": "name",
+     "type": "string",
+     "default": null,
+     "doc": "The variable's name, such as `HOME`."
+    }
+   ],
+   "returns": "string",
+   "summary": "Read an environment variable",
+   "doc": "Returns the value of the environment variable `name`, or `null` if it isn't set. An empty value is an empty string, not `null`.",
+   "module": "std/os",
+   "category": "Program"
+  },
+  "to_int": {
+   "name": "to_int",
+   "params": [
+    {
+     "name": "value",
+     "type": "byte|bool|double|string",
+     "default": null,
+     "doc": "The value to convert."
+    }
+   ],
+   "returns": "int",
+   "summary": "Convert a value to an int",
+   "doc": "Converts `value` to an `int`: a `byte` widens; `true` is `1` and `false` is `0`; a `double` is truncated toward zero; a `string` must be a whole int such as `\"-42\"` (an optional sign, then digits, with no spaces).",
+   "module": null,
+   "category": "Conversions"
+  },
+  "to_double": {
+   "name": "to_double",
+   "params": [
+    {
+     "name": "value",
+     "type": "int|byte|string",
+     "default": null,
+     "doc": "The value to convert."
+    }
+   ],
+   "returns": "double",
+   "summary": "Convert a value to a double",
+   "doc": "Converts `value` to a `double`. A `string` must be a whole number such as `\"2.5\"`, `\"-3\"`, or `\"1e5\"`, with no leading spaces.",
+   "module": null,
+   "category": "Conversions"
+  },
+  "to_byte": {
+   "name": "to_byte",
+   "params": [
+    {
+     "name": "value",
+     "type": "int",
+     "default": null,
+     "doc": "The int to convert; it must be between 0 and 255."
+    }
+   ],
+   "returns": "byte",
+   "summary": "Convert an int to a byte",
+   "doc": "Converts `value` to a `byte`.",
+   "module": null,
+   "category": "Conversions"
+  },
+  "to_string": {
+   "name": "to_string",
+   "params": [
+    {
+     "name": "value",
+     "type": "int|double|byte|bool|char",
+     "default": null,
+     "doc": "The value to convert."
+    }
+   ],
+   "returns": "string",
+   "summary": "Convert a value to a string",
+   "doc": "Converts `value` to text: ints and bytes in decimal, doubles formatted like `print` (`%g`), booleans as `true` or `false`, and a `char` as a one-character string.",
+   "module": null,
+   "category": "Conversions"
+  },
+  "print": {
+   "name": "print",
+   "params": [
+    {
+     "name": "values",
+     "type": "any...",
+     "default": null,
+     "doc": "Zero or more values of any type except `void`."
+    }
+   ],
+   "returns": "void",
+   "summary": "Write values to standard output",
+   "doc": "Writes its arguments on one line, separated by single spaces, followed by a newline. `print` is a statement built into the language, so it can't be passed around or redeclared.",
+   "module": null,
+   "category": "Output"
+  }
+ },
+ "classes": {
+  "Exception": {
+   "name": "Exception",
+   "kind": "class",
+   "extends": null,
+   "final": false,
+   "module": null,
+   "doc": "",
+   "properties": [],
+   "methods": [
+    {
+     "name": "__construct",
+     "static": false,
+     "params": [
+      {
+       "name": "message",
+       "type": "string",
+       "default": "\"\""
+      },
+      {
+       "name": "code",
+       "type": "int",
+       "default": "0"
+      }
+     ],
+     "returns": "void",
+     "doc": ""
+    },
+    {
+     "name": "getMessage",
+     "static": false,
+     "params": [],
+     "returns": "string",
+     "doc": ""
+    },
+    {
+     "name": "getCode",
+     "static": false,
+     "params": [],
+     "returns": "int",
+     "doc": ""
+    }
+   ]
+  },
+  "RuntimeException": {
+   "name": "RuntimeException",
+   "kind": "class",
+   "extends": "Exception",
+   "final": false,
+   "module": null,
+   "doc": "Errors that can only be detected while the program runs.",
+   "properties": [],
+   "methods": []
+  },
+  "IOException": {
+   "name": "IOException",
+   "kind": "class",
+   "extends": "RuntimeException",
+   "final": false,
+   "module": null,
+   "doc": "Reading or writing files failed.",
+   "properties": [],
+   "methods": []
+  },
+  "FileNotFoundException": {
+   "name": "FileNotFoundException",
+   "kind": "class",
+   "extends": "IOException",
+   "final": false,
+   "module": null,
+   "doc": "",
+   "properties": [],
+   "methods": []
+  },
+  "PermissionDeniedException": {
+   "name": "PermissionDeniedException",
+   "kind": "class",
+   "extends": "IOException",
+   "final": false,
+   "module": null,
+   "doc": "",
+   "properties": [],
+   "methods": []
+  },
+  "NetworkException": {
+   "name": "NetworkException",
+   "kind": "class",
+   "extends": "IOException",
+   "final": false,
+   "module": null,
+   "doc": "A network connection failed: the host couldn't be found, refused the connection, timed out, or failed the TLS certificate check.",
+   "properties": [],
+   "methods": []
+  },
+  "KeyNotFoundException": {
+   "name": "KeyNotFoundException",
+   "kind": "class",
+   "extends": "RuntimeException",
+   "final": false,
+   "module": null,
+   "doc": "A map lookup used a key that is not in the map.",
+   "properties": [],
+   "methods": []
+  },
+  "OutOfRangeException": {
+   "name": "OutOfRangeException",
+   "kind": "class",
+   "extends": "RuntimeException",
+   "final": false,
+   "module": null,
+   "doc": "An array index is below 0 or not less than the array's length.",
+   "properties": [],
+   "methods": []
+  },
+  "InvalidUtf8Exception": {
+   "name": "InvalidUtf8Exception",
+   "kind": "class",
+   "extends": "RuntimeException",
+   "final": false,
+   "module": null,
+   "doc": "A string is not valid UTF-8.",
+   "properties": [],
+   "methods": []
+  },
+  "ArithmeticException": {
+   "name": "ArithmeticException",
+   "kind": "class",
+   "extends": "Exception",
+   "final": false,
+   "module": null,
+   "doc": "An arithmetic operation has no result, such as a negative int exponent.",
+   "properties": [],
+   "methods": []
+  },
+  "DivisionByZeroException": {
+   "name": "DivisionByZeroException",
+   "kind": "class",
+   "extends": "ArithmeticException",
+   "final": false,
+   "module": null,
+   "doc": "`/` or `%` on ints with a zero right-hand side.",
+   "properties": [],
+   "methods": []
+  },
+  "InvalidArgumentException": {
+   "name": "InvalidArgumentException",
+   "kind": "class",
+   "extends": "Exception",
+   "final": false,
+   "module": null,
+   "doc": "A function was given an argument it cannot accept.",
+   "properties": [],
+   "methods": []
+  },
+  "JsonException": {
+   "name": "JsonException",
+   "kind": "class",
+   "extends": "Exception",
+   "final": false,
+   "module": null,
+   "doc": "json_decode was given text that isn't JSON or doesn't match the type it decodes into, or json_encode was given a value JSON can't represent.",
+   "properties": [],
+   "methods": []
+  },
+  "HttpException": {
+   "name": "HttpException",
+   "kind": "class",
+   "extends": "Exception",
+   "final": false,
+   "module": null,
+   "doc": "An HTTP request got an error status (from Response::raiseForStatus, with the status as its code) or was redirected too many times.",
+   "properties": [],
+   "methods": []
+  },
+  "File": {
+   "name": "File",
+   "kind": "class",
+   "extends": null,
+   "final": true,
+   "module": "std/file",
+   "doc": "A file opened for reading or writing a piece at a time, so large files don't have to fit in memory. Writes are buffered; close() (or the program ending) flushes them. Errors throw the same exceptions as the functions above, and using a file after close() throws IOException.",
+   "properties": [],
+   "methods": [
+    {
+     "name": "open",
+     "static": true,
+     "params": [
+      {
+       "name": "path",
+       "type": "string",
+       "default": null
+      },
+      {
+       "name": "mode",
+       "type": "string",
+       "default": "\"r\""
+      }
+     ],
+     "returns": "File",
+     "doc": "Opens `path`. Modes: \"r\" read, \"w\" write (emptying the file first), \"a\" append, \"x\" create a new file (throws IOException if it exists); add \"+\" to also allow the other direction, e.g. \"r+\"."
+    },
+    {
+     "name": "stdin",
+     "static": true,
+     "params": [],
+     "returns": "File",
+     "doc": ""
+    },
+    {
+     "name": "stdout",
+     "static": true,
+     "params": [],
+     "returns": "File",
+     "doc": ""
+    },
+    {
+     "name": "stderr",
+     "static": true,
+     "params": [],
+     "returns": "File",
+     "doc": ""
+    },
+    {
+     "name": "readLine",
+     "static": false,
+     "params": [],
+     "returns": "string",
+     "doc": "The next line without its line ending (\"\\n\" or \"\\r\\n\"), or null at the end of the file. Throws InvalidUtf8Exception if the line isn't UTF-8."
+    },
+    {
+     "name": "read",
+     "static": false,
+     "params": [
+      {
+       "name": "length",
+       "type": "int",
+       "default": null
+      }
+     ],
+     "returns": "byte[]",
+     "doc": "Up to `length` bytes; fewer only at the end of the file, and an empty array after it."
+    },
+    {
+     "name": "write",
+     "static": false,
+     "params": [
+      {
+       "name": "text",
+       "type": "string",
+       "default": null
+      }
+     ],
+     "returns": "void",
+     "doc": ""
+    },
+    {
+     "name": "writeBytes",
+     "static": false,
+     "params": [
+      {
+       "name": "data",
+       "type": "byte[]",
+       "default": null
+      }
+     ],
+     "returns": "void",
+     "doc": ""
+    },
+    {
+     "name": "eof",
+     "static": false,
+     "params": [],
+     "returns": "bool",
+     "doc": "Whether there is nothing left to read."
+    },
+    {
+     "name": "flush",
+     "static": false,
+     "params": [],
+     "returns": "void",
+     "doc": "Writes buffered data to the file now."
+    },
+    {
+     "name": "close",
+     "static": false,
+     "params": [],
+     "returns": "void",
+     "doc": "Flushes and closes the file. Closing twice does nothing. Closing stdin, stdout, or stderr only flushes them."
+    }
+   ]
+  },
+  "Socket": {
+   "name": "Socket",
+   "kind": "class",
+   "extends": null,
+   "final": true,
+   "module": "std/net",
+   "doc": "A connection to a server. Every connect, read, and write waits at most `timeout` seconds. With `tls`, the connection is encrypted and the server's certificate is checked against the system's CA certificates (or SSL_CERT_FILE). Failures throw NetworkException. Freeing a Socket doesn't close it; call close().",
+   "properties": [],
+   "methods": [
+    {
+     "name": "connect",
+     "static": true,
+     "params": [
+      {
+       "name": "host",
+       "type": "string",
+       "default": null
+      },
+      {
+       "name": "port",
+       "type": "int",
+       "default": null
+      },
+      {
+       "name": "tls",
+       "type": "bool",
+       "default": "false"
+      },
+      {
+       "name": "timeout",
+       "type": "int",
+       "default": "30"
+      }
+     ],
+     "returns": "Socket",
+     "doc": ""
+    },
+    {
+     "name": "write",
+     "static": false,
+     "params": [
+      {
+       "name": "text",
+       "type": "string",
+       "default": null
+      }
+     ],
+     "returns": "void",
+     "doc": ""
+    },
+    {
+     "name": "writeBytes",
+     "static": false,
+     "params": [
+      {
+       "name": "data",
+       "type": "byte[]",
+       "default": null
+      }
+     ],
+     "returns": "void",
+     "doc": ""
+    },
+    {
+     "name": "readLine",
+     "static": false,
+     "params": [],
+     "returns": "string",
+     "doc": "The next line without \"\\n\" or \"\\r\\n\", or null when the server has closed the connection. Bytes that aren't valid UTF-8 become U+FFFD."
+    },
+    {
+     "name": "read",
+     "static": false,
+     "params": [
+      {
+       "name": "length",
+       "type": "int",
+       "default": null
+      }
+     ],
+     "returns": "byte[]",
+     "doc": "Up to `length` bytes, as soon as any arrive; an empty array once the server has closed the connection."
+    },
+    {
+     "name": "readExactly",
+     "static": false,
+     "params": [
+      {
+       "name": "length",
+       "type": "int",
+       "default": null
+      }
+     ],
+     "returns": "byte[]",
+     "doc": "Exactly `length` bytes; throws NetworkException if the connection closes first."
+    },
+    {
+     "name": "readAll",
+     "static": false,
+     "params": [],
+     "returns": "byte[]",
+     "doc": "Everything until the server closes the connection."
+    },
+    {
+     "name": "close",
+     "static": false,
+     "params": [],
+     "returns": "void",
+     "doc": "Closes the connection. Closing twice does nothing."
+    }
+   ]
+  },
+  "Response": {
+   "name": "Response",
+   "kind": "class",
+   "extends": null,
+   "final": false,
+   "module": "std/http",
+   "doc": "The response to an HTTP request.",
+   "properties": [
+    {
+     "name": "status",
+     "type": "int",
+     "static": false,
+     "doc": "The status code, such as 200, and its reason phrase, such as \"OK\"."
+    },
+    {
+     "name": "reason",
+     "type": "string",
+     "static": false,
+     "doc": ""
+    },
+    {
+     "name": "headers",
+     "type": "map[string, string]",
+     "static": false,
+     "doc": "Header names in lowercase; a header sent more than once has its values joined with \", \"."
+    },
+    {
+     "name": "bytes",
+     "type": "byte[]",
+     "static": false,
+     "doc": "The body, as bytes."
+    },
+    {
+     "name": "url",
+     "type": "string",
+     "static": false,
+     "doc": "The URL that answered, after any redirects."
+    }
+   ],
+   "methods": [
+    {
+     "name": "__construct",
+     "static": false,
+     "params": [
+      {
+       "name": "status",
+       "type": "int",
+       "default": null
+      },
+      {
+       "name": "reason",
+       "type": "string",
+       "default": null
+      },
+      {
+       "name": "headers",
+       "type": "map[string, string]",
+       "default": null
+      },
+      {
+       "name": "bytes",
+       "type": "byte[]",
+       "default": null
+      },
+      {
+       "name": "url",
+       "type": "string",
+       "default": null
+      }
+     ],
+     "returns": "void",
+     "doc": ""
+    },
+    {
+     "name": "text",
+     "static": false,
+     "params": [],
+     "returns": "string",
+     "doc": "The body as text. Throws InvalidUtf8Exception if it isn't UTF-8."
+    },
+    {
+     "name": "header",
+     "static": false,
+     "params": [
+      {
+       "name": "name",
+       "type": "string",
+       "default": null
+      }
+     ],
+     "returns": "string",
+     "doc": "A header's value, by name in any case, or null if it wasn't sent."
+    },
+    {
+     "name": "ok",
+     "static": false,
+     "params": [],
+     "returns": "bool",
+     "doc": "Whether the status is below 400, as in requests."
+    },
+    {
+     "name": "raiseForStatus",
+     "static": false,
+     "params": [],
+     "returns": "void",
+     "doc": "Throws HttpException, with the status as its code, for a 4xx or 5xx status."
+    }
+   ]
+  },
+  "Request": {
+   "name": "Request",
+   "kind": "class",
+   "extends": null,
+   "final": false,
+   "module": "std/http/server",
+   "doc": "An HTTP request received by the server.",
+   "properties": [
+    {
+     "name": "method",
+     "type": "string",
+     "static": false,
+     "doc": "\"GET\", \"POST\", ... in upper case."
+    },
+    {
+     "name": "path",
+     "type": "string",
+     "static": false,
+     "doc": "The path, percent-decoded: \"/files/a b.txt\"."
+    },
+    {
+     "name": "rawPath",
+     "type": "string",
+     "static": false,
+     "doc": "The path as the client sent it: \"/files/a%20b.txt\"."
+    },
+    {
+     "name": "rawQuery",
+     "type": "string",
+     "static": false,
+     "doc": "What follows \"?\" in the URL, or \"\"."
+    },
+    {
+     "name": "protocol",
+     "type": "string",
+     "static": false,
+     "doc": "\"HTTP/1.1\" or \"HTTP/1.0\"."
+    },
+    {
+     "name": "scheme",
+     "type": "string",
+     "static": false,
+     "doc": "\"http\", or \"https\" when a trusted proxy says the client used HTTPS (see http_serve's trustProxy)."
+    },
+    {
+     "name": "headers",
+     "type": "map[string, string]",
+     "static": false,
+     "doc": "Header names in lower case. Repeated headers are joined with \", \"."
+    },
+    {
+     "name": "bytes",
+     "type": "byte[]",
+     "static": false,
+     "doc": ""
+    },
+    {
+     "name": "remoteAddress",
+     "type": "string",
+     "static": false,
+     "doc": "\"address:port\" of the client; \"unix\" for a client of a Unix socket. With http_serve's trustProxy, the address a proxy such as nginx forwarded, without a port."
+    },
+    {
+     "name": "params",
+     "type": "map[string, string]",
+     "static": false,
+     "doc": "The path's wildcards, set by Router."
+    }
+   ],
+   "methods": [
+    {
+     "name": "__construct",
+     "static": false,
+     "params": [
+      {
+       "name": "method",
+       "type": "string",
+       "default": null
+      },
+      {
+       "name": "rawPath",
+       "type": "string",
+       "default": null
+      },
+      {
+       "name": "rawQuery",
+       "type": "string",
+       "default": null
+      },
+      {
+       "name": "protocol",
+       "type": "string",
+       "default": null
+      },
+      {
+       "name": "headers",
+       "type": "map[string, string]",
+       "default": null
+      },
+      {
+       "name": "bytes",
+       "type": "byte[]",
+       "default": null
+      },
+      {
+       "name": "remoteAddress",
+       "type": "string",
+       "default": null
+      }
+     ],
+     "returns": "void",
+     "doc": ""
+    },
+    {
+     "name": "text",
+     "static": false,
+     "params": [],
+     "returns": "string",
+     "doc": "The body as text; throws InvalidUtf8Exception if it isn't UTF-8."
+    },
+    {
+     "name": "header",
+     "static": false,
+     "params": [
+      {
+       "name": "name",
+       "type": "string",
+       "default": null
+      }
+     ],
+     "returns": "string",
+     "doc": "A header's value (the name in any case), or null."
+    },
+    {
+     "name": "query",
+     "static": false,
+     "params": [
+      {
+       "name": "name",
+       "type": "string",
+       "default": null
+      }
+     ],
+     "returns": "string",
+     "doc": "A query string field (\"?page=2\"), or null."
+    },
+    {
+     "name": "form",
+     "static": false,
+     "params": [
+      {
+       "name": "name",
+       "type": "string",
+       "default": null
+      }
+     ],
+     "returns": "string",
+     "doc": "A field of a form posted as application/x-www-form-urlencoded, then of the query string, or null."
+    },
+    {
+     "name": "pathValue",
+     "static": false,
+     "params": [
+      {
+       "name": "name",
+       "type": "string",
+       "default": null
+      }
+     ],
+     "returns": "string",
+     "doc": "The value of a wildcard in the Router pattern that matched, such as \"id\" in \"/items/{id}\", or null."
+    }
+   ]
+  },
+  "ResponseWriter": {
+   "name": "ResponseWriter",
+   "kind": "class",
+   "extends": null,
+   "final": true,
+   "module": "std/http/server",
+   "doc": "Builds the response to a request. The status and headers can be changed until the handler returns; the body is sent with a Content-Length.",
+   "properties": [],
+   "methods": [
+    {
+     "name": "__construct",
+     "static": false,
+     "params": [],
+     "returns": "void",
+     "doc": ""
+    },
+    {
+     "name": "status",
+     "static": false,
+     "params": [
+      {
+       "name": "code",
+       "type": "int",
+       "default": null
+      }
+     ],
+     "returns": "void",
+     "doc": "Sets the status code (200 by default)."
+    },
+    {
+     "name": "statusCode",
+     "static": false,
+     "params": [],
+     "returns": "int",
+     "doc": ""
+    },
+    {
+     "name": "header",
+     "static": false,
+     "params": [
+      {
+       "name": "name",
+       "type": "string",
+       "default": null
+      },
+      {
+       "name": "value",
+       "type": "string",
+       "default": null
+      }
+     ],
+     "returns": "void",
+     "doc": "Sets a header, replacing any with the same name in any case."
+    },
+    {
+     "name": "getHeader",
+     "static": false,
+     "params": [
+      {
+       "name": "name",
+       "type": "string",
+       "default": null
+      }
+     ],
+     "returns": "string",
+     "doc": "A header set so far (the name in any case), or null."
+    },
+    {
+     "name": "write",
+     "static": false,
+     "params": [
+      {
+       "name": "text",
+       "type": "string",
+       "default": null
+      }
+     ],
+     "returns": "void",
+     "doc": "Appends text to the body."
+    },
+    {
+     "name": "writeBytes",
+     "static": false,
+     "params": [
+      {
+       "name": "data",
+       "type": "byte[]",
+       "default": null
+      }
+     ],
+     "returns": "void",
+     "doc": ""
+    },
+    {
+     "name": "redirect",
+     "static": false,
+     "params": [
+      {
+       "name": "url",
+       "type": "string",
+       "default": null
+      },
+      {
+       "name": "code",
+       "type": "int",
+       "default": "302"
+      }
+     ],
+     "returns": "void",
+     "doc": "Replies with a redirect to `url` (302 Found unless `code` says otherwise)."
+    },
+    {
+     "name": "error",
+     "static": false,
+     "params": [
+      {
+       "name": "code",
+       "type": "int",
+       "default": null
+      },
+      {
+       "name": "message",
+       "type": "string",
+       "default": "null"
+      }
+     ],
+     "returns": "void",
+     "doc": "Replies with `code` and its reason as plain text, like Go's http.Error: w->error(404) sends \"404 Not Found\"."
+    },
+    {
+     "name": "bytes",
+     "static": false,
+     "params": [],
+     "returns": "byte[]",
+     "doc": "The body written so far."
+    }
+   ]
+  },
+  "Router": {
+   "name": "Router",
+   "kind": "class",
+   "extends": null,
+   "final": true,
+   "module": "std/http/server",
+   "doc": "Sends each request to the handler whose pattern matches it best, like Go's ServeMux. A pattern is \"[METHOD ]/path\":  \"/about\"            only /about \"/static/\"          /static/ and everything below it \"/\"                 everything (what nothing else matches) \"/items/{id}\"       /items/7, with r->pathValue(\"id\") == \"7\" \"/files/{path...}\"  /files/a/b.txt, with path \"a/b.txt\" \"/{$}\"              only / itself \"POST /items\"       only POST requests; GET patterns also match HEAD  When several patterns match, the most specific wins: at the first segment where they differ, a fixed name beats {name}, which beats {name...} or a trailing \"/\"; then a longer pattern, then one with a method. A path that matches only with another method gets 405 Method Not Allowed; one that matches nothing, 404 Not Found. A path that matches only a \"/dir/\" pattern without its final slash is redirected to it.",
+   "properties": [],
+   "methods": [
+    {
+     "name": "__construct",
+     "static": false,
+     "params": [],
+     "returns": "void",
+     "doc": ""
+    },
+    {
+     "name": "handle",
+     "static": false,
+     "params": [
+      {
+       "name": "pattern",
+       "type": "string",
+       "default": null
+      },
+      {
+       "name": "handler",
+       "type": "function(Request, ResponseWriter): void",
+       "default": null
+      }
+     ],
+     "returns": "void",
+     "doc": ""
+    },
+    {
+     "name": "notFound",
+     "static": false,
+     "params": [
+      {
+       "name": "handler",
+       "type": "function(Request, ResponseWriter): void",
+       "default": null
+      }
+     ],
+     "returns": "void",
+     "doc": "Sets the handler for paths that match no pattern (by default, a plain 404 Not Found)."
+    },
+    {
+     "name": "serve",
+     "static": false,
+     "params": [
+      {
+       "name": "r",
+       "type": "Request",
+       "default": null
+      },
+      {
+       "name": "w",
+       "type": "ResponseWriter",
+       "default": null
+      }
+     ],
+     "returns": "void",
+     "doc": "Handles a request: finds the best route and calls its handler."
+    },
+    {
+     "name": "handler",
+     "static": false,
+     "params": [],
+     "returns": "function(Request, ResponseWriter): void",
+     "doc": "The router as a handler, for http_serve and the http_* wrappers."
+    }
+   ]
+  }
+ }
+}

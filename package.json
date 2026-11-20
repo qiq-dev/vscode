@@ -1,0 +1,82 @@
+{
+  "name": "qiq",
+  "displayName": "qiq",
+  "description": "qiq language support: syntax highlighting, compile errors as you type, completion with auto-import, hovers, parameter hints, go to definition, and the outline.",
+  "version": "0.1.0",
+  "publisher": "asimlqt",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Snippets"
+  ],
+  "keywords": [
+    "qiq"
+  ],
+  "main": "./src/extension.js",
+  "activationEvents": [],
+  "contributes": {
+    "languages": [
+      {
+        "id": "qiq",
+        "aliases": [
+          "qiq"
+        ],
+        "extensions": [
+          ".qiq"
+        ],
+        "configuration": "./language-configuration.json"
+      },
+      {
+        "id": "qiq-mod",
+        "aliases": [
+          "qiq.mod",
+          "qiq.sum"
+        ],
+        "filenames": [
+          "qiq.mod",
+          "qiq.sum"
+        ],
+        "configuration": "./language-configuration-mod.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "qiq",
+        "scopeName": "source.qiq",
+        "path": "./syntaxes/qiq.tmLanguage.json"
+      },
+      {
+        "language": "qiq-mod",
+        "scopeName": "source.qiq-mod",
+        "path": "./syntaxes/qiq-mod.tmLanguage.json"
+      }
+    ],
+    "snippets": [
+      {
+        "language": "qiq",
+        "path": "./snippets/qiq.json"
+      }
+    ],
+    "configuration": {
+      "title": "qiq",
+      "properties": {
+        "qiq.path": {
+          "type": "string",
+          "default": "qiq",
+          "description": "The qiq executable used to check for compile errors."
+        },
+        "qiq.diagnostics.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show compile errors (from `qiq check`) as you type."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "test": "node test/run.js",
+    "stdlib": "python3 scripts/generate-stdlib.py"
+  }
+}

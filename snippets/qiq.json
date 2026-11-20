@@ -1,0 +1,114 @@
+{
+  "function": {
+    "prefix": "function",
+    "body": ["function ${1:name}(${2}): ${3:void} {", "\t$0", "}"],
+    "description": "A function"
+  },
+  "anonymous function": {
+    "prefix": "func",
+    "body": ["function(${1}): ${2:void} {", "\t$0", "}"],
+    "description": "An anonymous function"
+  },
+  "arrow function": {
+    "prefix": "fn",
+    "body": ["fn(${1}) => ${0}"],
+    "description": "An arrow function: fn(int x) => x * 2"
+  },
+  "class": {
+    "prefix": "class",
+    "body": [
+      "class ${1:Name} {",
+      "\tpublic ${2:string} ${3:name};",
+      "",
+      "\tfunction __construct(${2:string} ${3:name}) {",
+      "\t\tthis->${3:name} = ${3:name};",
+      "\t}",
+      "$0",
+      "}"
+    ],
+    "description": "A class with a property and a constructor"
+  },
+  "interface": {
+    "prefix": "interface",
+    "body": ["interface ${1:Name} {", "\tfunction ${2:method}(${3}): ${4:void};", "}"],
+    "description": "An interface"
+  },
+  "method": {
+    "prefix": "method",
+    "body": ["${1|public,private,protected|} function ${2:name}(${3}): ${4:void} {", "\t$0", "}"],
+    "description": "A method"
+  },
+  "constructor": {
+    "prefix": "__construct",
+    "body": ["function __construct(${1}) {", "\t$0", "}"],
+    "description": "A constructor"
+  },
+  "if": {
+    "prefix": "if",
+    "body": ["if (${1:condition}) {", "\t$0", "}"],
+    "description": "if"
+  },
+  "if else": {
+    "prefix": "ifelse",
+    "body": ["if (${1:condition}) {", "\t$2", "} else {", "\t$0", "}"],
+    "description": "if / else"
+  },
+  "else if": {
+    "prefix": "elseif",
+    "body": ["else if (${1:condition}) {", "\t$0", "}"],
+    "description": "else if (qiq writes it as two words)"
+  },
+  "foreach": {
+    "prefix": "foreach",
+    "body": ["foreach (${1:items} as ${2:item}) {", "\t$0", "}"],
+    "description": "foreach over an array, map, or string"
+  },
+  "foreach key": {
+    "prefix": "foreachk",
+    "body": ["foreach (${1:items} as ${2:key} => ${3:value}) {", "\t$0", "}"],
+    "description": "foreach with the index or key"
+  },
+  "for range": {
+    "prefix": "for",
+    "body": ["foreach (range(${1:0}, ${2:9}) as ${3:i}) {", "\t$0", "}"],
+    "description": "Count with range (qiq has no C-style for loop)"
+  },
+  "while": {
+    "prefix": "while",
+    "body": ["while (${1:condition}) {", "\t$0", "}"],
+    "description": "while"
+  },
+  "switch": {
+    "prefix": "switch",
+    "body": ["switch (${1:value}) {", "\tcase ${2:1}:", "\t\t$3", "\tdefault:", "\t\t$0", "}"],
+    "description": "switch (cases don't fall through)"
+  },
+  "try catch": {
+    "prefix": "try",
+    "body": ["try {", "\t$1", "} catch (${2:Exception} ${3:e}) {", "\t$0", "}"],
+    "description": "try / catch"
+  },
+  "try finally": {
+    "prefix": "tryf",
+    "body": ["try {", "\t$1", "} catch (${2:Exception} ${3:e}) {", "\t$4", "} finally {", "\t$0", "}"],
+    "description": "try / catch / finally"
+  },
+  "import": {
+    "prefix": "import",
+    "body": ["import ${2:Name} from \"${1:path}\";"],
+    "description": "import names from a file, module, or std/ path"
+  },
+  "http server": {
+    "prefix": "httpserver",
+    "body": [
+      "import Request, ResponseWriter, Router, http_log, http_serve from \"std/http/server\";",
+      "",
+      "Router router = new Router();",
+      "router->handle(\"GET /${1:hello}/{name}\", function(Request r, ResponseWriter w): void {",
+      "\tw->write(\"Hello, \" + r->pathValue(\"name\") + \"!\\n\");",
+      "});",
+      "http_serve(\":${2:8080}\", http_log(router->handler()));"
+    ],
+    "description": "A web server with a router"
+  }
+}
