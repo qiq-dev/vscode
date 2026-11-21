@@ -24,6 +24,25 @@ function parseError(output, entry, cwd) {
   return { file: entry, line: null, column: null, message: text };
 }
 
+/** Where on `line` to underline an error whose message quotes something
+ * ('y', '+', 'Item'), searching from `column` (counting from 0): the first
+ * quoted text found there, as a whole word if it is a name. The compiler
+ * positions many errors at the start of the statement they're in, so this
+ * points at what the message is about. The leading context, such as
+ * `function 'f': `, is skipped. Returns { start, end } or null. */
+function quotedOnLine(text, column, message) {
+  const body = message.replace(/^(?:(?:function '[^']*'|anonymous function): )+/, "");
+  for (const [, quoted] of body.matchAll(/'([^'\n]+)'/g)) {
+    const isName = /^[A-Za-z_][A-Za-z0-9_]*$/.test(quoted);
+    const escaped = quoted.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const pattern = new RegExp(isName ? `(?<![A-Za-z0-9_$])${escaped}(?![A-Za-z0-9_])` : escaped, "g");
+    pattern.lastIndex = column;
+    const match = pattern.exec(text);
+    if (match) return { start: match.index, end: match.index + quoted.length };
+  }
+  return null;
+}
+
 /** Runs `qiq check --stdin <file>` with `text` as the file's contents.
  * Resolves to the error (see parseError), or null when the file compiles.
  * Rejects when qiq can't be run, e.g. ENOENT when it isn't installed. */
@@ -45,4 +64,4 @@ function check(qiq, file, text, timeout = 10000) {
   });
 }
 
-module.exports = { parseError, check };
+module.exports = { parseError, quotedOnLine, check };

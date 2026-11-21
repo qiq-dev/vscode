@@ -16,8 +16,9 @@ plus highlighting for `qiq.mod` and `qiq.sum`.
   error it reports, which also appears in the Problems panel. The compiler
   stops at the first error, so there is at most one per file. An error in an
   imported file is shown in that file and mentioned on the first line of the
-  one you're editing. Errors the compiler reports without a line (most type
-  errors, for now) are put on the first line.
+  one you're editing. Type errors are reported at the start of the statement
+  they're in, so when the message quotes a name or operator on that line
+  (`variable 'y' is not declared`), that is what's underlined.
 - **Completion**
   - Everything in scope: variables (with their types, including ones
     inferred from `x = new Item()` and `foreach` loops), parameters, `this`,
@@ -125,8 +126,8 @@ ELECTRON_RUN_AS_NODE=1 code test/run.js      # or: node test/run.js
 - `test/analysis.test.js`: reading qiq, scopes, types across files and modules
 - `test/diagnostics.test.js`: reading compiler errors
 - `test/extension.test.js`: the completion, hover, parameter hint, definition,
-  and outline providers, and compile errors (with the built compiler,
-  `../target/*/qiq`), against a stand-in for VS Code's API
+  and outline providers, and compile errors (with the compiler in `$QIQ`, or
+  one built in `../lang/target`), against a stand-in for VS Code's API
 - `test/grammar.test.js`: highlighting scopes, with the TextMate engine
   VS Code uses (found inside VS Code, or set `QIQ_VSCODE_APP` to its
   `resources/app` directory)

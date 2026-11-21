@@ -571,12 +571,17 @@ const symbolProvider = {
 
 const CHECK_DELAY = 300;
 
-/** The range to underline: the word at the error's position, or one
- * character there; the whole first line when the error has no position. */
+/** The range to underline: what the message quotes, when it's on the
+ * error's line (see diagnostics.quotedOnLine), else the word at the error's
+ * position, or one character there. The whole first line when the error
+ * has no position. */
 function errorRange(document, error) {
   if (error.line === null) return document.lineAt(0).range;
   const line = Math.min(error.line - 1, document.lineCount - 1);
-  const start = new vscode.Position(line, Math.max(0, error.column - 1));
+  const column = Math.max(0, error.column - 1);
+  const quoted = diagnostics.quotedOnLine(document.lineAt(line).text, column, error.message);
+  if (quoted) return new vscode.Range(new vscode.Position(line, quoted.start), new vscode.Position(line, quoted.end));
+  const start = new vscode.Position(line, column);
   const word = document.getWordRangeAtPosition(start);
   if (word && word.start.compareTo(start) === 0) return word;
   return new vscode.Range(start, new vscode.Position(line, start.character + 1));

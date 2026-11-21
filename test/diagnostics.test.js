@@ -4,7 +4,7 @@
 "use strict";
 
 const assert = require("assert");
-const { parseError, check } = require("../src/diagnostics");
+const { parseError, quotedOnLine, check } = require("../src/diagnostics");
 
 const tests = [];
 const test = (name, fn) => tests.push({ name, fn });
@@ -38,6 +38,17 @@ test("errors without a position", () => {
     message: "import cycle: a -> b",
   });
   assert.strictEqual(parseError("", "/p/main.qiq", "/p"), null);
+});
+
+test("finding what an error message quotes", () => {
+  assert.deepStrictEqual(quotedOnLine("print(y);", 0, "variable 'y' is not declared"), { start: 6, end: 7 });
+  // Whole words only, from the error's column, after the function context.
+  assert.deepStrictEqual(quotedOnLine("  int xs = x + 1;", 2, "function 'xs': variable 'x' is not declared"), { start: 11, end: 12 });
+  assert.deepStrictEqual(quotedOnLine("a + b + \"s\";", 0, "'+' requires two ints; found int and string"), { start: 2, end: 3 });
+  // A quoted name that isn't on the line: the next one that is.
+  assert.deepStrictEqual(quotedOnLine("A a = new A();", 0, "constructor 'B' or 'A' expects 1 argument(s)"), { start: 0, end: 1 });
+  assert.strictEqual(quotedOnLine("print(1);", 0, "non-void function must return a value"), null);
+  assert.strictEqual(quotedOnLine("print(y);", 7, "variable 'y' is not declared"), null);
 });
 
 test("a missing executable rejects", async () => {

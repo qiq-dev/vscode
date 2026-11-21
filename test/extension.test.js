@@ -353,8 +353,12 @@ test("go to definition and the outline", async () => {
   assert.deepStrictEqual(symbols[0].children.map((c) => c.name), ["items", "count", "owner", "add"]);
 });
 
-// The real compiler, when it has been built; otherwise the test is skipped.
-const QIQ = ["release", "debug"].map((build) => path.join(__dirname, "../../target", build, "qiq")).find(fs.existsSync);
+// The real compiler: $QIQ, or one built in a qiq repository next to this
+// one (../lang); otherwise the test is skipped.
+const QIQ = [
+  process.env.QIQ,
+  ...["release", "debug"].map((build) => path.join(__dirname, "../../lang/target", build, "qiq")),
+].find((file) => file && fs.existsSync(file));
 
 test("compile errors as you type", async () => {
   if (!QIQ) return console.log("     (skipped: build qiq first)");
@@ -378,10 +382,17 @@ test("compile errors as you type", async () => {
 
   assert.deepStrictEqual(await edit(file, 'print("hi");\n'), []);
 
-  // An error without a position is put on the first line.
+  // Type errors are positioned at their statement; what the message quotes
+  // is underlined.
   const [undeclared] = await edit(file, 'print("hi");\nprint(y);\n');
   assert.strictEqual(undeclared.message, "variable 'y' is not declared");
-  assert.strictEqual(undeclared.range.start.line, 0);
+  assert.deepStrictEqual([undeclared.range.start.line, undeclared.range.start.character, undeclared.range.end.character], [1, 6, 7]);
+  const [inFunction] = await edit(file, "function f(int n): int {\n  int x = \"a\";\n  return x;\n}\nprint(f(1));\n");
+  assert.strictEqual(inFunction.message, "function 'f': cannot initialize int variable 'x' with string");
+  assert.deepStrictEqual([inFunction.range.start.line, inFunction.range.start.character], [1, 6]);
+  const [missingReturn] = await edit(file, "function f(int n): int {\n  print(n);\n}\n");
+  assert.match(missingReturn.message, /must return a value on every path/);
+  assert.deepStrictEqual([missingReturn.range.start.line, missingReturn.range.start.character], [0, 9]);
 
   // An error in an imported file is shown there and mentioned here.
   const [imported] = await edit(file, 'import half from "./lib";\nprint(half(4));\n');
