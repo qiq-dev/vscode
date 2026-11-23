@@ -1716,6 +1716,86 @@
    "module": "std/os",
    "category": "Program"
   },
+  "exec": {
+   "name": "exec",
+   "params": [
+    {
+     "name": "command",
+     "type": "string[]",
+     "default": null,
+     "doc": "The program followed by its arguments, such as `[\"git\", \"status\"]`. The program is looked up on `PATH` unless it contains a `/`."
+    },
+    {
+     "name": "input",
+     "type": "string",
+     "default": "null",
+     "doc": "Text written to the command's standard input. Without it, the command's standard input is empty."
+    },
+    {
+     "name": "cwd",
+     "type": "string",
+     "default": "null",
+     "doc": "The directory the command runs in; the program's own by default."
+    },
+    {
+     "name": "env",
+     "type": "map[string, string]",
+     "default": "null",
+     "doc": "Environment variables to add or replace for the command. It also gets the program's other variables."
+    },
+    {
+     "name": "timeout",
+     "type": "int",
+     "default": "0",
+     "doc": "Seconds the command may run before it's killed; 0 for no limit."
+    }
+   ],
+   "returns": "ProcessResult",
+   "summary": "Run a program and wait for it",
+   "doc": "Runs `command`, waits for it to finish, and returns a ProcessResult with its exit status and everything it wrote to standard output and standard error. No shell is involved: each element of `command` reaches the program as one argument, exactly as given, so spaces, quotes, `$`, and `;` need no escaping and can't be used to inject another command. Use shell for pipes and redirects.",
+   "module": "std/os",
+   "category": "Program"
+  },
+  "shell": {
+   "name": "shell",
+   "params": [
+    {
+     "name": "command",
+     "type": "string",
+     "default": null,
+     "doc": "A shell command line, such as `ls *.qiq | wc -l`."
+    },
+    {
+     "name": "input",
+     "type": "string",
+     "default": "null",
+     "doc": "Text written to the command's standard input."
+    },
+    {
+     "name": "cwd",
+     "type": "string",
+     "default": "null",
+     "doc": "The directory the command runs in."
+    },
+    {
+     "name": "env",
+     "type": "map[string, string]",
+     "default": "null",
+     "doc": "Environment variables to add or replace."
+    },
+    {
+     "name": "timeout",
+     "type": "int",
+     "default": "0",
+     "doc": "Seconds before the command is killed; 0 for no limit."
+    }
+   ],
+   "returns": "ProcessResult",
+   "summary": "Run a command with the system shell",
+   "doc": "Runs `command` with `/bin/sh -c`, for pipes, redirects, wildcards, `&&`, and variables, and returns a ProcessResult. It's `exec([\"/bin/sh\", \"-c\", command], ...)`, with the same settings and errors.",
+   "module": "std/os",
+   "category": "Program"
+  },
   "to_int": {
    "name": "to_int",
    "params": [
@@ -1947,13 +2027,23 @@
    "properties": [],
    "methods": []
   },
+  "ProcessException": {
+   "name": "ProcessException",
+   "kind": "class",
+   "extends": "RuntimeException",
+   "final": false,
+   "module": null,
+   "doc": "A map lookup used a key that is not in the map. A command couldn't be run (std/os exec and shell): it wasn't found, isn't executable, the working directory doesn't exist, or it ran past its timeout. A command that runs and exits with an error status doesn't throw; check ProcessResult's exitCode.",
+   "properties": [],
+   "methods": []
+  },
   "KeyNotFoundException": {
    "name": "KeyNotFoundException",
    "kind": "class",
    "extends": "RuntimeException",
    "final": false,
    "module": null,
-   "doc": "A map lookup used a key that is not in the map.",
+   "doc": "",
    "properties": [],
    "methods": []
   },
@@ -2894,6 +2984,76 @@
      ],
      "returns": "string",
      "doc": "With date()'s letters, as in format(\"D j M Y, H:i T\"): also u for the microseconds, v for the milliseconds, and e for the zone's name."
+    }
+   ]
+  },
+  "ProcessResult": {
+   "name": "ProcessResult",
+   "kind": "class",
+   "extends": null,
+   "final": false,
+   "module": "std/os",
+   "doc": "What a command run by exec or shell did: its exit status and everything it wrote to standard output and standard error.",
+   "properties": [
+    {
+     "name": "exitCode",
+     "type": "int",
+     "static": false,
+     "readonly": true,
+     "doc": "The exit status: 0 for success, 1 to 255 for failure, and 128 plus the signal's number if a signal ended the command."
+    },
+    {
+     "name": "stdout",
+     "type": "string",
+     "static": false,
+     "readonly": true,
+     "doc": "Everything the command wrote to standard output."
+    },
+    {
+     "name": "stderr",
+     "type": "string",
+     "static": false,
+     "readonly": true,
+     "doc": "Everything the command wrote to standard error."
+    }
+   ],
+   "methods": [
+    {
+     "name": "__construct",
+     "static": false,
+     "params": [
+      {
+       "name": "exitCode",
+       "type": "int",
+       "default": null
+      },
+      {
+       "name": "stdout",
+       "type": "string",
+       "default": null
+      },
+      {
+       "name": "stderr",
+       "type": "string",
+       "default": null
+      }
+     ],
+     "returns": "void",
+     "doc": ""
+    },
+    {
+     "name": "ok",
+     "static": false,
+     "params": [],
+     "returns": "bool",
+     "doc": "Whether the command succeeded (exited with status 0)."
+    },
+    {
+     "name": "check",
+     "static": false,
+     "params": [],
+     "returns": "ProcessResult",
+     "doc": "Throws ProcessException, with the exit status as its code and the error output in its message, unless the command succeeded. Returns the result, so `exec(...)->check()->stdout` reads the output of a command that must succeed."
     }
    ]
   },
