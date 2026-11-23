@@ -101,7 +101,7 @@
   "http server": {
     "prefix": "httpserver",
     "body": [
-      "import Request, ResponseWriter, Router, http_log, http_serve from \"std/http/server\";",
+      "import Request, ResponseWriter, Router, http_log, http_serve from \"std/net/http/server\";",
       "",
       "Router router = new Router();",
       "router->handle(\"GET /${1:hello}/{name}\", function(Request r, ResponseWriter w): void {",

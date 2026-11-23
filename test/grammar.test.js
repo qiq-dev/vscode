@@ -74,7 +74,7 @@ function scopes(grammar, source) {
 }
 
 const SOURCE = `// A comment with "quotes" and class
-import Router as Mux, http_serve from "std/http/server";
+import Router as Mux, http_serve from "std/net/http/server";
 
 abstract class Shape extends Base implements Drawable, Named {
     private static int count = 0;
@@ -100,12 +100,34 @@ function greet(string name, int times = 2): string {
     http_get(url, timeout: 5);
     return true && !false;
 }
+
+class Point {
+    const ORIGIN = 0;
+    function __construct(public readonly int x) {}
+}
+if (shape instanceof Circle circle) {
+    print(shape::class, Point::class, holder?->point?->norm());
+    count++;
+    total += 2;
+    mask <<= 1;
+}
 `;
 
 (async () => {
   const qiq = await grammarFor(path.join(__dirname, "..", "syntaxes", "qiq.tmLanguage.json"), "source.qiq");
   const scope = scopes(qiq, SOURCE);
   const expected = [
+    ["const", 1, "storage.type.const.qiq"],
+    ["readonly", 1, "storage.modifier.qiq"],
+    ["instanceof", 1, "keyword.operator.instanceof.qiq"],
+    ["shape::class", 1, "variable.other.qiq"],
+    ["::class", 1, "punctuation.separator.static.qiq"],
+    ["Point::class", 1, "entity.name.type.class.qiq"],
+    ["?->", 1, "punctuation.accessor.arrow.qiq"],
+    ["norm", 1, "entity.name.function.member.qiq"],
+    ["++", 1, "keyword.operator.increment.qiq"],
+    ["+=", 1, "keyword.operator.assignment.compound.qiq"],
+    ["<<=", 1, "keyword.operator.assignment.compound.qiq"],
     ["// A comment", 1, "comment.line.double-slash.qiq"],
     ["class", 1, "comment.line.double-slash.qiq"],
     ["import", 1, "keyword.control.import.qiq"],
@@ -113,7 +135,7 @@ function greet(string name, int times = 2): string {
     ["as", 1, "keyword.control.import.qiq"],
     ["http_serve", 1, "entity.name.function.qiq"],
     ["from", 1, "keyword.control.import.qiq"],
-    ["std/http/server", 1, "string.quoted.double.qiq"],
+    ["std/net/http/server", 1, "string.quoted.double.qiq"],
     ["abstract", 1, "storage.modifier.qiq"],
     ["class", 2, "storage.type.class.qiq"],
     ["Shape", 1, "entity.name.type.class.qiq"],

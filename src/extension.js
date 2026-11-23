@@ -36,6 +36,8 @@ async function contextFor(document) {
 // Formatting signatures and docs
 
 function parameterText(p) {
+  // `...`: any number of values for a query's placeholders (std/sql).
+  if (p.variadic) return `...${p.name}`;
   return `${p.type} ${p.name}${p.default !== null && p.default !== undefined ? ` = ${p.default}` : ""}`;
 }
 
@@ -67,8 +69,10 @@ function memberDocs(member, owner) {
   if (member.params) {
     const modifiers = `${member.visibility && member.visibility !== "public" ? member.visibility + " " : ""}${member.static ? "static " : ""}`;
     markdown.appendCodeblock(`${modifiers}function ${owner}::${signature(member.name, member.params, member.returns)}`, LANGUAGE);
+  } else if (member.constant) {
+    markdown.appendCodeblock(`${member.visibility && member.visibility !== "public" ? member.visibility + " " : ""}const ${member.type} ${owner}::${member.name} = ${member.value}`, LANGUAGE);
   } else {
-    markdown.appendCodeblock(`${member.visibility || "public"} ${member.static ? "static " : ""}${member.type} ${owner}::${member.name}`, LANGUAGE);
+    markdown.appendCodeblock(`${member.visibility || "public"} ${member.static ? "static " : ""}${member.readonly ? "readonly " : ""}${member.type} ${owner}::${member.name}`, LANGUAGE);
   }
   if (member.doc) markdown.appendMarkdown(member.doc);
   return markdown;
@@ -218,6 +222,14 @@ function accessTo(context, cls, offset) {
   return "public";
 }
 
+/** `::class`, the name of a class (or of an object's class). */
+function classNameItem() {
+  const item = new vscode.CompletionItem({ label: "class", description: "string" }, Kind.Keyword);
+  item.documentation = new vscode.MarkdownString("The class's name, as a string: `Circle::class` is `\"Circle\"`. On a value, the name of its object's class when the program runs.");
+  item.sortText = "2class";
+  return item;
+}
+
 function memberItems(context, found, offset, wantStatic) {
   if (!found || !found.type) return [];
   const cls = found.context.findClass(found.type) || context.findClass(found.type);
@@ -227,9 +239,11 @@ function memberItems(context, found, offset, wantStatic) {
   const items = [];
   // `parent::` calls the parent's methods, static or not.
   const include = (member) => (found.parent ? true : wantStatic ? member.static : !member.static);
+  // `Class::class` is the class's name.
+  if (wantStatic && !found.parent) items.push(classNameItem());
   for (const property of properties) {
     if (!include(property)) continue;
-    const item = new vscode.CompletionItem({ label: property.name, description: property.type }, Kind.Field);
+    const item = new vscode.CompletionItem({ label: property.name, description: property.type }, property.constant ? Kind.Constant : Kind.Field);
     item.documentation = memberDocs(property, property.owner);
     item.sortText = (property.owner === cls.name ? "0" : "1") + property.name;
     items.push(item);
@@ -346,6 +360,8 @@ const completionProvider = {
       }
       case "static": {
         const found = context.typeOfExpression(completion.expression.start, completion.expression.end, offset);
+        // `value::` only has `class`: the name of its object's class.
+        if (found && !found.static && found.type) return [classNameItem()];
         return memberItems(context, found && found.static ? found : null, offset, true);
       }
       case "new": {

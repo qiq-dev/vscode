@@ -221,7 +221,7 @@ test("types across files, modules, and the standard library", async () => {
   const main = `import Mux as WebMux from "github.com/ada/web/mux";
 import Page, render from "example.com/app/views/page";
 import File from "std/file";
-import Router, Request, ResponseWriter from "std/http/server";
+import Router, Request, ResponseWriter from "std/net/http/server";
 
 WebMux mux = new WebMux();
 File f = File::open("x");

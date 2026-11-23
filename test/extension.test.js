@@ -41,7 +41,7 @@ const vscode = {
       this.kind = kind;
     }
   },
-  CompletionItemKind: { Function: 3, Method: 2, Field: 5, Variable: 6, Class: 7, Interface: 8, Module: 9, Keyword: 14, File: 17, Folder: 19, TypeParameter: 25 },
+  CompletionItemKind: { Function: 3, Method: 2, Field: 5, Variable: 6, Class: 7, Interface: 8, Module: 9, Keyword: 14, File: 17, Folder: 19, Constant: 21, TypeParameter: 25 },
   SymbolKind: { Function: 12, Class: 5, Interface: 11, Field: 8, Method: 6, Constructor: 9 },
   SnippetString: class {
     constructor(value) {
@@ -246,9 +246,50 @@ test("standard library members and statics", async () => {
   assert.ok(labels(file).includes("readLine") && labels(file).includes("close"));
   assert.ok(!labels(file).includes("open"), "static methods aren't offered after ->");
   const statics = await complete(MAIN, 'import File from "std/file";\nFile::|', ":");
-  assert.deepStrictEqual(labels(statics).sort(), ["open", "stderr", "stdin", "stdout"]);
+  assert.deepStrictEqual(labels(statics).sort(), ["class", "open", "stderr", "stdin", "stdout"]);
   const exception = await complete(MAIN, "try { } catch (RuntimeException e) {\n    e->|\n}", ">");
   assert.deepStrictEqual(labels(exception).sort(), ["getCode", "getMessage"], "inherited from Exception");
+});
+
+test("newer syntax: ?->, ::class, instanceof, promotion, readonly, constants, and query values", async () => {
+  const classes =
+    "class Point {\n    const ORIGIN = 0;\n    const string LABEL = \"pt\";\n    function __construct(public readonly int x, private int y = 0, int plain = 1) {}\n    function norm(): int { return 0; }\n}\n" +
+    "class Holder {\n    public Point point;\n}\n";
+  // Promoted parameters are properties; a plain parameter isn't.
+  const members = await complete(MAIN, classes + "Point p = new Point(1);\np->|", ">");
+  assert.ok(labels(members).includes("x") && labels(members).includes("norm"), labels(members).join());
+  assert.ok(!labels(members).includes("y"), "a private promoted property isn't offered outside");
+  assert.ok(!labels(members).includes("plain"));
+  // After ?->, and through a ?-> chain.
+  const nullsafe = await complete(MAIN, classes + "Holder h = null;\nh?->point?->|", ">");
+  assert.ok(labels(nullsafe).includes("x"), labels(nullsafe).join());
+  // Constants and class after Class::, and class after value::.
+  const statics = await complete(MAIN, classes + "Point::|", ":");
+  assert.ok(["ORIGIN", "LABEL", "class"].every((name) => labels(statics).includes(name)), labels(statics).join());
+  const value = await complete(MAIN, classes + "Point p = new Point(1);\np::|", ":");
+  assert.deepStrictEqual(labels(value), ["class"]);
+  // instanceof binds a typed variable.
+  const bound = await complete(MAIN, classes + "Point q = null;\nif (q instanceof Point point) {\n    point->|\n}", ">");
+  assert.ok(labels(bound).includes("norm"), labels(bound).join());
+  // A string from ::class.
+  const name = await complete(MAIN, classes + "s = Point::class;\n|", "");
+  const variable = name.find((item) => (item.label.label || item.label) === "s");
+  assert.strictEqual(variable && variable.label.description, "string");
+  // The values after a query's SQL, and queryAs.
+  const { document, position } = at(MAIN, 'import Database from "std/sql";\nDatabase db = Database::open("sqlite::memory:");\ndb->query("select ?", 1, |');
+  const help = await providers.signature.provideSignatureHelp(document, position);
+  assert.strictEqual(help.signatures[0].label, "Database::query(string sql, ...values): Row[]");
+  assert.strictEqual(help.activeParameter, 1);
+  const database = await complete(MAIN, 'import Database from "std/sql";\nDatabase db = Database::open("x");\ndb->|', ">");
+  assert.ok(["queryAs", "queryOneAs", "cursor", "transaction"].every((method) => labels(database).includes(method)), labels(database).join());
+  // Hovers show readonly and const.
+  const hoverAt = async (source) => {
+    const { document, position } = at(MAIN, source);
+    const result = await providers.hover.provideHover(document, position);
+    return result ? result.contents.value : "";
+  };
+  assert.ok((await hoverAt(classes + "Point p = new Point(1);\nint a = p->|x;")).includes("readonly int Point::x"));
+  assert.ok((await hoverAt(classes + "int b = Point::OR|IGIN;")).includes("const int Point::ORIGIN = 0"));
 });
 
 test("completion with auto-import", async () => {
@@ -266,7 +307,7 @@ test("completion with auto-import", async () => {
   const router = freshItems.find((i) => i.label.label === "Router");
   assert.strictEqual(
     applyEdits(fresh.text, fresh.document, router.additionalTextEdits),
-    '// My program.\nimport Router from "std/http/server";\n\nprint(1);\nRou'
+    '// My program.\nimport Router from "std/net/http/server";\n\nprint(1);\nRou'
   );
   assert.ok(!freshItems.some((i) => i.label.label === "trim" && i.additionalTextEdits), "prelude functions need no import");
   const imported = await complete(MAIN, 'import File from "std/file";\nFil|');
@@ -288,7 +329,7 @@ test("new, types, and import paths and names", async () => {
   assert.ok(names.includes("Item") && names.includes("Router") && names.includes("RuntimeException"));
   assert.strictEqual(created.find((i) => i.label.label === "Item").insertText.value, "Item($0)");
   const paths = await complete(MAIN, 'import X from "std/|";', "/");
-  assert.ok(labels(paths).includes("std/http/server"));
+  assert.ok(labels(paths).includes("std/net/http/server"));
   const relative = await complete(MAIN, 'import X from "mod|";', '"');
   assert.ok(labels(relative).includes("models/"), labels(relative).join(","));
   const inside = await complete(MAIN, 'import X from "models/|";', "/");
@@ -328,7 +369,7 @@ test("parameter hints", async () => {
   const put = await hint('import file_put_contents from "std/file";\nfile_put_contents("a", |');
   assert.strictEqual(put.signatures[0].label, "file_put_contents(string path, string data, bool append = false): int");
   assert.strictEqual(put.activeParameter, 1);
-  const named = await hint('import http_get from "std/http";\nhttp_get("u", timeout: |');
+  const named = await hint('import http_get from "std/net/http";\nhttp_get("u", timeout: |');
   assert.strictEqual(named.activeParameter, 2);
   const constructor = await hint('import Item from "models/item";\nx = new Item("a", |');
   assert.strictEqual(constructor.signatures[0].label, "Item(string name, double price)");
@@ -354,10 +395,10 @@ test("go to definition and the outline", async () => {
 });
 
 // The real compiler: $QIQ, or one built in a qiq repository next to this
-// one (../lang); otherwise the test is skipped.
+// one (../qiq); otherwise the test is skipped.
 const QIQ = [
   process.env.QIQ,
-  ...["release", "debug"].map((build) => path.join(__dirname, "../../lang/target", build, "qiq")),
+  ...["release", "debug"].map((build) => path.join(__dirname, "../../qiq/target", build, "qiq")),
 ].find((file) => file && fs.existsSync(file));
 
 test("compile errors as you type", async () => {

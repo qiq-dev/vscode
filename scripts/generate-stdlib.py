@@ -17,26 +17,39 @@ import re
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-REPO = os.path.abspath(sys.argv[1] if len(sys.argv) > 1 else os.path.join(HERE, "..", ".."))
+
+
+def default_repository():
+    """The qiq repository next to this extension's folder (../qiq), or the
+    folder above it, where the extension used to live."""
+    for candidate in (os.path.join(HERE, "..", "..", "qiq"), os.path.join(HERE, "..", "..")):
+        if os.path.exists(os.path.join(candidate, "src", "compiler.rs")):
+            return candidate
+    sys.exit("can't find the qiq repository: give its path, as in python3 scripts/generate-stdlib.py ../qiq")
+
+
+REPO = os.path.abspath(sys.argv[1] if len(sys.argv) > 1 else default_repository())
 sys.path.insert(0, os.path.join(REPO, "docs", "src"))
 sys.path.insert(0, os.path.join(REPO, "docs"))
 import stdlib  # noqa: E402  (docs/src/stdlib.py)
 from std_imports import module_of  # noqa: E402  (docs/std_imports.py)
 
-# The standard library's files, and the import path each needs (None: the
-# prelude, available everywhere). Keep in step with STDLIB_MODULES in
-# src/compiler.rs.
-MODULES = [
-    ("string.qiq", None),
-    ("exceptions.qiq", None),
-    ("file.qiq", "std/file"),
-    ("date.qiq", "std/time"),
-    ("memory.qiq", "std/memory"),
-    ("program.qiq", "std/os"),
-    ("net.qiq", "std/net"),
-    ("http.qiq", "std/http"),
-    ("server.qiq", "std/http/server"),
-]
+def stdlib_modules():
+    """The standard library's files, and the import path each needs (None:
+    the prelude, available everywhere), from STDLIB_MODULES in
+    src/compiler.rs, so they can't fall out of step."""
+    source = open(os.path.join(REPO, "src", "compiler.rs")).read()
+    table = source[source.index("const STDLIB_MODULES"):]
+    table = table[: table.index("];")]
+    modules = []
+    for file, path in re.findall(r'\("([\w.]+\.qiq)",\s*(?:None|Some\("([^"]+)"\))', table):
+        modules.append((file, path or None))
+    if not modules:
+        sys.exit("found no standard library modules in src/compiler.rs")
+    return modules
+
+
+MODULES = stdlib_modules()
 
 
 def markdown(text):
@@ -71,6 +84,10 @@ def split_params(text):
 
 
 def parse_param(text):
+    # `...` ends a standard library method that takes the values for a
+    # query's placeholders (see Function::binds_values in src/compiler.rs).
+    if text.strip() == "...":
+        return {"name": "values", "type": "...", "default": None, "variadic": True}
     default = None
     if "=" in text:
         text, default = text.split("=", 1)
@@ -117,7 +134,7 @@ def parse_member(line):
     if rest.startswith(":"):
         returns = re.split(r"\s*[{;]\s*$|\s*\{", rest[1:].strip())[0].strip()
     return start.group(1), start.group(2), params, returns
-PROPERTY = re.compile(r"^\s*((?:(?:public|private|protected|static|final)\s+)+)(.+?)\s+(\w+)\s*(?:=.*)?;")
+PROPERTY = re.compile(r"^\s*((?:(?:public|private|protected|static|final|readonly)\s+)+)(.+?)\s+(\w+)\s*(?:=.*)?;")
 CLASS = re.compile(r"^(?:(?:final|abstract)\s+)*(class|interface)\s+(\w+)(?:\s+extends\s+(\w+))?(?:\s+implements\s+([\w\s,]+?))?\s*\{")
 
 
@@ -171,6 +188,7 @@ def classes():
                             "name": name,
                             "type": type_.strip(),
                             "static": "static" in modifiers,
+                            "readonly": "readonly" in modifiers,
                             "doc": " ".join(comment).strip(),
                         })
             comment = []
@@ -180,11 +198,39 @@ def classes():
     return result
 
 
+# Methods the compiler provides rather than the standard library's files
+# declare (see emit_query_as in src/compiler.rs): they read rows into the
+# class the result is used as, which completion shows as T.
+COMPILER_METHODS = {
+    "Database": [
+        ("queryAs", [{"name": "sql", "type": "string", "default": None}, {"name": "values", "type": "...", "default": None, "variadic": True}], "T[]",
+         "Runs a query and reads each row into an object of the class the result is used as, as in `User[] users = db->queryAs(sql, ...);`: through its constructor, by parameter name, or its public properties."),
+        ("queryOneAs", [{"name": "sql", "type": "string", "default": None}, {"name": "values", "type": "...", "default": None, "variadic": True}], "T",
+         "The first row of a query read into an object of the class the result is used as, as in `User user = db->queryOneAs(sql, ...);`, or null when there is none."),
+    ],
+    "Cursor": [
+        ("nextAs", [], "T", "The next row read into an object of the class the result is used as, as in `Event event = rows->nextAs();`, or null after the last."),
+        ("fetchAs", [{"name": "count", "type": "int", "default": None}], "T[]",
+         "Up to `count` more rows read into objects of the class the result is used as, as in `Event[] batch = rows->fetchAs(500);`."),
+    ],
+}
+
+
+def add_compiler_methods(classes):
+    for class_name, methods in COMPILER_METHODS.items():
+        if class_name not in classes:
+            continue
+        for name, params, returns, doc in methods:
+            classes[class_name]["methods"].append({"name": name, "static": False, "params": params, "returns": returns, "doc": doc})
+
+
 def main():
+    all_classes = classes()
+    add_compiler_methods(all_classes)
     data = {
         "modules": [path for _, path in MODULES if path],
         "functions": functions(),
-        "classes": classes(),
+        "classes": all_classes,
     }
     out = os.path.join(HERE, "..", "data", "stdlib.json")
     os.makedirs(os.path.dirname(out), exist_ok=True)

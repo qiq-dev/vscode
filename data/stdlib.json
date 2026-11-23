@@ -5,8 +5,10 @@
   "std/memory",
   "std/os",
   "std/net",
-  "std/http",
-  "std/http/server"
+  "std/net/http",
+  "std/net/http/server",
+  "std/crypto",
+  "std/sql"
  ],
  "functions": {
   "len": {
@@ -419,7 +421,7 @@
      "name": "start",
      "type": "int|double|char",
      "default": null,
-     "doc": "The first value."
+     "doc": "The first value. Given alone, as `range(count)`, it's a count instead: see below."
     },
     {
      "name": "end",
@@ -435,8 +437,8 @@
     }
    ],
    "returns": "int[]|double[]|char[]",
-   "summary": "An array of numbers or characters from start to end",
-   "doc": "Returns the values from `start` to `end`, as PHP's `range` does:\n\n\n- The result is `int[]` for ints, `double[]` if any argument is a double, and `char[]` for two chars, which count by Unicode code point (`range('a', 'e')`, `range('α', 'ε')`).\n\n- The end is included: `range(1, 3)` is `[1, 2, 3]`. When `end` is less than `start`, the values count down: `range(3, 1)` is `[3, 2, 1]`.\n\n- For doubles, value i is `start + i * step`, stopping at `end`, so rounding can leave the end out: `range(0.0, 0.3, 0.1)` has three values.\n\n\nIn `foreach (range(...) as i)` over ints, no array is built: the loop just counts.",
+   "summary": "A count from 0, or numbers or characters from start to end",
+   "doc": "`range(count)`, with one int, returns `0` up to `count - 1`: `range(3)` is `[0, 1, 2]`, and `range(0)` and a negative count give `[]`. It's the loop `for (i = 0; i < count; i++)` of other languages: `foreach (range(len(items)) as i)` goes through the indexes of `items`, and does nothing when it's empty. (PHP's `range` has no one-argument form.)\n\nWith two or three arguments, it returns the values from `start` to `end`, as PHP's `range` does:\n\n\n- The result is `int[]` for ints, `double[]` if any argument is a double, and `char[]` for two chars, which count by Unicode code point (`range('a', 'e')`, `range('α', 'ε')`).\n\n- The end is included: `range(1, 3)` is `[1, 2, 3]`. When `end` is less than `start`, the values count down: `range(3, 1)` is `[3, 2, 1]`. So `range(0, n - 1)` isn't empty when `n` is 0: it's `[0, -1]`. Use `range(n)`.\n\n- For doubles, value i is `start + i * step`, stopping at `end`, so rounding can leave the end out: `range(0.0, 0.3, 0.1)` has three values.\n\n\nIn `foreach (range(...) as i)` over ints, no array is built: the loop just counts.",
    "module": null,
    "category": "Arrays"
   },
@@ -622,7 +624,7 @@
    ],
    "returns": "bool",
    "summary": "Check whether a map has a value",
-   "doc": "Returns whether any entry of `map` has `value`. Numbers and bools compare by value, strings and chars by content, and arrays, maps, and objects by identity: the same instance, not an equal one.",
+   "doc": "Returns whether any entry of `map` has `value`. Values compare as `==` compares them: numbers and bools by value, strings and chars by content, and arrays and maps by contents (the same elements in order, or the same keys and values in any order). Objects and functions compare by identity: the same instance, not an equal one.",
    "module": null,
    "category": "Maps"
   },
@@ -1149,7 +1151,7 @@
    "returns": "Response",
    "summary": "Send an HTTP request",
    "doc": "Sends the request, follows redirects, and returns the final Response. Set a `Content-Type` header to describe a body, such as `application/json`.",
-   "module": "std/http",
+   "module": "std/net/http",
    "category": "HTTP"
   },
   "http_get": {
@@ -1177,7 +1179,7 @@
    "returns": "Response",
    "summary": "Send a GET request",
    "doc": "Same as `http_request(\"GET\", url, null, headers, timeout)`.",
-   "module": "std/http",
+   "module": "std/net/http",
    "category": "HTTP"
   },
   "http_post": {
@@ -1211,7 +1213,7 @@
    "returns": "Response",
    "summary": "Send a POST request",
    "doc": "Same as `http_request(\"POST\", url, body, headers, timeout)`.",
-   "module": "std/http",
+   "module": "std/net/http",
    "category": "HTTP"
   },
   "urlencode": {
@@ -1227,7 +1229,7 @@
    "returns": "string",
    "summary": "Percent-encode text for a query string",
    "doc": "Encodes the text's UTF-8 bytes as `%XX`, except letters, digits, and `-_.`, and writes spaces as `+`, as PHP's `urlencode` does. Use it for query strings and form bodies; for path segments, use rawurlencode.",
-   "module": "std/http",
+   "module": "std/net/http",
    "category": "HTTP"
   },
   "rawurlencode": {
@@ -1243,7 +1245,7 @@
    "returns": "string",
    "summary": "Percent-encode text for a URL path",
    "doc": "Encodes the text's UTF-8 bytes as `%XX`, except letters, digits, and `-_.~` (RFC 3986), as PHP's `rawurlencode` does. Spaces become `%20`.",
-   "module": "std/http",
+   "module": "std/net/http",
    "category": "HTTP"
   },
   "urldecode": {
@@ -1259,7 +1261,7 @@
    "returns": "string",
    "summary": "Decode percent-encoded text",
    "doc": "Decodes `%XX` sequences, and `+` as a space, as PHP's `urldecode` does. A `%` that isn't followed by two hex digits is kept as is.",
-   "module": "std/http",
+   "module": "std/net/http",
    "category": "HTTP"
   },
   "rawurldecode": {
@@ -1275,7 +1277,7 @@
    "returns": "string",
    "summary": "Decode a percent-encoded URL path",
    "doc": "Decodes `%XX` sequences like urldecode, but leaves `+` as is, as PHP's `rawurldecode` does. Use it for URL paths, where `+` is an ordinary character.",
-   "module": "std/http",
+   "module": "std/net/http",
    "category": "HTTP"
   },
   "http_build_query": {
@@ -1291,7 +1293,7 @@
    "returns": "string",
    "summary": "Build a query string from a map",
    "doc": "Returns `name=value` pairs joined with `&`, with names and values encoded by urlencode, in the map's order, as PHP's `http_build_query` does for a flat array.",
-   "module": "std/http",
+   "module": "std/net/http",
    "category": "HTTP"
   },
   "http_serve": {
@@ -1325,7 +1327,7 @@
    "returns": "void",
    "summary": "Run an HTTP server",
    "doc": "Listens on the address, starts the workers, and serves requests until the program gets SIGINT (Ctrl-C) or SIGTERM. Each worker serves one connection at a time; see How the server works.",
-   "module": "std/http/server",
+   "module": "std/net/http/server",
    "category": "HTTP server"
   },
   "http_file_server": {
@@ -1341,7 +1343,7 @@
    "returns": "function(Request, ResponseWriter): void",
    "summary": "A handler that serves files from a directory",
    "doc": "Returns a handler that serves the file at the request's path inside `directory`, with a `Content-Type` from its extension (see http_content_type). For a directory, it serves its `index.html`, or a listing of its files; a directory path without a trailing `/` is redirected to one. Only `GET` and `HEAD` are allowed (405 otherwise), and a path containing a `..` segment gets 404, so files outside the directory can't be reached. Files are read whole into memory.",
-   "module": "std/http/server",
+   "module": "std/net/http/server",
    "category": "HTTP server"
   },
   "http_strip_prefix": {
@@ -1363,7 +1365,7 @@
    "returns": "function(Request, ResponseWriter): void",
    "summary": "Remove a prefix from the path before calling a handler",
    "doc": "Returns a handler that removes `prefix` from the request's `path` and `rawPath` and calls `handler`, like Go's `http.StripPrefix`. A request whose path doesn't start with the prefix gets 404.",
-   "module": "std/http/server",
+   "module": "std/net/http/server",
    "category": "HTTP server"
   },
   "http_log": {
@@ -1379,7 +1381,7 @@
    "returns": "function(Request, ResponseWriter): void",
    "summary": "Log each request to stderr",
    "doc": "Returns a handler that calls `handler` and then writes a line to stderr in the style of `php -S`: the time, the client's address, the status, the method, the path, and how long the handler took. A handler of this shape that wraps another is often called *middleware*; write your own the same way.",
-   "module": "std/http/server",
+   "module": "std/net/http/server",
    "category": "HTTP server"
   },
   "http_content_type": {
@@ -1395,8 +1397,236 @@
    "returns": "string",
    "summary": "The Content-Type for a file name",
    "doc": "Looks up the file's extension, in any case, among common web types: HTML, CSS, JavaScript, JSON, text, images, fonts, audio, video, PDF, archives, and WebAssembly. Text types include `; charset=utf-8`.",
-   "module": "std/http/server",
+   "module": "std/net/http/server",
    "category": "HTTP server"
+  },
+  "md5": {
+   "name": "md5",
+   "params": [
+    {
+     "name": "text",
+     "type": "string",
+     "default": null,
+     "doc": "The text to hash, as its UTF-8 bytes."
+    }
+   ],
+   "returns": "string",
+   "summary": "Compute a string's MD5 digest",
+   "doc": "Returns the MD5 digest of `text` as 32 lowercase hex digits, like PHP's `md5`. The same as `hash(\"md5\", text)`.",
+   "module": "std/crypto",
+   "category": "Hashing and encoding"
+  },
+  "sha1": {
+   "name": "sha1",
+   "params": [
+    {
+     "name": "text",
+     "type": "string",
+     "default": null,
+     "doc": "The text to hash, as its UTF-8 bytes."
+    }
+   ],
+   "returns": "string",
+   "summary": "Compute a string's SHA-1 digest",
+   "doc": "Returns the SHA-1 digest of `text` as 40 lowercase hex digits, like PHP's `sha1`. The same as `hash(\"sha1\", text)`.",
+   "module": "std/crypto",
+   "category": "Hashing and encoding"
+  },
+  "hash": {
+   "name": "hash",
+   "params": [
+    {
+     "name": "algorithm",
+     "type": "string",
+     "default": null,
+     "doc": "The algorithm: `\"md5\"`, `\"sha1\"`, `\"sha224\"`, `\"sha256\"`, `\"sha384\"`, or `\"sha512\"`, in any case."
+    },
+    {
+     "name": "text",
+     "type": "string",
+     "default": null,
+     "doc": "The text to hash, as its UTF-8 bytes."
+    }
+   ],
+   "returns": "string",
+   "summary": "Compute a string's digest with a chosen algorithm",
+   "doc": "Returns the digest of `text` as lowercase hex, like PHP's `hash`.",
+   "module": "std/crypto",
+   "category": "Hashing and encoding"
+  },
+  "hash_hmac": {
+   "name": "hash_hmac",
+   "params": [
+    {
+     "name": "algorithm",
+     "type": "string",
+     "default": null,
+     "doc": "The algorithm: `\"md5\"`, `\"sha1\"`, `\"sha224\"`, `\"sha256\"`, `\"sha384\"`, or `\"sha512\"`, in any case."
+    },
+    {
+     "name": "text",
+     "type": "string",
+     "default": null,
+     "doc": "The message."
+    },
+    {
+     "name": "key",
+     "type": "string",
+     "default": null,
+     "doc": "The secret key."
+    }
+   ],
+   "returns": "string",
+   "summary": "Compute an HMAC",
+   "doc": "Returns the HMAC of `text` with `key` as lowercase hex, like PHP's `hash_hmac`, with the arguments in the same order. An HMAC shows that a message came from someone who knows the key and wasn't changed on the way, which is how webhooks and many APIs sign requests.",
+   "module": "std/crypto",
+   "category": "Hashing and encoding"
+  },
+  "hash_bytes": {
+   "name": "hash_bytes",
+   "params": [
+    {
+     "name": "algorithm",
+     "type": "string",
+     "default": null,
+     "doc": "The algorithm: `\"md5\"`, `\"sha1\"`, `\"sha224\"`, `\"sha256\"`, `\"sha384\"`, or `\"sha512\"`, in any case."
+    },
+    {
+     "name": "data",
+     "type": "byte[]",
+     "default": null,
+     "doc": "The bytes to hash."
+    }
+   ],
+   "returns": "byte[]",
+   "summary": "Compute the raw digest of bytes",
+   "doc": "Returns the digest of `data` as bytes, like PHP's `hash` with `binary` set. Use it for data that isn't text, such as a file read with `file_get_bytes`, and where a raw digest is needed; bin2hex turns it into hex.",
+   "module": "std/crypto",
+   "category": "Hashing and encoding"
+  },
+  "bin2hex": {
+   "name": "bin2hex",
+   "params": [
+    {
+     "name": "data",
+     "type": "byte[]",
+     "default": null,
+     "doc": "The bytes."
+    }
+   ],
+   "returns": "string",
+   "summary": "Write bytes as hex",
+   "doc": "Returns `data` as lowercase hex, two digits per byte, like PHP's `bin2hex`.",
+   "module": "std/crypto",
+   "category": "Hashing and encoding"
+  },
+  "base64_encode": {
+   "name": "base64_encode",
+   "params": [
+    {
+     "name": "text",
+     "type": "string",
+     "default": null,
+     "doc": "The text, encoded as its UTF-8 bytes."
+    }
+   ],
+   "returns": "string",
+   "summary": "Encode text as base64",
+   "doc": "Returns `text` in base64 (RFC 4648), with the standard alphabet and `=` padding, like PHP's `base64_encode`.",
+   "module": "std/crypto",
+   "category": "Hashing and encoding"
+  },
+  "base64_encode_bytes": {
+   "name": "base64_encode_bytes",
+   "params": [
+    {
+     "name": "data",
+     "type": "byte[]",
+     "default": null,
+     "doc": "The bytes."
+    }
+   ],
+   "returns": "string",
+   "summary": "Encode bytes as base64",
+   "doc": "Returns `data` in base64, as `base64_encode` does for text. Use it for binary data such as images, keys, and digests.",
+   "module": "std/crypto",
+   "category": "Hashing and encoding"
+  },
+  "base64_decode": {
+   "name": "base64_decode",
+   "params": [
+    {
+     "name": "text",
+     "type": "string",
+     "default": null,
+     "doc": "The base64 text."
+    }
+   ],
+   "returns": "string",
+   "summary": "Decode base64 into text",
+   "doc": "Returns the text that `text` encodes. The standard and the URL-safe alphabets are both accepted (`+` or `-`, `/` or `_`), whitespace and line breaks are skipped, and the `=` padding may be left out. The bytes it decodes to must be UTF-8 text.",
+   "module": "std/crypto",
+   "category": "Hashing and encoding"
+  },
+  "base64_decode_bytes": {
+   "name": "base64_decode_bytes",
+   "params": [
+    {
+     "name": "text",
+     "type": "string",
+     "default": null,
+     "doc": "The base64 text."
+    }
+   ],
+   "returns": "byte[]",
+   "summary": "Decode base64 into bytes",
+   "doc": "Returns the bytes that `text` encodes, accepting what `base64_decode` accepts. Use it for binary data, and for the parts of a JWT, which use the URL-safe alphabet without padding.",
+   "module": "std/crypto",
+   "category": "Hashing and encoding"
+  },
+  "bcrypt_hash": {
+   "name": "bcrypt_hash",
+   "params": [
+    {
+     "name": "password",
+     "type": "string",
+     "default": null,
+     "doc": "The password, as its UTF-8 bytes: at most 72 bytes."
+    },
+    {
+     "name": "cost",
+     "type": "int",
+     "default": "12",
+     "doc": "How much work hashing takes, as a power of two: 4 to 31. Each step doubles the time; 12 takes about a third of a second."
+    }
+   ],
+   "returns": "string",
+   "summary": "Hash a password for storing, with bcrypt",
+   "doc": "Returns a bcrypt hash of `password` with a new random salt, in the form PHP's `password_hash` makes: 60 characters starting `$2y$` and the cost, as in `$2y$12$`. The salt and cost are part of the hash, so store the hash and nothing else, and check a password against it with bcrypt_verify. Hashing the same password twice gives different hashes.",
+   "module": "std/crypto",
+   "category": "Hashing and encoding"
+  },
+  "bcrypt_verify": {
+   "name": "bcrypt_verify",
+   "params": [
+    {
+     "name": "password",
+     "type": "string",
+     "default": null,
+     "doc": "The password to check."
+    },
+    {
+     "name": "hash",
+     "type": "string",
+     "default": null,
+     "doc": "A hash from `bcrypt_hash`: a bcrypt hash starting `$2y$`, `$2b$`, or `$2a$`."
+    }
+   ],
+   "returns": "bool",
+   "summary": "Check a password against a bcrypt hash",
+   "doc": "Returns whether `password` is the password `hash` was made from, like PHP's `password_verify`. It hashes `password` again with the hash's salt and cost, so it takes as long as `bcrypt_hash` did, and compares the results in a way that takes the same time however much of them matches.",
+   "module": "std/crypto",
+   "category": "Hashing and encoding"
   },
   "argv": {
    "name": "argv",
@@ -1436,6 +1666,53 @@
    "returns": "string",
    "summary": "Read an environment variable",
    "doc": "Returns the value of the environment variable `name`, or `null` if it isn't set. An empty value is an empty string, not `null`.",
+   "module": "std/os",
+   "category": "Program"
+  },
+  "setenv": {
+   "name": "setenv",
+   "params": [
+    {
+     "name": "name",
+     "type": "string",
+     "default": null,
+     "doc": "The variable's name."
+    },
+    {
+     "name": "value",
+     "type": "string",
+     "default": null,
+     "doc": "Its new value."
+    }
+   ],
+   "returns": "void",
+   "summary": "Set an environment variable",
+   "doc": "Sets the environment variable `name` to `value` for the rest of the program, replacing any value it had. Like PHP's `putenv(\"NAME=value\")`, with the name and value apart. It affects what `getenv` returns and what the standard library reads from the environment: `TZ` sets the default time zone for `date` and DateTime (unless `date_default_timezone_set` chose one), `PGPASSWORD` and `MYSQL_PWD` are read when a Database opens without a password in its URL, and `SSL_CERT_FILE` and `SSL_CERT_DIR` when the first TLS connection is made.",
+   "module": "std/os",
+   "category": "Program"
+  },
+  "unsetenv": {
+   "name": "unsetenv",
+   "params": [
+    {
+     "name": "name",
+     "type": "string",
+     "default": null,
+     "doc": "The variable's name."
+    }
+   ],
+   "returns": "void",
+   "summary": "Remove an environment variable",
+   "doc": "Removes the environment variable `name`, so `getenv` returns `null` for it. Removing one that isn't set does nothing.",
+   "module": "std/os",
+   "category": "Program"
+  },
+  "getpid": {
+   "name": "getpid",
+   "params": [],
+   "returns": "int",
+   "summary": "Get the program's process ID",
+   "doc": "Returns the process ID of the running program, like PHP's `getmypid`. Each worker process of the HTTP server has its own, which makes it useful in log lines; it's also a simple way to make a name unique on the machine, such as a temporary file's.",
    "module": "std/os",
    "category": "Program"
   },
@@ -1611,6 +1888,62 @@
    "final": false,
    "module": null,
    "doc": "A network connection failed: the host couldn't be found, refused the connection, timed out, or failed the TLS certificate check.",
+   "properties": [],
+   "methods": []
+  },
+  "DatabaseException": {
+   "name": "DatabaseException",
+   "kind": "class",
+   "extends": "RuntimeException",
+   "final": false,
+   "module": null,
+   "doc": "A database couldn't be opened, or rejected a statement: an SQL syntax error, a broken constraint, a missing table, or the wrong number of values for the placeholders (std/sql). getSqlState() is the standard five-character SQLSTATE (\"42P01\"; \"HY000\" for a general error) and getCode() the database's own error number (SQLite's extended result code, MySQL's error number; 0 for PostgreSQL, which has none).",
+   "properties": [],
+   "methods": [
+    {
+     "name": "__construct",
+     "static": false,
+     "params": [
+      {
+       "name": "message",
+       "type": "string",
+       "default": "\"\""
+      },
+      {
+       "name": "code",
+       "type": "int",
+       "default": "0"
+      }
+     ],
+     "returns": "void",
+     "doc": ""
+    },
+    {
+     "name": "getSqlState",
+     "static": false,
+     "params": [],
+     "returns": "string",
+     "doc": ""
+    }
+   ]
+  },
+  "ConstraintViolationException": {
+   "name": "ConstraintViolationException",
+   "kind": "class",
+   "extends": "DatabaseException",
+   "final": false,
+   "module": null,
+   "doc": "A statement broke a constraint (SQLSTATE class 23): NOT NULL, CHECK, a foreign key, or a unique key.",
+   "properties": [],
+   "methods": []
+  },
+  "UniqueViolationException": {
+   "name": "UniqueViolationException",
+   "kind": "class",
+   "extends": "ConstraintViolationException",
+   "final": false,
+   "module": null,
+   "doc": "A row would duplicate another's value in a unique key or primary key.",
    "properties": [],
    "methods": []
   },
@@ -1811,6 +2144,759 @@
     }
    ]
   },
+  "Duration": {
+   "name": "Duration",
+   "kind": "class",
+   "extends": null,
+   "final": true,
+   "module": "std/time",
+   "doc": "A length of time, precise to the microsecond: what DateTime's until and since give, and what add and sub take. A day here is 24 hours; use DateTime's addDays for calendar days.",
+   "properties": [],
+   "methods": [
+    {
+     "name": "ofDays",
+     "static": true,
+     "params": [
+      {
+       "name": "days",
+       "type": "int",
+       "default": null
+      }
+     ],
+     "returns": "Duration",
+     "doc": ""
+    },
+    {
+     "name": "ofHours",
+     "static": true,
+     "params": [
+      {
+       "name": "hours",
+       "type": "int",
+       "default": null
+      }
+     ],
+     "returns": "Duration",
+     "doc": ""
+    },
+    {
+     "name": "ofMinutes",
+     "static": true,
+     "params": [
+      {
+       "name": "minutes",
+       "type": "int",
+       "default": null
+      }
+     ],
+     "returns": "Duration",
+     "doc": ""
+    },
+    {
+     "name": "ofSeconds",
+     "static": true,
+     "params": [
+      {
+       "name": "seconds",
+       "type": "int",
+       "default": null
+      }
+     ],
+     "returns": "Duration",
+     "doc": ""
+    },
+    {
+     "name": "ofMilliseconds",
+     "static": true,
+     "params": [
+      {
+       "name": "milliseconds",
+       "type": "int",
+       "default": null
+      }
+     ],
+     "returns": "Duration",
+     "doc": ""
+    },
+    {
+     "name": "ofMicroseconds",
+     "static": true,
+     "params": [
+      {
+       "name": "microseconds",
+       "type": "int",
+       "default": null
+      }
+     ],
+     "returns": "Duration",
+     "doc": ""
+    },
+    {
+     "name": "totalDays",
+     "static": false,
+     "params": [],
+     "returns": "int",
+     "doc": "The length in whole units, rounded toward zero: 90 minutes is 1 hour."
+    },
+    {
+     "name": "totalHours",
+     "static": false,
+     "params": [],
+     "returns": "int",
+     "doc": ""
+    },
+    {
+     "name": "totalMinutes",
+     "static": false,
+     "params": [],
+     "returns": "int",
+     "doc": ""
+    },
+    {
+     "name": "totalSeconds",
+     "static": false,
+     "params": [],
+     "returns": "int",
+     "doc": ""
+    },
+    {
+     "name": "totalMilliseconds",
+     "static": false,
+     "params": [],
+     "returns": "int",
+     "doc": ""
+    },
+    {
+     "name": "totalMicroseconds",
+     "static": false,
+     "params": [],
+     "returns": "int",
+     "doc": ""
+    },
+    {
+     "name": "plus",
+     "static": false,
+     "params": [
+      {
+       "name": "other",
+       "type": "Duration",
+       "default": null
+      }
+     ],
+     "returns": "Duration",
+     "doc": ""
+    },
+    {
+     "name": "minus",
+     "static": false,
+     "params": [
+      {
+       "name": "other",
+       "type": "Duration",
+       "default": null
+      }
+     ],
+     "returns": "Duration",
+     "doc": ""
+    },
+    {
+     "name": "multipliedBy",
+     "static": false,
+     "params": [
+      {
+       "name": "times",
+       "type": "int",
+       "default": null
+      }
+     ],
+     "returns": "Duration",
+     "doc": ""
+    },
+    {
+     "name": "negated",
+     "static": false,
+     "params": [],
+     "returns": "Duration",
+     "doc": ""
+    },
+    {
+     "name": "abs",
+     "static": false,
+     "params": [],
+     "returns": "Duration",
+     "doc": ""
+    },
+    {
+     "name": "isNegative",
+     "static": false,
+     "params": [],
+     "returns": "bool",
+     "doc": ""
+    },
+    {
+     "name": "isZero",
+     "static": false,
+     "params": [],
+     "returns": "bool",
+     "doc": ""
+    },
+    {
+     "name": "equals",
+     "static": false,
+     "params": [
+      {
+       "name": "other",
+       "type": "Duration",
+       "default": null
+      }
+     ],
+     "returns": "bool",
+     "doc": ""
+    },
+    {
+     "name": "compareTo",
+     "static": false,
+     "params": [
+      {
+       "name": "other",
+       "type": "Duration",
+       "default": null
+      }
+     ],
+     "returns": "int",
+     "doc": ""
+    }
+   ]
+  },
+  "DateTime": {
+   "name": "DateTime",
+   "kind": "class",
+   "extends": null,
+   "final": true,
+   "module": "std/time",
+   "doc": "An instant in time, shown in a time zone: like PHP's DateTimeImmutable, a DateTime never changes, and the methods that change something give a new one. Precise to the microsecond.",
+   "properties": [],
+   "methods": [
+    {
+     "name": "now",
+     "static": true,
+     "params": [
+      {
+       "name": "zone",
+       "type": "string",
+       "default": "null"
+      }
+     ],
+     "returns": "DateTime",
+     "doc": "The current time, in `zone` (or the default zone)."
+    },
+    {
+     "name": "of",
+     "static": true,
+     "params": [
+      {
+       "name": "year",
+       "type": "int",
+       "default": null
+      },
+      {
+       "name": "month",
+       "type": "int",
+       "default": null
+      },
+      {
+       "name": "day",
+       "type": "int",
+       "default": null
+      },
+      {
+       "name": "hour",
+       "type": "int",
+       "default": "0"
+      },
+      {
+       "name": "minute",
+       "type": "int",
+       "default": "0"
+      },
+      {
+       "name": "second",
+       "type": "int",
+       "default": "0"
+      },
+      {
+       "name": "microsecond",
+       "type": "int",
+       "default": "0"
+      },
+      {
+       "name": "zone",
+       "type": "string",
+       "default": "null"
+      }
+     ],
+     "returns": "DateTime",
+     "doc": "A date and time on `zone`'s clock. Throws InvalidArgumentException for fields that don't make a date or time, such as April 31."
+    },
+    {
+     "name": "fromTimestamp",
+     "static": true,
+     "params": [
+      {
+       "name": "seconds",
+       "type": "int",
+       "default": null
+      },
+      {
+       "name": "zone",
+       "type": "string",
+       "default": "null"
+      }
+     ],
+     "returns": "DateTime",
+     "doc": "The instant `seconds` after 1970-01-01 00:00:00 UTC (a Unix timestamp)."
+    },
+    {
+     "name": "fromTimestampMicros",
+     "static": true,
+     "params": [
+      {
+       "name": "microseconds",
+       "type": "int",
+       "default": null
+      },
+      {
+       "name": "zone",
+       "type": "string",
+       "default": "null"
+      }
+     ],
+     "returns": "DateTime",
+     "doc": "The instant `microseconds` after 1970-01-01 00:00:00 UTC."
+    },
+    {
+     "name": "parse",
+     "static": true,
+     "params": [
+      {
+       "name": "text",
+       "type": "string",
+       "default": null
+      },
+      {
+       "name": "format",
+       "type": "string",
+       "default": "null"
+      },
+      {
+       "name": "zone",
+       "type": "string",
+       "default": "null"
+      }
+     ],
+     "returns": "DateTime",
+     "doc": "Reads a date and time. Without a format: ISO 8601 and what databases write, such as \"2026-11-22\", \"2026-11-22 10:30:00\", or \"2026-11-22T10:30:00.125+01:00\". With one: PHP's createFromFormat letters, as in parse(\"22/11/2026 10:30\", \"d/m/Y H:i\"). A time with an offset or zone of its own is in it; others are in `zone` (or the default zone). Throws InvalidArgumentException when it can't."
+    },
+    {
+     "name": "year",
+     "static": false,
+     "params": [],
+     "returns": "int",
+     "doc": ""
+    },
+    {
+     "name": "month",
+     "static": false,
+     "params": [],
+     "returns": "int",
+     "doc": ""
+    },
+    {
+     "name": "day",
+     "static": false,
+     "params": [],
+     "returns": "int",
+     "doc": ""
+    },
+    {
+     "name": "hour",
+     "static": false,
+     "params": [],
+     "returns": "int",
+     "doc": ""
+    },
+    {
+     "name": "minute",
+     "static": false,
+     "params": [],
+     "returns": "int",
+     "doc": ""
+    },
+    {
+     "name": "second",
+     "static": false,
+     "params": [],
+     "returns": "int",
+     "doc": ""
+    },
+    {
+     "name": "microsecond",
+     "static": false,
+     "params": [],
+     "returns": "int",
+     "doc": ""
+    },
+    {
+     "name": "dayOfWeek",
+     "static": false,
+     "params": [],
+     "returns": "int",
+     "doc": "1 for Monday to 7 for Sunday, as ISO 8601 numbers them."
+    },
+    {
+     "name": "dayOfYear",
+     "static": false,
+     "params": [],
+     "returns": "int",
+     "doc": "1 for January 1."
+    },
+    {
+     "name": "daysInMonth",
+     "static": false,
+     "params": [],
+     "returns": "int",
+     "doc": ""
+    },
+    {
+     "name": "timestamp",
+     "static": false,
+     "params": [],
+     "returns": "int",
+     "doc": "Seconds since 1970-01-01 00:00:00 UTC (a Unix timestamp), rounded down."
+    },
+    {
+     "name": "timestampMicros",
+     "static": false,
+     "params": [],
+     "returns": "int",
+     "doc": "Microseconds since 1970-01-01 00:00:00 UTC."
+    },
+    {
+     "name": "zone",
+     "static": false,
+     "params": [],
+     "returns": "string",
+     "doc": "The zone's name: \"Europe/London\", \"UTC\", or \"+05:30\"."
+    },
+    {
+     "name": "offset",
+     "static": false,
+     "params": [],
+     "returns": "int",
+     "doc": "The zone's offset from UTC at this instant, in seconds: 3600 for +01:00."
+    },
+    {
+     "name": "withZone",
+     "static": false,
+     "params": [
+      {
+       "name": "zone",
+       "type": "string",
+       "default": null
+      }
+     ],
+     "returns": "DateTime",
+     "doc": "The same instant on another zone's clock."
+    },
+    {
+     "name": "withDate",
+     "static": false,
+     "params": [
+      {
+       "name": "year",
+       "type": "int",
+       "default": null
+      },
+      {
+       "name": "month",
+       "type": "int",
+       "default": null
+      },
+      {
+       "name": "day",
+       "type": "int",
+       "default": null
+      }
+     ],
+     "returns": "DateTime",
+     "doc": "Another date at the same time of day."
+    },
+    {
+     "name": "withTime",
+     "static": false,
+     "params": [
+      {
+       "name": "hour",
+       "type": "int",
+       "default": null
+      },
+      {
+       "name": "minute",
+       "type": "int",
+       "default": null
+      },
+      {
+       "name": "second",
+       "type": "int",
+       "default": "0"
+      },
+      {
+       "name": "microsecond",
+       "type": "int",
+       "default": "0"
+      }
+     ],
+     "returns": "DateTime",
+     "doc": "Another time of day on the same date."
+    },
+    {
+     "name": "addYears",
+     "static": false,
+     "params": [
+      {
+       "name": "years",
+       "type": "int",
+       "default": null
+      }
+     ],
+     "returns": "DateTime",
+     "doc": "Calendar steps keep the time on the clock, across daylight saving changes too: a day later is the same time tomorrow, even when that's 23 or 25 hours away. A month or year later on a day the month doesn't have is its last day: January 31 plus a month is February 28 (or 29). Negative numbers go back."
+    },
+    {
+     "name": "addMonths",
+     "static": false,
+     "params": [
+      {
+       "name": "months",
+       "type": "int",
+       "default": null
+      }
+     ],
+     "returns": "DateTime",
+     "doc": ""
+    },
+    {
+     "name": "addWeeks",
+     "static": false,
+     "params": [
+      {
+       "name": "weeks",
+       "type": "int",
+       "default": null
+      }
+     ],
+     "returns": "DateTime",
+     "doc": ""
+    },
+    {
+     "name": "addDays",
+     "static": false,
+     "params": [
+      {
+       "name": "days",
+       "type": "int",
+       "default": null
+      }
+     ],
+     "returns": "DateTime",
+     "doc": ""
+    },
+    {
+     "name": "addHours",
+     "static": false,
+     "params": [
+      {
+       "name": "hours",
+       "type": "int",
+       "default": null
+      }
+     ],
+     "returns": "DateTime",
+     "doc": "Steps of elapsed time: exactly that long later, whatever the clock says."
+    },
+    {
+     "name": "addMinutes",
+     "static": false,
+     "params": [
+      {
+       "name": "minutes",
+       "type": "int",
+       "default": null
+      }
+     ],
+     "returns": "DateTime",
+     "doc": ""
+    },
+    {
+     "name": "addSeconds",
+     "static": false,
+     "params": [
+      {
+       "name": "seconds",
+       "type": "int",
+       "default": null
+      }
+     ],
+     "returns": "DateTime",
+     "doc": ""
+    },
+    {
+     "name": "add",
+     "static": false,
+     "params": [
+      {
+       "name": "duration",
+       "type": "Duration",
+       "default": null
+      }
+     ],
+     "returns": "DateTime",
+     "doc": ""
+    },
+    {
+     "name": "sub",
+     "static": false,
+     "params": [
+      {
+       "name": "duration",
+       "type": "Duration",
+       "default": null
+      }
+     ],
+     "returns": "DateTime",
+     "doc": ""
+    },
+    {
+     "name": "startOfDay",
+     "static": false,
+     "params": [],
+     "returns": "DateTime",
+     "doc": "00:00:00 on this date (or the first time the day has, where midnight is skipped by a daylight saving change)."
+    },
+    {
+     "name": "endOfDay",
+     "static": false,
+     "params": [],
+     "returns": "DateTime",
+     "doc": "23:59:59.999999 on this date."
+    },
+    {
+     "name": "startOfMonth",
+     "static": false,
+     "params": [],
+     "returns": "DateTime",
+     "doc": ""
+    },
+    {
+     "name": "endOfMonth",
+     "static": false,
+     "params": [],
+     "returns": "DateTime",
+     "doc": ""
+    },
+    {
+     "name": "isBefore",
+     "static": false,
+     "params": [
+      {
+       "name": "other",
+       "type": "DateTime",
+       "default": null
+      }
+     ],
+     "returns": "bool",
+     "doc": "Comparisons are of instants, whatever the zones: 10:00 in London and 11:00 in Paris on the same winter day are equal."
+    },
+    {
+     "name": "isAfter",
+     "static": false,
+     "params": [
+      {
+       "name": "other",
+       "type": "DateTime",
+       "default": null
+      }
+     ],
+     "returns": "bool",
+     "doc": ""
+    },
+    {
+     "name": "equals",
+     "static": false,
+     "params": [
+      {
+       "name": "other",
+       "type": "DateTime",
+       "default": null
+      }
+     ],
+     "returns": "bool",
+     "doc": ""
+    },
+    {
+     "name": "compareTo",
+     "static": false,
+     "params": [
+      {
+       "name": "other",
+       "type": "DateTime",
+       "default": null
+      }
+     ],
+     "returns": "int",
+     "doc": "-1, 0, or 1, as this is before, at, or after `other`."
+    },
+    {
+     "name": "until",
+     "static": false,
+     "params": [
+      {
+       "name": "other",
+       "type": "DateTime",
+       "default": null
+      }
+     ],
+     "returns": "Duration",
+     "doc": "The time from this to `other`: negative when `other` is earlier."
+    },
+    {
+     "name": "since",
+     "static": false,
+     "params": [
+      {
+       "name": "other",
+       "type": "DateTime",
+       "default": null
+      }
+     ],
+     "returns": "Duration",
+     "doc": "The time from `other` to this."
+    },
+    {
+     "name": "format",
+     "static": false,
+     "params": [
+      {
+       "name": "format",
+       "type": "string",
+       "default": null
+      }
+     ],
+     "returns": "string",
+     "doc": "With date()'s letters, as in format(\"D j M Y, H:i T\"): also u for the microseconds, v for the milliseconds, and e for the zone's name."
+    }
+   ]
+  },
   "Socket": {
    "name": "Socket",
    "kind": "class",
@@ -1923,42 +3009,345 @@
     }
    ]
   },
+  "Url": {
+   "name": "Url",
+   "kind": "class",
+   "extends": null,
+   "final": true,
+   "module": "std/net",
+   "doc": "A URL, as RFC 3986 defines it: like Go's net/url URL, but immutable, as DateTime is: the methods that change something give a new Url.  Url search = Url::parse(\"https://api.example.com/v1/\")->resolve(\"search\")->withQuery(\"q\", \"café\"); print(search); // https://api.example.com/v1/search?q=caf%C3%A9  The parts it returns are unescaped (path(), query(name), ...), except rawPath() and rawQuery(); the ones it's given are escaped as each part needs. Printing a Url, or to_string, gives it in full.",
+   "properties": [],
+   "methods": [
+    {
+     "name": "parse",
+     "static": true,
+     "params": [
+      {
+       "name": "text",
+       "type": "string",
+       "default": null
+      }
+     ],
+     "returns": "Url",
+     "doc": "Reads a URL, absolute (\"https://example.com/a?b=c#d\") or relative (\"../a\", \"?page=2\"). Characters that should have been escaped, such as a space, are accepted and escaped. Throws InvalidArgumentException for one that can't be read: a bad %-escape, a port that isn't a number from 0 to 65535, or a host with characters a host can't have."
+    },
+    {
+     "name": "scheme",
+     "static": false,
+     "params": [],
+     "returns": "string",
+     "doc": "The scheme, in lower case (\"https\"), or null for a relative URL."
+    },
+    {
+     "name": "user",
+     "static": false,
+     "params": [],
+     "returns": "string",
+     "doc": "The user and password before the host, or null."
+    },
+    {
+     "name": "password",
+     "static": false,
+     "params": [],
+     "returns": "string",
+     "doc": ""
+    },
+    {
+     "name": "host",
+     "static": false,
+     "params": [],
+     "returns": "string",
+     "doc": "The host without brackets (\"example.com\", \"::1\"), or null without one; \"\" for an empty one, as in file:///tmp/a."
+    },
+    {
+     "name": "port",
+     "static": false,
+     "params": [],
+     "returns": "int",
+     "doc": "The port, or 0 when the URL doesn't give one."
+    },
+    {
+     "name": "path",
+     "static": false,
+     "params": [],
+     "returns": "string",
+     "doc": "The path, unescaped: \"/a b/c\" for /a%20b/c."
+    },
+    {
+     "name": "rawPath",
+     "static": false,
+     "params": [],
+     "returns": "string",
+     "doc": "The path as the URL writes it, escaped."
+    },
+    {
+     "name": "rawQuery",
+     "static": false,
+     "params": [],
+     "returns": "string",
+     "doc": "What follows \"?\", escaped, or null when there's no \"?\"."
+    },
+    {
+     "name": "fragment",
+     "static": false,
+     "params": [],
+     "returns": "string",
+     "doc": "What follows \"#\", unescaped, or null when there's no \"#\"."
+    },
+    {
+     "name": "isAbsolute",
+     "static": false,
+     "params": [],
+     "returns": "bool",
+     "doc": "Whether it has a scheme, so it stands on its own."
+    },
+    {
+     "name": "query",
+     "static": false,
+     "params": [
+      {
+       "name": "name",
+       "type": "string",
+       "default": null
+      }
+     ],
+     "returns": "string",
+     "doc": "The first value of the query parameter `name`, unescaped (\"+\" is a space), or null when there's none. \"?flag\" gives \"\" for flag."
+    },
+    {
+     "name": "queryAll",
+     "static": false,
+     "params": [
+      {
+       "name": "name",
+       "type": "string",
+       "default": null
+      }
+     ],
+     "returns": "string[]",
+     "doc": "Every value of the query parameter `name`, in order: [\"a\", \"b\"] for ?tag=a&tag=b."
+    },
+    {
+     "name": "queryNames",
+     "static": false,
+     "params": [],
+     "returns": "string[]",
+     "doc": "The query parameters' names, each once, in the order they first come."
+    },
+    {
+     "name": "withQuery",
+     "static": false,
+     "params": [
+      {
+       "name": "name",
+       "type": "string",
+       "default": null
+      },
+      {
+       "name": "value",
+       "type": "string",
+       "default": null
+      }
+     ],
+     "returns": "Url",
+     "doc": "With the query parameter `name` set to `value` (escaped), in the place of its first value, without its others; at the end when it's new."
+    },
+    {
+     "name": "withAddedQuery",
+     "static": false,
+     "params": [
+      {
+       "name": "name",
+       "type": "string",
+       "default": null
+      },
+      {
+       "name": "value",
+       "type": "string",
+       "default": null
+      }
+     ],
+     "returns": "Url",
+     "doc": "With another value for `name` at the end: ?tag=a then ?tag=a&tag=b."
+    },
+    {
+     "name": "withoutQuery",
+     "static": false,
+     "params": [
+      {
+       "name": "name",
+       "type": "string",
+       "default": null
+      }
+     ],
+     "returns": "Url",
+     "doc": "Without the query parameter `name` (none of its values)."
+    },
+    {
+     "name": "withRawQuery",
+     "static": false,
+     "params": [
+      {
+       "name": "raw",
+       "type": "string",
+       "default": null
+      }
+     ],
+     "returns": "Url",
+     "doc": "With the whole query replaced by `raw` (written as it goes after \"?\", escaped), or no query for null."
+    },
+    {
+     "name": "withScheme",
+     "static": false,
+     "params": [
+      {
+       "name": "scheme",
+       "type": "string",
+       "default": null
+      }
+     ],
+     "returns": "Url",
+     "doc": "With another scheme (\"https\"), or none for null."
+    },
+    {
+     "name": "withUser",
+     "static": false,
+     "params": [
+      {
+       "name": "user",
+       "type": "string",
+       "default": null
+      },
+      {
+       "name": "password",
+       "type": "string",
+       "default": "null"
+      }
+     ],
+     "returns": "Url",
+     "doc": "With another user and password (not escaped), or none for null."
+    },
+    {
+     "name": "withHost",
+     "static": false,
+     "params": [
+      {
+       "name": "host",
+       "type": "string",
+       "default": null
+      }
+     ],
+     "returns": "Url",
+     "doc": "With another host: a name, an IPv4 address, or an IPv6 one (without brackets). null removes the host, with the user and port."
+    },
+    {
+     "name": "withPort",
+     "static": false,
+     "params": [
+      {
+       "name": "port",
+       "type": "int",
+       "default": null
+      }
+     ],
+     "returns": "Url",
+     "doc": "With another port, or none for 0."
+    },
+    {
+     "name": "withPath",
+     "static": false,
+     "params": [
+      {
+       "name": "path",
+       "type": "string",
+       "default": null
+      }
+     ],
+     "returns": "Url",
+     "doc": "With another path (unescaped: \"/a b\" becomes /a%20b)."
+    },
+    {
+     "name": "withFragment",
+     "static": false,
+     "params": [
+      {
+       "name": "fragment",
+       "type": "string",
+       "default": null
+      }
+     ],
+     "returns": "Url",
+     "doc": "With another fragment (unescaped), or none for null."
+    },
+    {
+     "name": "resolve",
+     "static": false,
+     "params": [
+      {
+       "name": "reference",
+       "type": "string",
+       "default": null
+      }
+     ],
+     "returns": "Url",
+     "doc": "`reference` resolved against this URL, as a browser resolves a link on this page (RFC 3986, section 5.2): \"/b\" keeps the scheme and host, \"c\" replaces the last segment of the path, \"../c\" goes up one, \"?x\" keeps the path, and an absolute URL is itself."
+    },
+    {
+     "name": "equals",
+     "static": false,
+     "params": [
+      {
+       "name": "other",
+       "type": "Url",
+       "default": null
+      }
+     ],
+     "returns": "bool",
+     "doc": "Whether the two are written the same way."
+    }
+   ]
+  },
   "Response": {
    "name": "Response",
    "kind": "class",
    "extends": null,
    "final": false,
-   "module": "std/http",
+   "module": "std/net/http",
    "doc": "The response to an HTTP request.",
    "properties": [
     {
      "name": "status",
      "type": "int",
      "static": false,
+     "readonly": false,
      "doc": "The status code, such as 200, and its reason phrase, such as \"OK\"."
     },
     {
      "name": "reason",
      "type": "string",
      "static": false,
+     "readonly": false,
      "doc": ""
     },
     {
      "name": "headers",
      "type": "map[string, string]",
      "static": false,
+     "readonly": false,
      "doc": "Header names in lowercase; a header sent more than once has its values joined with \", \"."
     },
     {
      "name": "bytes",
      "type": "byte[]",
      "static": false,
+     "readonly": false,
      "doc": "The body, as bytes."
     },
     {
      "name": "url",
      "type": "string",
      "static": false,
+     "readonly": false,
      "doc": "The URL that answered, after any redirects."
     }
    ],
@@ -2037,67 +3426,77 @@
    "kind": "class",
    "extends": null,
    "final": false,
-   "module": "std/http/server",
+   "module": "std/net/http/server",
    "doc": "An HTTP request received by the server.",
    "properties": [
     {
      "name": "method",
      "type": "string",
      "static": false,
+     "readonly": false,
      "doc": "\"GET\", \"POST\", ... in upper case."
     },
     {
      "name": "path",
      "type": "string",
      "static": false,
+     "readonly": false,
      "doc": "The path, percent-decoded: \"/files/a b.txt\"."
     },
     {
      "name": "rawPath",
      "type": "string",
      "static": false,
+     "readonly": false,
      "doc": "The path as the client sent it: \"/files/a%20b.txt\"."
     },
     {
      "name": "rawQuery",
      "type": "string",
      "static": false,
+     "readonly": false,
      "doc": "What follows \"?\" in the URL, or \"\"."
     },
     {
      "name": "protocol",
      "type": "string",
      "static": false,
+     "readonly": false,
      "doc": "\"HTTP/1.1\" or \"HTTP/1.0\"."
     },
     {
      "name": "scheme",
      "type": "string",
      "static": false,
+     "readonly": false,
      "doc": "\"http\", or \"https\" when a trusted proxy says the client used HTTPS (see http_serve's trustProxy)."
     },
     {
      "name": "headers",
      "type": "map[string, string]",
      "static": false,
+     "readonly": false,
      "doc": "Header names in lower case. Repeated headers are joined with \", \"."
     },
     {
      "name": "bytes",
      "type": "byte[]",
      "static": false,
+     "readonly": false,
      "doc": ""
     },
     {
      "name": "remoteAddress",
      "type": "string",
      "static": false,
+     "readonly": false,
      "doc": "\"address:port\" of the client; \"unix\" for a client of a Unix socket. With http_serve's trustProxy, the address a proxy such as nginx forwarded, without a port."
     },
     {
      "name": "params",
      "type": "map[string, string]",
      "static": false,
+     "readonly": false,
      "doc": "The path's wildcards, set by Router."
     }
    ],
@@ -2153,6 +3552,13 @@
      "doc": "The body as text; throws InvalidUtf8Exception if it isn't UTF-8."
     },
     {
+     "name": "url",
+     "static": false,
+     "params": [],
+     "returns": "Url",
+     "doc": "A header's value (the name in any case), or null. The URL the client asked for: the scheme (see trustProxy in http_serve), the Host header, the path, and the query."
+    },
+    {
      "name": "header",
      "static": false,
      "params": [
@@ -2163,7 +3569,7 @@
       }
      ],
      "returns": "string",
-     "doc": "A header's value (the name in any case), or null."
+     "doc": ""
     },
     {
      "name": "query",
@@ -2211,7 +3617,7 @@
    "kind": "class",
    "extends": null,
    "final": true,
-   "module": "std/http/server",
+   "module": "std/net/http/server",
    "doc": "Builds the response to a request. The status and headers can be changed until the handler returns; the body is sent with a Content-Length.",
    "properties": [],
    "methods": [
@@ -2349,7 +3755,7 @@
    "kind": "class",
    "extends": null,
    "final": true,
-   "module": "std/http/server",
+   "module": "std/net/http/server",
    "doc": "Sends each request to the handler whose pattern matches it best, like Go's ServeMux. A pattern is \"[METHOD ]/path\":  \"/about\"            only /about \"/static/\"          /static/ and everything below it \"/\"                 everything (what nothing else matches) \"/items/{id}\"       /items/7, with r->pathValue(\"id\") == \"7\" \"/files/{path...}\"  /files/a/b.txt, with path \"a/b.txt\" \"/{$}\"              only / itself \"POST /items\"       only POST requests; GET patterns also match HEAD  When several patterns match, the most specific wins: at the first segment where they differ, a fixed name beats {name}, which beats {name...} or a trailing \"/\"; then a longer pattern, then one with a method. A path that matches only with another method gets 405 Method Not Allowed; one that matches nothing, 404 Not Found. A path that matches only a \"/dir/\" pattern without its final slash is redirected to it.",
    "properties": [],
    "methods": [
@@ -2415,6 +3821,489 @@
      "params": [],
      "returns": "function(Request, ResponseWriter): void",
      "doc": "The router as a handler, for http_serve and the http_* wrappers."
+    }
+   ]
+  },
+  "Row": {
+   "name": "Row",
+   "kind": "class",
+   "extends": null,
+   "final": true,
+   "module": "std/sql",
+   "doc": "One row of a query's result. Read a column by name with the getter for its type; a getter throws DatabaseException when the column doesn't exist or holds another type, so a mistake shows up where it is.",
+   "properties": [],
+   "methods": [
+    {
+     "name": "__construct",
+     "static": false,
+     "params": [
+      {
+       "name": "result",
+       "type": "__Result",
+       "default": null
+      },
+      {
+       "name": "first",
+       "type": "int",
+       "default": null
+      }
+     ],
+     "returns": "void",
+     "doc": ""
+    },
+    {
+     "name": "columns",
+     "static": false,
+     "params": [],
+     "returns": "string[]",
+     "doc": "The column names, in the order the query gives them."
+    },
+    {
+     "name": "has",
+     "static": false,
+     "params": [
+      {
+       "name": "column",
+       "type": "string",
+       "default": null
+      }
+     ],
+     "returns": "bool",
+     "doc": "Whether the result has a column named `column`."
+    },
+    {
+     "name": "isNull",
+     "static": false,
+     "params": [
+      {
+       "name": "column",
+       "type": "string",
+       "default": null
+      }
+     ],
+     "returns": "bool",
+     "doc": "Whether the column is NULL."
+    },
+    {
+     "name": "getInt",
+     "static": false,
+     "params": [
+      {
+       "name": "column",
+       "type": "string",
+       "default": null
+      }
+     ],
+     "returns": "int",
+     "doc": "An INTEGER column. Throws when it's NULL or holds another type."
+    },
+    {
+     "name": "getIntOr",
+     "static": false,
+     "params": [
+      {
+       "name": "column",
+       "type": "string",
+       "default": null
+      },
+      {
+       "name": "fallback",
+       "type": "int",
+       "default": null
+      }
+     ],
+     "returns": "int",
+     "doc": "An INTEGER column, or `fallback` when it's NULL."
+    },
+    {
+     "name": "getDouble",
+     "static": false,
+     "params": [
+      {
+       "name": "column",
+       "type": "string",
+       "default": null
+      }
+     ],
+     "returns": "double",
+     "doc": "A REAL column, or an INTEGER one as a double (as from AVG or SUM), or a PostgreSQL numeric."
+    },
+    {
+     "name": "getDoubleOr",
+     "static": false,
+     "params": [
+      {
+       "name": "column",
+       "type": "string",
+       "default": null
+      },
+      {
+       "name": "fallback",
+       "type": "double",
+       "default": null
+      }
+     ],
+     "returns": "double",
+     "doc": "A REAL or INTEGER column, or `fallback` when it's NULL."
+    },
+    {
+     "name": "getBool",
+     "static": false,
+     "params": [
+      {
+       "name": "column",
+       "type": "string",
+       "default": null
+      }
+     ],
+     "returns": "bool",
+     "doc": "An INTEGER column holding 0 or 1, as SQLite stores booleans."
+    },
+    {
+     "name": "getBoolOr",
+     "static": false,
+     "params": [
+      {
+       "name": "column",
+       "type": "string",
+       "default": null
+      },
+      {
+       "name": "fallback",
+       "type": "bool",
+       "default": null
+      }
+     ],
+     "returns": "bool",
+     "doc": "A column holding 0 or 1, or `fallback` when it's NULL."
+    },
+    {
+     "name": "getString",
+     "static": false,
+     "params": [
+      {
+       "name": "column",
+       "type": "string",
+       "default": null
+      }
+     ],
+     "returns": "string",
+     "doc": "A TEXT column (or a PostgreSQL numeric, as its exact text), or null when it's NULL (so `?? \"\"` gives a default). Text that isn't valid UTF-8 can only be read with getBytes."
+    },
+    {
+     "name": "getBytes",
+     "static": false,
+     "params": [
+      {
+       "name": "column",
+       "type": "string",
+       "default": null
+      }
+     ],
+     "returns": "byte[]",
+     "doc": "A BLOB column, or null when it's NULL. Also reads TEXT that isn't valid UTF-8."
+    },
+    {
+     "name": "getDateTime",
+     "static": false,
+     "params": [
+      {
+       "name": "column",
+       "type": "string",
+       "default": null
+      },
+      {
+       "name": "zone",
+       "type": "string",
+       "default": "null"
+      }
+     ],
+     "returns": "DateTime",
+     "doc": "A date and time column as a DateTime, or null when it's NULL: text such as a PostgreSQL timestamptz or a MySQL DATETIME (see DateTime::parse; a time without an offset is in `zone`, or the default zone), or an INTEGER Unix timestamp."
+    },
+    {
+     "name": "toMap",
+     "static": false,
+     "params": [],
+     "returns": "map[string, string]",
+     "doc": "The row as text, for printing and debugging: each column's value written as print writes it, NULL as null, and bytes as \"(N bytes)\"."
+    }
+   ]
+  },
+  "Cursor": {
+   "name": "Cursor",
+   "kind": "class",
+   "extends": null,
+   "final": true,
+   "module": "std/sql",
+   "doc": "The rows of a query, read a batch at a time rather than all at once, for results too big to hold in memory. From Database::cursor.  Cursor rows = db->cursor(\"select * from events where day = ?\", day); Row row = rows->next(); while (row != null) { ... row = rows->next(); }  A cursor closes itself after its last row; close() stops early. With PostgreSQL and MySQL, the rows come from the connection as they're read, so the database can't run another statement until they've all been read or the cursor is closed (doing so throws DatabaseException).",
+   "properties": [],
+   "methods": [
+    {
+     "name": "__construct",
+     "static": false,
+     "params": [
+      {
+       "name": "handle",
+       "type": "int",
+       "default": null
+      }
+     ],
+     "returns": "void",
+     "doc": ""
+    },
+    {
+     "name": "next",
+     "static": false,
+     "params": [],
+     "returns": "Row",
+     "doc": "The next row, or null after the last."
+    },
+    {
+     "name": "fetch",
+     "static": false,
+     "params": [
+      {
+       "name": "count",
+       "type": "int",
+       "default": null
+      }
+     ],
+     "returns": "Row[]",
+     "doc": "Up to `count` more rows: fewer only at the end, and none after it."
+    },
+    {
+     "name": "close",
+     "static": false,
+     "params": [],
+     "returns": "void",
+     "doc": "Stops reading: the rest of the rows are skipped. Closing twice, or after the last row, does nothing."
+    },
+    {
+     "name": "nextAs",
+     "static": false,
+     "params": [],
+     "returns": "T",
+     "doc": "The next row read into an object of the class the result is used as, as in `Event event = rows->nextAs();`, or null after the last."
+    },
+    {
+     "name": "fetchAs",
+     "static": false,
+     "params": [
+      {
+       "name": "count",
+       "type": "int",
+       "default": null
+      }
+     ],
+     "returns": "T[]",
+     "doc": "Up to `count` more rows read into objects of the class the result is used as, as in `Event[] batch = rows->fetchAs(500);`."
+    }
+   ]
+  },
+  "Database": {
+   "name": "Database",
+   "kind": "class",
+   "extends": null,
+   "final": true,
+   "module": "std/sql",
+   "doc": "A connection to a database.",
+   "properties": [],
+   "methods": [
+    {
+     "name": "open",
+     "static": true,
+     "params": [
+      {
+       "name": "dsn",
+       "type": "string",
+       "default": null
+      }
+     ],
+     "returns": "Database",
+     "doc": "Opens a database: \"sqlite:path/to/file.db\" (created if it doesn't exist), \"sqlite::memory:\" for one that lives in memory until it's closed, \"postgres://user:password@host:5432/database\", or \"mysql://user:password@host:3306/database\" (for MariaDB too; options after ?: sslmode=disable|require, connect_timeout=seconds). SQLite's URI names work too, such as \"sqlite:file:data.db?mode=ro\" to open read-only. A SQLite statement waits up to 5 seconds for another process's lock before throwing."
+    },
+    {
+     "name": "execute",
+     "static": false,
+     "params": [
+      {
+       "name": "sql",
+       "type": "string",
+       "default": null
+      },
+      {
+       "name": "values",
+       "type": "...",
+       "default": null,
+       "variadic": true
+      }
+     ],
+     "returns": "int",
+     "doc": "Runs one statement, such as an INSERT, UPDATE, DELETE, or CREATE TABLE, with values for its placeholders. Returns how many rows it inserted, changed, or deleted."
+    },
+    {
+     "name": "query",
+     "static": false,
+     "params": [
+      {
+       "name": "sql",
+       "type": "string",
+       "default": null
+      },
+      {
+       "name": "values",
+       "type": "...",
+       "default": null,
+       "variadic": true
+      }
+     ],
+     "returns": "Row[]",
+     "doc": "Runs a query with values for its placeholders and returns its rows."
+    },
+    {
+     "name": "queryOne",
+     "static": false,
+     "params": [
+      {
+       "name": "sql",
+       "type": "string",
+       "default": null
+      },
+      {
+       "name": "values",
+       "type": "...",
+       "default": null,
+       "variadic": true
+      }
+     ],
+     "returns": "Row",
+     "doc": "The first row of a query, or null when there is none. The rest of the rows aren't read."
+    },
+    {
+     "name": "cursor",
+     "static": false,
+     "params": [
+      {
+       "name": "sql",
+       "type": "string",
+       "default": null
+      },
+      {
+       "name": "values",
+       "type": "...",
+       "default": null,
+       "variadic": true
+      }
+     ],
+     "returns": "Cursor",
+     "doc": "Runs a query with values for its placeholders and returns a Cursor that reads its rows a batch at a time."
+    },
+    {
+     "name": "executeScript",
+     "static": false,
+     "params": [
+      {
+       "name": "sql",
+       "type": "string",
+       "default": null
+      }
+     ],
+     "returns": "void",
+     "doc": "Runs several statements separated by semicolons, such as a schema; they can't have placeholders."
+    },
+    {
+     "name": "lastInsertId",
+     "static": false,
+     "params": [],
+     "returns": "int",
+     "doc": "The rowid (the INTEGER PRIMARY KEY) of the last row inserted."
+    },
+    {
+     "name": "begin",
+     "static": false,
+     "params": [],
+     "returns": "void",
+     "doc": "Transactions: changes made after begin() are saved together by commit(), or all undone by rollback(). Without one, each statement is saved on its own."
+    },
+    {
+     "name": "commit",
+     "static": false,
+     "params": [],
+     "returns": "void",
+     "doc": ""
+    },
+    {
+     "name": "rollback",
+     "static": false,
+     "params": [],
+     "returns": "void",
+     "doc": ""
+    },
+    {
+     "name": "inTransaction",
+     "static": false,
+     "params": [],
+     "returns": "bool",
+     "doc": "Whether a transaction is open."
+    },
+    {
+     "name": "transaction",
+     "static": false,
+     "params": [
+      {
+       "name": "body",
+       "type": "function(): void",
+       "default": null
+      }
+     ],
+     "returns": "void",
+     "doc": "Runs `body` in a transaction: commits when it returns, or rolls back and rethrows when it throws. Inside another transaction, it uses a savepoint instead: when `body` throws, only its own changes are rolled back, and the outer transaction carries on (or not) as its code decides; when it returns, its changes become part of the outer one."
+    },
+    {
+     "name": "close",
+     "static": false,
+     "params": [],
+     "returns": "void",
+     "doc": "Closes the connection. Closing twice does nothing; using the database afterwards throws DatabaseException."
+    },
+    {
+     "name": "queryAs",
+     "static": false,
+     "params": [
+      {
+       "name": "sql",
+       "type": "string",
+       "default": null
+      },
+      {
+       "name": "values",
+       "type": "...",
+       "default": null,
+       "variadic": true
+      }
+     ],
+     "returns": "T[]",
+     "doc": "Runs a query and reads each row into an object of the class the result is used as, as in `User[] users = db->queryAs(sql, ...);`: through its constructor, by parameter name, or its public properties."
+    },
+    {
+     "name": "queryOneAs",
+     "static": false,
+     "params": [
+      {
+       "name": "sql",
+       "type": "string",
+       "default": null
+      },
+      {
+       "name": "values",
+       "type": "...",
+       "default": null,
+       "variadic": true
+      }
+     ],
+     "returns": "T",
+     "doc": "The first row of a query read into an object of the class the result is used as, as in `User user = db->queryOneAs(sql, ...);`, or null when there is none."
     }
    ]
   }

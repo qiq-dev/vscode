@@ -1,6 +1,6 @@
 # qiq for Visual Studio Code
 
-Language support for [qiq](../README.md): syntax highlighting, compile errors
+Language support for [qiq](../qiq/README.md): syntax highlighting, compile errors
 as you type, completion, hovers, parameter hints, go to definition, and the
 outline, for `.qiq` files,
 plus highlighting for `qiq.mod` and `qiq.sum`.
@@ -9,8 +9,10 @@ plus highlighting for `qiq.mod` and `qiq.sum`.
 
 - **Syntax highlighting** for qiq: keywords, types, strings and their
   escapes (an unsupported escape such as `\q` is marked), chars, numbers,
-  declarations, calls, `->` and `::` access, named arguments, imports, and
-  anonymous functions. `qiq.mod` and `qiq.sum` are highlighted too.
+  declarations, calls, `->`, `?->`, and `::` access, `::class`,
+  `instanceof`, `++` and compound assignments, `const` and `readonly`, named
+  arguments, imports, and anonymous functions. `qiq.mod` and `qiq.sum` are
+  highlighted too.
 - **Compile errors as you type**: shortly after you stop typing, the
   extension runs `qiq check` on the file's unsaved text and underlines the
   error it reports, which also appears in the Problems panel. The compiler
@@ -21,17 +23,21 @@ plus highlighting for `qiq.mod` and `qiq.sum`.
   (`variable 'y' is not declared`), that is what's underlined.
 - **Completion**
   - Everything in scope: variables (with their types, including ones
-    inferred from `x = new Item()` and `foreach` loops), parameters, `this`,
-    your functions and classes, imported names, keywords, and types.
+    inferred from `x = new Item()`, `foreach` loops, and
+    `if (shape instanceof Circle circle)`), parameters, `this`, your
+    functions and classes, imported names, keywords, and types.
   - **The standard library, with auto-import**: choosing `file_get_contents`
     adds `import file_get_contents from "std/file";`, or adds the name to an
     existing import from `std/file`. Prelude functions such as `trim` and
     `len` need no import.
-  - **Members after `->`**, worked out from declared types, through chains
-    such as `basket->first()->name` and `items[0]->`, across files and modules,
-    including inherited members. Private and protected members only appear
-    where they're accessible.
-  - **Static members after `::`**, and `parent::` / `self::` / `static::`.
+  - **Members after `->` and `?->`**, worked out from declared types,
+    through chains such as `basket->first()->name`, `user?->address?->city`,
+    and `items[0]->`, across files and modules, including inherited members
+    and properties declared by constructor promotion
+    (`function __construct(public readonly int x)`). Private and protected
+    members only appear where they're accessible.
+  - **Static members and constants after `::`**, `class` after `Class::`
+    and `value::`, and `parent::` / `self::` / `static::`.
   - **After `new`**: classes you can instantiate, with constructor hints.
   - **Import paths**: `std/` modules, your module path and the modules in
     `qiq.mod`, and files and directories; then the names a file exports, in
@@ -41,7 +47,8 @@ plus highlighting for `qiq.mod` and `qiq.sum`.
 - **Hovers** with signatures and docs, for the standard library and for
   your own code (from the `//` comments above a declaration).
 - **Parameter hints** for functions, methods, constructors, and function
-  values, following named arguments such as `timeout: 5`.
+  values, following named arguments such as `timeout: 5`, and the values
+  after a query's SQL (`db->query(sql, ...values)`).
 - **Go to definition** for functions, classes, methods, and properties in
   your files and in modules.
 - **Outline** of a file's classes, members, and functions.
@@ -104,16 +111,18 @@ without optimizing or linking, and reads the error it prints.
 
 ### The standard library data
 
-`data/stdlib.json` comes from the manual's source (`docs/src/stdlib.py`) and
-the standard library's files (`stdlib/*.qiq`) in the qiq repository. After
-the standard library changes, regenerate it:
+`data/stdlib.json` comes from the manual's source (`docs/src/stdlib.py`), the
+standard library's files (`stdlib/*.qiq`), and the list of its modules and
+their import paths (`STDLIB_MODULES` in `src/compiler.rs`), in the qiq
+repository; methods the compiler provides itself, such as `Database`'s
+`queryAs`, are added by the script. After the standard library changes,
+regenerate it:
 
 ```sh
 python3 scripts/generate-stdlib.py [path to the qiq repository]
 ```
 
-The path defaults to this folder's parent, which is right while the extension
-lives in the qiq repository.
+The path defaults to `../qiq`, the repository next to this folder.
 
 ### Tests
 
@@ -123,11 +132,18 @@ The tests need only Node, and VS Code includes one:
 ELECTRON_RUN_AS_NODE=1 code test/run.js      # or: node test/run.js
 ```
 
+With VS Code installed as a snap, run its Electron directly, since the `code`
+launcher doesn't pass the script on:
+
+```sh
+ELECTRON_RUN_AS_NODE=1 /snap/code/current/usr/share/code/code test/run.js
+```
+
 - `test/analysis.test.js`: reading qiq, scopes, types across files and modules
 - `test/diagnostics.test.js`: reading compiler errors
 - `test/extension.test.js`: the completion, hover, parameter hint, definition,
   and outline providers, and compile errors (with the compiler in `$QIQ`, or
-  one built in `../lang/target`), against a stand-in for VS Code's API
+  one built in `../qiq/target`), against a stand-in for VS Code's API
 - `test/grammar.test.js`: highlighting scopes, with the TextMate engine
   VS Code uses (found inside VS Code, or set `QIQ_VSCODE_APP` to its
   `resources/app` directory)

@@ -12,7 +12,7 @@ const KEYWORDS = [
   "if", "else", "foreach", "while", "switch", "case", "default", "break", "continue", "return",
   "try", "catch", "finally", "throw", "as", "new", "function", "fn", "class", "interface", "extends",
   "implements", "abstract", "final", "static", "public", "private", "protected", "import", "from",
-  "true", "false", "null", "this", "self", "parent", "print", "map",
+  "true", "false", "null", "this", "self", "parent", "print", "map", "instanceof", "const", "readonly",
 ];
 
 /** The text with comments and the contents of string and char literals
@@ -92,17 +92,27 @@ function splitTopLevel(text, separator = ",") {
   return parts;
 }
 
-/** `int count = 0` -> {type: "int", name: "count", default: "0"}. */
+/** `int count = 0` -> {type: "int", name: "count", default: "0"}. A
+ * constructor parameter written with `public`, `protected`, `private`, or
+ * `readonly` is also a property: `promoted` is its visibility. */
 function parseParameter(text) {
   let [declaration, ...rest] = splitTopLevel(text, "=");
   declaration = declaration.trim();
+  if (declaration === "...") return { type: "...", name: "values", default: null, variadic: true };
+  const modifiers = declaration.match(/^((?:(?:public|protected|private|readonly)\s+)*)/)[1];
+  declaration = declaration.slice(modifiers.length);
   const match = declaration.match(new RegExp(`^(.*\\S)\\s+(${IDENT})$`, "s"));
   if (!match) return null;
-  return {
+  const parameter = {
     type: normalizeType(match[1]),
     name: match[2],
     default: rest.length ? rest.join("=").trim() : null,
   };
+  if (modifiers) {
+    parameter.promoted = (modifiers.match(/\b(public|protected|private)\b/) || [, "public"])[1];
+    parameter.readonly = /\breadonly\b/.test(modifiers);
+  }
+  return parameter;
 }
 
 function normalizeType(type) {
@@ -274,7 +284,7 @@ function parseMembers(text, masked, cls) {
       const statement = masked.slice(statementStart, i);
       const leading = statement.length - statement.trimStart().length;
       const start = statementStart + leading;
-      const modifiers = statement.trim().match(/^((?:(?:public|private|protected|static|final|abstract)\s+)*)/)[1];
+      const modifiers = statement.trim().match(/^((?:(?:public|private|protected|static|final|abstract|readonly)\s+)*)/)[1];
       const rest = statement.trim().slice(modifiers.length);
       const visibility = (modifiers.match(/\b(public|private|protected)\b/) || [, "public"])[1];
       const isStatic = /\bstatic\b/.test(modifiers);
@@ -286,7 +296,38 @@ function parseMembers(text, masked, cls) {
           method.abstract = /\babstract\b/.test(modifiers) || method.bodyStart < 0;
           method.doc = docCommentAbove(text, start);
           cls.methods.push(method);
+          // Promoted constructor parameters are properties too.
+          if (method.name === "__construct") {
+            for (const param of method.params) {
+              if (!param.promoted) continue;
+              cls.properties.push({
+                name: param.name,
+                type: param.type,
+                visibility: param.promoted,
+                static: false,
+                readonly: param.readonly,
+                offset: method.start,
+                doc: "",
+              });
+            }
+          }
           i = method.bodyEnd > 0 ? method.bodyEnd : i;
+        }
+      } else if (c === ";" && /^const\s/.test(rest)) {
+        // `const [type] NAME = value;`: a constant, read with Class::NAME.
+        const constant = rest.match(new RegExp(`^const\\s+(?:(.*?)\\s+)?(${IDENT})\\s*=\\s*([\\s\\S]*)$`));
+        if (constant) {
+          const value = text.slice(start + modifiers.length, i).replace(/^[\s\S]*?=\s*/, "").trim();
+          cls.properties.push({
+            name: constant[2],
+            type: constant[1] ? normalizeType(constant[1]) : literalType(value) || "int",
+            visibility,
+            static: true,
+            constant: true,
+            value,
+            offset: start,
+            doc: docCommentAbove(text, start),
+          });
         }
       } else if (c === ";" && rest.trim()) {
         const property = parseParameter(text.slice(start + modifiers.length, i));
@@ -296,6 +337,7 @@ function parseMembers(text, masked, cls) {
             type: property.type,
             visibility,
             static: isStatic,
+            readonly: /\breadonly\b/.test(modifiers),
             offset: start,
             doc: docCommentAbove(text, start),
           });
@@ -408,6 +450,9 @@ function variablesAt(text, doc, offset, resolver) {
   // catch (Type e)
   const caught = new RegExp(`\\bcatch\\s*\\(\\s*(${IDENT})\\s+(${IDENT})\\s*\\)`, "g");
   while ((match = caught.exec(region))) add(match[2], match[1]);
+  // if (shape instanceof Circle circle): `circle` is a Circle.
+  const bound = new RegExp(`\\binstanceof\\s+(${IDENT})\\s+(${IDENT})\\b`, "g");
+  while ((match = bound.exec(region))) if (!KEYWORDS.includes(match[2])) add(match[2], match[1]);
   // foreach (items as value) and foreach (items as key => value)
   const loop = new RegExp(`\\bforeach\\s*\\(\\s*(.+?)\\s+as\\s+(?:(${IDENT})\\s*=>\\s*)?(${IDENT})\\s*\\)`, "g");
   while ((match = loop.exec(region))) {
@@ -491,6 +536,11 @@ function expressionBefore(masked, end) {
     i = start;
     const save = i;
     skipSpace();
+    if (masked.slice(i - 3, i) === "?->") {
+      i -= 3;
+      skipSpace();
+      continue;
+    }
     if (masked.slice(i - 2, i) === "->" || masked.slice(i - 2, i) === "::") {
       i -= 2;
       skipSpace();
@@ -553,9 +603,10 @@ function steps(masked, start, end) {
     if (masked[i] === "[") {
       skipBrackets();
       result.push({ kind: "index" });
-    } else if (masked.startsWith("->", i) || masked.startsWith("::", i)) {
+    } else if (masked.startsWith("->", i) || masked.startsWith("?->", i) || masked.startsWith("::", i)) {
+      // `?->` reads a member like `->`, giving null for a null object.
       const staticAccess = masked[i] === ":";
-      i += 2;
+      i += masked[i] === "?" ? 3 : 2;
       skipSpace();
       const name = readName();
       if (!name) return null;
@@ -627,7 +678,8 @@ function completionContext(text, offset) {
   const tail = masked.slice(Math.max(0, before - 2), before);
   const spaced = masked.slice(0, before).replace(/\s+$/, "");
   if (spaced.endsWith("->")) {
-    const expression = expressionBefore(masked, spaced.length - 2);
+    // After `?->` too, which reads a member of an object that may be null.
+    const expression = expressionBefore(masked, spaced.length - (spaced.endsWith("?->") ? 3 : 2));
     return expression ? { kind: "member", expression, prefix } : { kind: "general", prefix };
   }
   if (spaced.endsWith("::") || tail === "::") {

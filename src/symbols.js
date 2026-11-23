@@ -362,6 +362,11 @@ class Context {
         current = { type: analysis.functionReturnType(current.type), context: current.context };
         continue;
       }
+      // `X::class` and `value::class`: the class's name.
+      if (step.kind === "staticMember" && step.name === "class") {
+        current = { type: "string", context: current.context };
+        continue;
+      }
       const cls = current.context.findClass(current.type) || this.findClass(current.type);
       if (!cls) return null;
       const access = enclosing && enclosing.name === cls.name ? "own" : "public";
