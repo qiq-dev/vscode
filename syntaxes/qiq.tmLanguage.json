@@ -15,6 +15,7 @@
       "patterns": [
         { "include": "#comment" },
         { "include": "#regex-call" },
+        { "include": "#fstring" },
         { "include": "#raw-string" },
         { "include": "#string" },
         { "include": "#char" },
@@ -229,6 +230,80 @@
         {
           "match": "\\.",
           "name": "constant.other.character-class.any.regexp.qiq"
+        }
+      ]
+    },
+    "fstring": {
+      "comment": "f\"text {expression} text\": the expressions are code, with an optional :spec (as in sprintf); {{ and }} are braces.",
+      "begin": "\\b(f)(\")",
+      "beginCaptures": {
+        "1": {
+          "name": "storage.type.string.qiq"
+        },
+        "2": {
+          "name": "punctuation.definition.string.begin.qiq"
+        }
+      },
+      "end": "\"|$",
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.definition.string.end.qiq"
+        }
+      },
+      "name": "string.quoted.double.interpolated.qiq",
+      "patterns": [
+        {
+          "match": "\\{\\{|\\}\\}",
+          "name": "constant.character.escape.qiq"
+        },
+        {
+          "match": "\\\\[nrt\"\\\\]",
+          "name": "constant.character.escape.qiq"
+        },
+        {
+          "match": "\\\\.",
+          "name": "invalid.illegal.escape.qiq"
+        },
+        {
+          "begin": "\\{",
+          "beginCaptures": {
+            "0": {
+              "name": "punctuation.section.interpolation.begin.qiq"
+            }
+          },
+          "end": "(?:(?<!:)(:)(?!:)([-+ 0#.A-Za-z0-9]*))?(\\})",
+          "endCaptures": {
+            "1": {
+              "name": "punctuation.separator.format.qiq"
+            },
+            "2": {
+              "name": "constant.other.format-spec.qiq"
+            },
+            "3": {
+              "name": "punctuation.section.interpolation.end.qiq"
+            }
+          },
+          "name": "meta.embedded.interpolation.qiq",
+          "contentName": "source.qiq",
+          "patterns": [
+            {
+              "comment": "Braces inside the expression, such as a map literal.",
+              "begin": "\\{",
+              "end": "\\}",
+              "patterns": [
+                {
+                  "include": "#code"
+                }
+              ]
+            },
+            {
+              "include": "#code"
+            }
+          ]
+        },
+        {
+          "match": "\\}",
+          "name": "invalid.illegal.brace.qiq"
         }
       ]
     },

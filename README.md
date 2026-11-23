@@ -9,7 +9,7 @@ plus highlighting for `qiq.mod` and `qiq.sum`.
 
 - **Syntax highlighting** for qiq: keywords, types, strings and their
   escapes (an unsupported escape such as `\q` is marked), raw `...`
-  strings, chars, numbers, block comments,
+  strings, f-strings (with their `{expressions}` highlighted as code), chars, numbers, block comments,
   declarations, calls, `->`, `?->`, and `::` access, `::class`,
   `instanceof`, `++` and compound assignments, `const` and `readonly`, named
   arguments, imports, and anonymous functions. A pattern written as a raw

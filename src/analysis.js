@@ -15,6 +15,64 @@ const KEYWORDS = [
   "true", "false", "null", "this", "self", "parent", "print", "map", "instanceof", "const", "readonly",
 ];
 
+/** Whether an f-string starts at `i`: an `f` that begins a word, then `"`. */
+function isFString(text, i) {
+  return text[i] === "f" && text[i + 1] === '"' && !(i > 0 && /[A-Za-z0-9_$]/.test(text[i - 1]));
+}
+
+/** The f-string starting at `i` (its `f`), read as the compiler reads it:
+ * `end` is just after its closing quote (or where the line or text ends
+ * without one), and `holes` the expressions inside `{}` ({start, end},
+ * without the braces or a `:spec`). `{{` and `}}` are braces in the text. */
+function fstringSpans(text, i) {
+  const n = text.length;
+  const holes = [];
+  let at = i + 2;
+  while (at < n && text[at] !== '"' && text[at] !== "\n") {
+    const c = text[at];
+    if (c === "\\") {
+      at += 2;
+    } else if ((c === "{" && text[at + 1] === "{") || (c === "}" && text[at + 1] === "}")) {
+      at += 2;
+    } else if (c === "{") {
+      const start = at + 1;
+      let depth = 0;
+      let end = -1;
+      let j = start;
+      while (j < n && text[j] !== "\n") {
+        const d = text[j];
+        if (d === '"' || d === "'" || d === "`") {
+          // A string or char inside the expression.
+          j++;
+          while (j < n && text[j] !== d && text[j] !== "\n") j += text[j] === "\\" && d !== "`" ? 2 : 1;
+          j++;
+          continue;
+        }
+        if (d === "(" || d === "[" || d === "{") depth++;
+        else if ((d === ")" || d === "]") && depth > 0) depth--;
+        else if (d === "}" && depth > 0) depth--;
+        else if (d === "}" || (d === ":" && depth === 0 && text[j + 1] !== ":" && text[j - 1] !== ":")) {
+          end = j;
+          break;
+        }
+        j++;
+      }
+      if (end < 0) {
+        // Not closed (yet): the expression runs to the end of the line.
+        holes.push({ start, end: j });
+        return { end: j, holes };
+      }
+      holes.push({ start, end });
+      // Past the closing brace, and any spec before it.
+      while (j < n && text[j] !== "}" && text[j] !== "\n") j++;
+      at = j + 1;
+    } else {
+      at++;
+    }
+  }
+  return { end: at < n && text[at] === '"' ? at + 1 : at, holes };
+}
+
 /** The text with comments and the contents of string and char literals
  * replaced by spaces (same length, same line breaks), so patterns and
  * bracket matching don't see them. Quotes are kept. */
@@ -32,6 +90,16 @@ function mask(text) {
       const end = text.indexOf("*/", i + 2);
       const stop = end < 0 ? n : end + 2;
       for (; i < stop; i++) if (text[i] !== "\n") out[i] = " ";
+    } else if (isFString(text, i)) {
+      // An f-string: the text and braces blanked, the expressions kept
+      // (themselves masked), so completion and hovers work inside them.
+      const { end, holes } = fstringSpans(text, i);
+      for (let at = i + 2; at < end - 1; at++) if (text[at] !== "\n") out[at] = " ";
+      for (const hole of holes) {
+        const inner = mask(text.slice(hole.start, hole.end));
+        for (let at = 0; at < inner.length; at++) out[hole.start + at] = inner[at];
+      }
+      i = end;
     } else if (c === "`") {
       // A raw string: blanked up to the closing backtick, keeping line
       // breaks, with no escapes. The backticks are kept.
@@ -75,6 +143,17 @@ function lexicalContext(text, offset) {
       const end = text.indexOf("*/", i + 2);
       if (end < 0 || end + 2 > offset) return { kind: "comment" };
       i = end + 2;
+      continue;
+    }
+    if (isFString(text, i)) {
+      const { end, holes } = fstringSpans(text, i);
+      if (end > offset || (end === offset && text[end - 1] !== '"')) {
+        // Inside it: in an expression, as code there; otherwise in its text.
+        const hole = holes.find((h) => h.start <= offset && offset <= h.end);
+        if (hole) return lexicalContext(text.slice(hole.start, offset), offset - hole.start);
+        return { kind: "string", start: i + 1, value: text.slice(i + 2, offset) };
+      }
+      i = end;
       continue;
     }
     if (c === "`") {
@@ -784,6 +863,7 @@ function callAt(text, offset) {
 }
 
 module.exports = {
+  fstringSpans,
   KEYWORDS,
   PRIMITIVES,
   mask,

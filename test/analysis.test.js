@@ -70,6 +70,27 @@ test("raw strings", () => {
   assert.strictEqual(at("s = `a\nb`;\nx|"), "code");
 });
 
+test("f-strings", () => {
+  const text = 'string s = f"a {x->y} {{ } {m["k"]:.2f} b"; int n = 1;';
+  const masked = analysis.mask(text);
+  assert.strictEqual(masked.length, text.length);
+  assert.ok(masked.includes("x->y") && masked.includes('m[" "]'), masked);
+  assert.ok(!masked.includes("a ") && !masked.includes(".2f") && !masked.includes("{{"), masked);
+  assert.ok(masked.includes("; int n = 1;"));
+
+  const at = (source) => analysis.lexicalContext(cursor(source).text, cursor(source).offset).kind;
+  assert.strictEqual(at('s = f"hello | there"'), "string");
+  assert.strictEqual(at('s = f"hello {us|}"'), "code");
+  assert.strictEqual(at('s = f"hello {user->|"'), "code");
+  assert.strictEqual(at('s = f"{m["k|"]}"'), "string");
+  assert.strictEqual(at('s = f"{x}"; y|'), "code");
+  assert.strictEqual(at('s = elf"x|"'), "string");
+  // In an expression, completion sees the variables of the code around it.
+  const doc = analysis.parseDocument('function f(string name): void { print(f"{nam}"); }');
+  const { text: source, offset } = cursor('function f(string name): void { print(f"{nam|}"); }');
+  assert.ok(analysis.variablesAt(source, doc, offset).some((v) => v.name === "name"));
+});
+
 test("block doc comments", () => {
   const text = [
     "/**",

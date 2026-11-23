@@ -121,6 +121,7 @@ int z = 4;
 RegexMatch rm = preg_match(\`/^(?<year>\\d{4})-[a-z]+?\\.$/i\`, subject, 7);
 string t = preg_replace(\`#a|(?:b)\\1(?=c)#\`, "x", s) + preg_test("/q+/", s);
 string u = \`/(\\w)+/\`;
+string g = f"Hi {user->name}: {total:.2f} {{x}} {A::b} {len({"k" => 1})}!";
 `;
 
 (async () => {
@@ -173,6 +174,18 @@ string u = \`/(\\w)+/\`;
     ["x\", s)", 1, "string.quoted.double.qiq"],
     ["q+/", 1, "string.quoted.double.qiq"],
     ["/(\\w)+/", 1, "string.quoted.other.raw.qiq"],
+    ["f\"Hi", 1, "storage.type.string.qiq"],
+    ["Hi {", 1, "string.quoted.double.interpolated.qiq"],
+    ["{user", 1, "punctuation.section.interpolation.begin.qiq"],
+    ["->name}", 1, "punctuation.accessor.arrow.qiq"],
+    ["}: {", 1, "punctuation.section.interpolation.end.qiq"],
+    [".2f}", 1, "constant.other.format-spec.qiq"],
+    ["{{x}}", 1, "constant.character.escape.qiq"],
+    ["::b}", 1, "punctuation.separator.static.qiq"],
+    ["\"k\"", 1, "punctuation.definition.string.begin.qiq"],
+    ["=> 1})}", 1, "keyword.operator.arrow.qiq"],
+    ["}!\"", 1, "punctuation.section.interpolation.end.qiq"],
+    ["!\";", 1, "string.quoted.double.interpolated.qiq"],
     ["// A comment", 1, "comment.line.double-slash.qiq"],
     ["class", 1, "comment.line.double-slash.qiq"],
     ["import", 1, "keyword.control.import.qiq"],
