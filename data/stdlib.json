@@ -9,7 +9,8 @@
   "std/net/http/server",
   "std/crypto",
   "std/sql",
-  "std/regex"
+  "std/regex",
+  "std/math"
  ],
  "functions": {
   "len": {
@@ -616,6 +617,516 @@
    "doc": "Returns `text` with a backslash before each character that has a meaning in a pattern (`. \\ + * ? [ ^ ] $ ( ) { } = ! < > | : - #`) and before `delimiter`, so text from a user or a file can go inside a pattern and match only itself.",
    "module": "std/regex",
    "category": "Regular expressions"
+  },
+  "abs": {
+   "name": "abs",
+   "params": [
+    {
+     "name": "x",
+     "type": "int|double",
+     "default": null,
+     "doc": "The value."
+    }
+   ],
+   "returns": "int|double",
+   "summary": "The absolute value",
+   "doc": "Returns `x` without its sign. It works on ints and on doubles and returns the same type: the compiler handles it for the types it's given.",
+   "module": "std/math",
+   "category": "Math"
+  },
+  "min": {
+   "name": "min",
+   "params": [
+    {
+     "name": "values",
+     "type": "int...|double...|int[]|double[]",
+     "default": null,
+     "doc": "Two or more ints, or two or more doubles, or one array of them."
+    }
+   ],
+   "returns": "int|double",
+   "summary": "The smallest of several values",
+   "doc": "Returns the smallest of its arguments, or of the elements of an array. It works on ints and on doubles and returns the same type: the compiler handles it for the types it's given.",
+   "module": "std/math",
+   "category": "Math"
+  },
+  "max": {
+   "name": "max",
+   "params": [
+    {
+     "name": "values",
+     "type": "int...|double...|int[]|double[]",
+     "default": null,
+     "doc": "Two or more ints, or two or more doubles, or one array of them."
+    }
+   ],
+   "returns": "int|double",
+   "summary": "The largest of several values",
+   "doc": "Returns the largest of its arguments, or of the elements of an array. It works on ints and on doubles and returns the same type: the compiler handles it for the types it's given.",
+   "module": "std/math",
+   "category": "Math"
+  },
+  "clamp": {
+   "name": "clamp",
+   "params": [
+    {
+     "name": "x",
+     "type": "int|double",
+     "default": null,
+     "doc": "The value."
+    },
+    {
+     "name": "low",
+     "type": "int|double",
+     "default": null,
+     "doc": "The smallest result."
+    },
+    {
+     "name": "high",
+     "type": "int|double",
+     "default": null,
+     "doc": "The largest result."
+    }
+   ],
+   "returns": "int|double",
+   "summary": "Limit a value to a range",
+   "doc": "Returns `x`, or `low` if `x` is below it, or `high` if it's above: `max(low, min(x, high))` in one call. It works on ints and on doubles and returns the same type: the compiler handles it for the types it's given. PHP has no `clamp`.",
+   "module": "std/math",
+   "category": "Math"
+  },
+  "floor": {
+   "name": "floor",
+   "params": [
+    {
+     "name": "x",
+     "type": "double",
+     "default": null,
+     "doc": "The value."
+    }
+   ],
+   "returns": "double",
+   "summary": "Round down",
+   "doc": "Returns the largest whole number not above `x`, as a double.",
+   "module": "std/math",
+   "category": "Math"
+  },
+  "ceil": {
+   "name": "ceil",
+   "params": [
+    {
+     "name": "x",
+     "type": "double",
+     "default": null,
+     "doc": "The value."
+    }
+   ],
+   "returns": "double",
+   "summary": "Round up",
+   "doc": "Returns the smallest whole number not below `x`, as a double.",
+   "module": "std/math",
+   "category": "Math"
+  },
+  "round": {
+   "name": "round",
+   "params": [
+    {
+     "name": "x",
+     "type": "double",
+     "default": null,
+     "doc": "The value."
+    },
+    {
+     "name": "precision",
+     "type": "int",
+     "default": "0",
+     "doc": "Decimal places; negative rounds to tens, hundreds, and so on."
+    }
+   ],
+   "returns": "double",
+   "summary": "Round to a number of decimal places",
+   "doc": "Returns `x` rounded to `precision` decimal places, with halves rounded away from zero, as PHP's `round` (see above).",
+   "module": "std/math",
+   "category": "Math"
+  },
+  "number_format": {
+   "name": "number_format",
+   "params": [
+    {
+     "name": "x",
+     "type": "int|double",
+     "default": null,
+     "doc": "The number."
+    },
+    {
+     "name": "decimals",
+     "type": "int",
+     "default": "0",
+     "doc": "Decimal places; negative rounds before the point."
+    },
+    {
+     "name": "point",
+     "type": "string",
+     "default": "\".\"",
+     "doc": "The decimal point."
+    },
+    {
+     "name": "thousands",
+     "type": "string",
+     "default": "\",\"",
+     "doc": "Put between each group of three digits."
+    }
+   ],
+   "returns": "string",
+   "summary": "Format a number with grouped thousands",
+   "doc": "Returns `x` as text, rounded to `decimals` places as `round` rounds, with `thousands` between each group of three digits, as PHP's `number_format`. An int is written exactly, however large. A value that rounds to zero has no minus sign.",
+   "module": "std/math",
+   "category": "Math"
+  },
+  "sqrt": {
+   "name": "sqrt",
+   "params": [
+    {
+     "name": "x",
+     "type": "double",
+     "default": null,
+     "doc": "The value."
+    }
+   ],
+   "returns": "double",
+   "summary": "Square root",
+   "doc": "Returns the square root of `x`, or `NAN` for a negative number.",
+   "module": "std/math",
+   "category": "Math"
+  },
+  "exp": {
+   "name": "exp",
+   "params": [
+    {
+     "name": "x",
+     "type": "double",
+     "default": null,
+     "doc": "The value."
+    }
+   ],
+   "returns": "double",
+   "summary": "e to a power",
+   "doc": "Returns *e* raised to the power `x`.",
+   "module": "std/math",
+   "category": "Math"
+  },
+  "log": {
+   "name": "log",
+   "params": [
+    {
+     "name": "x",
+     "type": "double",
+     "default": null,
+     "doc": "The value."
+    },
+    {
+     "name": "base",
+     "type": "double",
+     "default": "e",
+     "doc": "The base; *e* (a natural logarithm) by default."
+    }
+   ],
+   "returns": "double",
+   "summary": "Logarithm",
+   "doc": "Returns the logarithm of `x` to `base`. For bases 10 and 2, `log10` and `log2` are exact for powers of the base.",
+   "module": "std/math",
+   "category": "Math"
+  },
+  "log10": {
+   "name": "log10",
+   "params": [
+    {
+     "name": "x",
+     "type": "double",
+     "default": null,
+     "doc": "The value."
+    }
+   ],
+   "returns": "double",
+   "summary": "Base-10 logarithm",
+   "doc": "Returns the base-10 logarithm of `x`.",
+   "module": "std/math",
+   "category": "Math"
+  },
+  "log2": {
+   "name": "log2",
+   "params": [
+    {
+     "name": "x",
+     "type": "double",
+     "default": null,
+     "doc": "The value."
+    }
+   ],
+   "returns": "double",
+   "summary": "Base-2 logarithm",
+   "doc": "Returns the base-2 logarithm of `x`.",
+   "module": "std/math",
+   "category": "Math"
+  },
+  "hypot": {
+   "name": "hypot",
+   "params": [
+    {
+     "name": "x",
+     "type": "double",
+     "default": null,
+     "doc": "One side."
+    },
+    {
+     "name": "y",
+     "type": "double",
+     "default": null,
+     "doc": "The other side."
+    }
+   ],
+   "returns": "double",
+   "summary": "Length of a hypotenuse",
+   "doc": "Returns `sqrt(x * x + y * y)`, without overflowing for large values: the distance of the point (x, y) from the origin.",
+   "module": "std/math",
+   "category": "Math"
+  },
+  "sin": {
+   "name": "sin",
+   "params": [
+    {
+     "name": "x",
+     "type": "double",
+     "default": null,
+     "doc": "An angle in radians."
+    }
+   ],
+   "returns": "double",
+   "summary": "Sine",
+   "doc": "Returns the sine of `x`. `cos` and `tan` work the same way.",
+   "module": "std/math",
+   "category": "Math"
+  },
+  "cos": {
+   "name": "cos",
+   "params": [
+    {
+     "name": "x",
+     "type": "double",
+     "default": null,
+     "doc": "An angle in radians."
+    }
+   ],
+   "returns": "double",
+   "summary": "Cosine",
+   "doc": "Returns the cosine of `x`.",
+   "module": "std/math",
+   "category": "Math"
+  },
+  "tan": {
+   "name": "tan",
+   "params": [
+    {
+     "name": "x",
+     "type": "double",
+     "default": null,
+     "doc": "An angle in radians."
+    }
+   ],
+   "returns": "double",
+   "summary": "Tangent",
+   "doc": "Returns the tangent of `x`.",
+   "module": "std/math",
+   "category": "Math"
+  },
+  "asin": {
+   "name": "asin",
+   "params": [
+    {
+     "name": "x",
+     "type": "double",
+     "default": null,
+     "doc": "The value."
+    }
+   ],
+   "returns": "double",
+   "summary": "Arc sine",
+   "doc": "Returns the angle, in radians from -pi/2 to pi/2, whose sine is `x`; `NAN` outside -1 to 1.",
+   "module": "std/math",
+   "category": "Math"
+  },
+  "acos": {
+   "name": "acos",
+   "params": [
+    {
+     "name": "x",
+     "type": "double",
+     "default": null,
+     "doc": "The value."
+    }
+   ],
+   "returns": "double",
+   "summary": "Arc cosine",
+   "doc": "Returns the angle, in radians from 0 to pi, whose cosine is `x`; `NAN` outside -1 to 1.",
+   "module": "std/math",
+   "category": "Math"
+  },
+  "atan": {
+   "name": "atan",
+   "params": [
+    {
+     "name": "x",
+     "type": "double",
+     "default": null,
+     "doc": "The value."
+    }
+   ],
+   "returns": "double",
+   "summary": "Arc tangent",
+   "doc": "Returns the angle, in radians from -pi/2 to pi/2, whose tangent is `x`.",
+   "module": "std/math",
+   "category": "Math"
+  },
+  "atan2": {
+   "name": "atan2",
+   "params": [
+    {
+     "name": "y",
+     "type": "double",
+     "default": null,
+     "doc": "The point's y."
+    },
+    {
+     "name": "x",
+     "type": "double",
+     "default": null,
+     "doc": "The point's x."
+    }
+   ],
+   "returns": "double",
+   "summary": "Angle of a point",
+   "doc": "Returns the angle of the point (x, y) from the positive x axis, in radians from -pi to pi, using the signs of both to find the quadrant.",
+   "module": "std/math",
+   "category": "Math"
+  },
+  "deg2rad": {
+   "name": "deg2rad",
+   "params": [
+    {
+     "name": "degrees",
+     "type": "double",
+     "default": null,
+     "doc": "An angle in degrees."
+    }
+   ],
+   "returns": "double",
+   "summary": "Degrees to radians",
+   "doc": "Returns the angle in radians.",
+   "module": "std/math",
+   "category": "Math"
+  },
+  "rad2deg": {
+   "name": "rad2deg",
+   "params": [
+    {
+     "name": "radians",
+     "type": "double",
+     "default": null,
+     "doc": "An angle in radians."
+    }
+   ],
+   "returns": "double",
+   "summary": "Radians to degrees",
+   "doc": "Returns the angle in degrees.",
+   "module": "std/math",
+   "category": "Math"
+  },
+  "pi": {
+   "name": "pi",
+   "params": [],
+   "returns": "double",
+   "summary": "The number pi",
+   "doc": "Returns pi, 3.141592653589793, like PHP's `pi()` and `M_PI`.",
+   "module": "std/math",
+   "category": "Math"
+  },
+  "is_nan": {
+   "name": "is_nan",
+   "params": [
+    {
+     "name": "x",
+     "type": "double",
+     "default": null,
+     "doc": "The value."
+    }
+   ],
+   "returns": "bool",
+   "summary": "Check for not-a-number",
+   "doc": "Returns whether `x` is `NAN`, the result of operations such as `0.0 / 0.0` or `sqrt(-1.0)`. `NAN` isn't equal to anything, itself included, so `x == x` can't tell.",
+   "module": "std/math",
+   "category": "Math"
+  },
+  "is_finite": {
+   "name": "is_finite",
+   "params": [
+    {
+     "name": "x",
+     "type": "double",
+     "default": null,
+     "doc": "The value."
+    }
+   ],
+   "returns": "bool",
+   "summary": "Check for an ordinary number",
+   "doc": "Returns whether `x` is neither infinite nor `NAN`.",
+   "module": "std/math",
+   "category": "Math"
+  },
+  "is_infinite": {
+   "name": "is_infinite",
+   "params": [
+    {
+     "name": "x",
+     "type": "double",
+     "default": null,
+     "doc": "The value."
+    }
+   ],
+   "returns": "bool",
+   "summary": "Check for infinity",
+   "doc": "Returns whether `x` is `INF` or `-INF`, the result of dividing a nonzero double by zero, for example.",
+   "module": "std/math",
+   "category": "Math"
+  },
+  "random_int": {
+   "name": "random_int",
+   "params": [
+    {
+     "name": "min",
+     "type": "int",
+     "default": null,
+     "doc": "The smallest result."
+    },
+    {
+     "name": "max",
+     "type": "int",
+     "default": null,
+     "doc": "The largest result."
+    }
+   ],
+   "returns": "int",
+   "summary": "A secure random int in a range",
+   "doc": "Returns a random int from `min` to `max`, both included, each equally likely, from the operating system's secure random source, as PHP's `random_int`. It's suitable for tokens, codes, and passwords.",
+   "module": "std/math",
+   "category": "Math"
+  },
+  "random_double": {
+   "name": "random_double",
+   "params": [],
+   "returns": "double",
+   "summary": "A secure random double from 0 to 1",
+   "doc": "Returns a random double from 0 up to, but not including, 1, from the operating system's secure random source, with every multiple of 2-53 in that range equally likely.",
+   "module": "std/math",
+   "category": "Math"
   },
   "range": {
    "name": "range",
