@@ -14,6 +14,7 @@
     "code": {
       "patterns": [
         { "include": "#comment" },
+        { "include": "#regex-call" },
         { "include": "#raw-string" },
         { "include": "#string" },
         { "include": "#char" },
@@ -50,6 +51,184 @@
           "begin": "/\\*",
           "end": "\\*/",
           "name": "comment.block.qiq"
+        }
+      ]
+    },
+    "regex-call": {
+      "comment": "A std/regex call whose pattern is a raw string: the pattern gets regex highlighting, and the rest of the call is ordinary code.",
+      "begin": "\\b(preg_(?:match_all|match|test|replace_callback|replace|split))\\s*(\\()\\s*(?=`)",
+      "beginCaptures": {
+        "1": {
+          "name": "entity.name.function.call.qiq"
+        },
+        "2": {
+          "name": "punctuation.qiq"
+        }
+      },
+      "end": "(?<=`)",
+      "patterns": [
+        {
+          "include": "#regex"
+        }
+      ]
+    },
+    "regex": {
+      "comment": "A PHP-style pattern in a raw string: delimiter, expression, delimiter, flags.",
+      "begin": "`",
+      "beginCaptures": {
+        "0": {
+          "name": "punctuation.definition.string.begin.qiq"
+        }
+      },
+      "end": "`",
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.definition.string.end.qiq"
+        }
+      },
+      "name": "string.regexp.qiq",
+      "patterns": [
+        {
+          "match": "\\G\\s*([^\\w\\s\\\\`])",
+          "captures": {
+            "1": {
+              "name": "punctuation.definition.delimiter.regexp.qiq"
+            }
+          }
+        },
+        {
+          "match": "([^\\w\\s\\\\`])([imsxuUDAnJ]*)(?=`)",
+          "captures": {
+            "1": {
+              "name": "punctuation.definition.delimiter.regexp.qiq"
+            },
+            "2": {
+              "name": "keyword.other.flag.regexp.qiq"
+            }
+          }
+        },
+        {
+          "include": "#regex-body"
+        }
+      ]
+    },
+    "regex-body": {
+      "patterns": [
+        {
+          "match": "\\\\[dDwWsShHvVRNXC]|\\\\[pP]\\{\\^?[A-Za-z_&]+\\}|\\\\[pP][A-Za-z]",
+          "name": "constant.other.character-class.escape.backslash.regexp.qiq"
+        },
+        {
+          "match": "\\\\[bBAzZGK]",
+          "name": "keyword.control.anchor.regexp.qiq"
+        },
+        {
+          "match": "\\\\(?:[1-9][0-9]?|g\\{?-?[0-9]+\\}?|k<[A-Za-z_][A-Za-z0-9_]*>|k\\{[A-Za-z_][A-Za-z0-9_]*\\}|k'[A-Za-z_][A-Za-z0-9_]*')",
+          "name": "keyword.other.back-reference.regexp.qiq"
+        },
+        {
+          "match": "\\\\(?:x\\{[0-9A-Fa-f]+\\}|x[0-9A-Fa-f]{1,2}|0[0-7]{0,2}|o\\{[0-7]+\\}|c.|.)",
+          "name": "constant.character.escape.backslash.regexp.qiq"
+        },
+        {
+          "begin": "(\\[)(\\^)?",
+          "beginCaptures": {
+            "1": {
+              "name": "punctuation.definition.character-class.regexp.qiq"
+            },
+            "2": {
+              "name": "keyword.operator.negation.regexp.qiq"
+            }
+          },
+          "end": "\\]",
+          "endCaptures": {
+            "0": {
+              "name": "punctuation.definition.character-class.regexp.qiq"
+            }
+          },
+          "name": "constant.other.character-class.set.regexp.qiq",
+          "patterns": [
+            {
+              "match": "\\\\[dDwWsShHvVRNXC]|\\\\[pP]\\{\\^?[A-Za-z_&]+\\}|\\\\[pP][A-Za-z]",
+              "name": "constant.other.character-class.escape.backslash.regexp.qiq"
+            },
+            {
+              "match": "\\\\[bBAzZGK]",
+              "name": "keyword.control.anchor.regexp.qiq"
+            },
+            {
+              "match": "\\\\(?:[1-9][0-9]?|g\\{?-?[0-9]+\\}?|k<[A-Za-z_][A-Za-z0-9_]*>|k\\{[A-Za-z_][A-Za-z0-9_]*\\}|k'[A-Za-z_][A-Za-z0-9_]*')",
+              "name": "keyword.other.back-reference.regexp.qiq"
+            },
+            {
+              "match": "\\\\(?:x\\{[0-9A-Fa-f]+\\}|x[0-9A-Fa-f]{1,2}|0[0-7]{0,2}|o\\{[0-7]+\\}|c.|.)",
+              "name": "constant.character.escape.backslash.regexp.qiq"
+            },
+            {
+              "match": "\\[:\\^?[a-z]+:\\]",
+              "name": "constant.other.character-class.posix.regexp.qiq"
+            },
+            {
+              "match": "(?:[^\\\\\\]`]|\\\\.)-(?:[^\\\\\\]`]|\\\\.)",
+              "name": "constant.other.character-class.range.regexp.qiq"
+            }
+          ]
+        },
+        {
+          "match": "(\\(\\?<)([A-Za-z_][A-Za-z0-9_]*)(>)|(\\(\\?P?<)([A-Za-z_][A-Za-z0-9_]*)(>)|(\\(\\?')([A-Za-z_][A-Za-z0-9_]*)(')",
+          "captures": {
+            "1": {
+              "name": "punctuation.definition.group.regexp.qiq"
+            },
+            "2": {
+              "name": "entity.name.tag.named-group.regexp.qiq"
+            },
+            "3": {
+              "name": "punctuation.definition.group.regexp.qiq"
+            },
+            "4": {
+              "name": "punctuation.definition.group.regexp.qiq"
+            },
+            "5": {
+              "name": "entity.name.tag.named-group.regexp.qiq"
+            },
+            "6": {
+              "name": "punctuation.definition.group.regexp.qiq"
+            },
+            "7": {
+              "name": "punctuation.definition.group.regexp.qiq"
+            },
+            "8": {
+              "name": "entity.name.tag.named-group.regexp.qiq"
+            },
+            "9": {
+              "name": "punctuation.definition.group.regexp.qiq"
+            }
+          }
+        },
+        {
+          "match": "\\(\\?(?:<=|<!|=|!)",
+          "name": "punctuation.definition.group.assertion.regexp.qiq"
+        },
+        {
+          "match": "\\(\\?(?:[imsxnUJ-]*:|>|\\||#[^)]*\\))?|\\(|\\)",
+          "name": "punctuation.definition.group.regexp.qiq"
+        },
+        {
+          "match": "(?:[*+?]|\\{[0-9]+(?:,[0-9]*)?\\})[?+]?",
+          "name": "keyword.operator.quantifier.regexp.qiq"
+        },
+        {
+          "match": "[\\^$]",
+          "name": "keyword.control.anchor.regexp.qiq"
+        },
+        {
+          "match": "\\|",
+          "name": "keyword.operator.or.regexp.qiq"
+        },
+        {
+          "match": "\\.",
+          "name": "constant.other.character-class.any.regexp.qiq"
         }
       ]
     },

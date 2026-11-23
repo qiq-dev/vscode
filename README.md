@@ -12,8 +12,10 @@ plus highlighting for `qiq.mod` and `qiq.sum`.
   strings, chars, numbers, block comments,
   declarations, calls, `->`, `?->`, and `::` access, `::class`,
   `instanceof`, `++` and compound assignments, `const` and `readonly`, named
-  arguments, imports, and anonymous functions. `qiq.mod` and `qiq.sum` are
-  highlighted too.
+  arguments, imports, and anonymous functions. A pattern written as a raw
+  string in a `preg_*` call is highlighted as a regular expression: groups,
+  classes, quantifiers, anchors, escapes, delimiters, and flags. `qiq.mod`
+  and `qiq.sum` are highlighted too.
 - **Compile errors as you type**: shortly after you stop typing, the
   extension runs `qiq check` on the file's unsaved text and underlines the
   error it reports, which also appears in the Problems panel. The compiler

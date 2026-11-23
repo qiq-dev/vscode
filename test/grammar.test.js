@@ -118,6 +118,9 @@ int y = 2 /* inline */ + 3;
 string raw = \`^\\d+ "q" // no
   /* no */ \`;
 int z = 4;
+RegexMatch rm = preg_match(\`/^(?<year>\\d{4})-[a-z]+?\\.$/i\`, subject, 7);
+string t = preg_replace(\`#a|(?:b)\\1(?=c)#\`, "x", s) + preg_test("/q+/", s);
+string u = \`/(\\w)+/\`;
 `;
 
 (async () => {
@@ -145,6 +148,31 @@ int z = 4;
     ["// no", 1, "string.quoted.other.raw.qiq"],
     ["/* no */", 1, "string.quoted.other.raw.qiq"],
     ["int z", 1, "storage.type.primitive.qiq"],
+    ["preg_match", 1, "entity.name.function.call.qiq"],
+    ["/^(?", 1, "punctuation.definition.delimiter.regexp.qiq"],
+    ["^(?<", 1, "keyword.control.anchor.regexp.qiq"],
+    ["(?<year", 1, "punctuation.definition.group.regexp.qiq"],
+    ["year>", 1, "entity.name.tag.named-group.regexp.qiq"],
+    ["\\d{4}", 1, "constant.other.character-class.escape.backslash.regexp.qiq"],
+    ["{4}", 1, "keyword.operator.quantifier.regexp.qiq"],
+    ["[a-z]", 1, "punctuation.definition.character-class.regexp.qiq"],
+    ["a-z]", 1, "constant.other.character-class.range.regexp.qiq"],
+    ["+?\\.", 1, "keyword.operator.quantifier.regexp.qiq"],
+    ["\\.$", 1, "constant.character.escape.backslash.regexp.qiq"],
+    ["$/i", 1, "keyword.control.anchor.regexp.qiq"],
+    ["/i`", 1, "punctuation.definition.delimiter.regexp.qiq"],
+    ["i`, subject", 1, "keyword.other.flag.regexp.qiq"],
+    ["7);", 1, "constant.numeric.integer.qiq"],
+    ["preg_replace", 1, "entity.name.function.call.qiq"],
+    ["#a|", 1, "punctuation.definition.delimiter.regexp.qiq"],
+    ["|(?:", 1, "keyword.operator.or.regexp.qiq"],
+    ["(?:b", 1, "punctuation.definition.group.regexp.qiq"],
+    ["\\1(", 1, "keyword.other.back-reference.regexp.qiq"],
+    ["(?=c", 1, "punctuation.definition.group.assertion.regexp.qiq"],
+    ["\"x\"", 1, "punctuation.definition.string.begin.qiq"],
+    ["x\", s)", 1, "string.quoted.double.qiq"],
+    ["q+/", 1, "string.quoted.double.qiq"],
+    ["/(\\w)+/", 1, "string.quoted.other.raw.qiq"],
     ["// A comment", 1, "comment.line.double-slash.qiq"],
     ["class", 1, "comment.line.double-slash.qiq"],
     ["import", 1, "keyword.control.import.qiq"],
