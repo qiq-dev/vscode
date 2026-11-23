@@ -59,11 +59,33 @@ the module cache, `~/.cache/qiq/mod`), and `std/` paths.
 
 ## Installing
 
-While developing, open this folder in VS Code and press **F5** ("Run the
-qiq extension") to start a window with the extension loaded.
+1. Download the `.vsix` file (for example `qiq-0.2.0.vsix`) from the
+   [releases page](https://github.com/qiq-dev/vscode/releases).
+2. Install it:
 
-To use it in your normal VS Code, link the folder into your extensions and
-reload the window:
+   ```sh
+   code --install-extension qiq-0.2.0.vsix
+   ```
+
+   Or, in VS Code, open the Extensions view, click the **...** menu at the
+   top, choose **Install from VSIX...**, and pick the file.
+3. Reload VS Code if it asks you to.
+
+To update, install the newer `.vsix` the same way. It replaces the old
+version.
+
+Highlighting, completion, hovers and the other editor features work on their
+own. To see compile errors as you type, the `qiq` executable also needs to be
+on your `PATH`. If it isn't, set `qiq.path` to where it is (see
+[Settings](#settings)).
+
+## Development
+
+Open this folder in VS Code and press **F5** ("Run the qiq extension") to
+start a window with the extension loaded.
+
+To use your working copy in your normal VS Code, link the folder into your
+extensions and reload the window:
 
 ```sh
 ln -s "$PWD" ~/.vscode/extensions/qiq
