@@ -31,6 +31,8 @@ function parseError(output, entry, cwd) {
  * points at what the message is about. The leading context, such as
  * `function 'f': `, is skipped. Returns { start, end } or null. */
 function quotedOnLine(text, column, message) {
+  const literal = literalOnLine(text, column, message);
+  if (literal) return literal;
   const body = message.replace(/^(?:(?:function '[^']*'|anonymous function): )+/, "");
   for (const [, quoted] of body.matchAll(/'([^'\n]+)'/g)) {
     const isName = /^[A-Za-z_][A-Za-z0-9_]*$/.test(quoted);
@@ -39,6 +41,21 @@ function quotedOnLine(text, column, message) {
     pattern.lastIndex = column;
     const match = pattern.exec(text);
     if (match) return { start: match.index, end: match.index + quoted.length };
+  }
+  return null;
+}
+
+/** The first string literal ("..." or `...`) on `line`, from `column`,
+ * whose text the message contains, as a regular expression error quotes
+ * its pattern: `invalid regular expression /(\d+/: ...`. Returns { start,
+ * end } around the whole literal, or null. */
+function literalOnLine(text, column, message) {
+  const literals = /`[^`]*`|"(?:\\.|[^"\\])*"/g;
+  literals.lastIndex = column;
+  for (let match; (match = literals.exec(text)); ) {
+    const inside = match[0].slice(1, -1);
+    // Short text such as "a" would be found in almost any message.
+    if (inside.length >= 3 && message.includes(inside)) return { start: match.index, end: match.index + match[0].length };
   }
   return null;
 }

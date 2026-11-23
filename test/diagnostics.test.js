@@ -48,6 +48,10 @@ test("finding what an error message quotes", () => {
   // A quoted name that isn't on the line: the next one that is.
   assert.deepStrictEqual(quotedOnLine("A a = new A();", 0, "constructor 'B' or 'A' expects 1 argument(s)"), { start: 0, end: 1 });
   assert.strictEqual(quotedOnLine("print(1);", 0, "non-void function must return a value"), null);
+  // A regular expression error quotes the pattern: the literal is underlined.
+  const line = 'RegexMatch m = preg_match(`/(\\d+/`, "a/b");';
+  assert.deepStrictEqual(quotedOnLine(line, 0, "invalid regular expression /(\\d+/: missing closing parenthesis at offset 4"), { start: 26, end: 34 });
+  assert.deepStrictEqual(quotedOnLine('x = preg_test("/abc", s);', 0, "no ending delimiter '/' in /abc"), { start: 14, end: 20 });
   assert.strictEqual(quotedOnLine("print(y);", 7, "variable 'y' is not declared"), null);
 });
 
