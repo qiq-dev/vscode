@@ -45,7 +45,7 @@ plus highlighting for `qiq.mod` and `qiq.sum`.
   - **Snippets**: `function`, `class`, `foreach`, `for` (a `range` loop),
     `try`, `switch`, `httpserver`, and more.
 - **Hovers** with signatures and docs, for the standard library and for
-  your own code (from the `//` comments above a declaration).
+  your own code (from the `//` or `/** */` comment above a declaration).
 - **Parameter hints** for functions, methods, constructors, and function
   values, following named arguments such as `timeout: 5`, and the values
   after a query's SQL (`db->query(sql, ...values)`).

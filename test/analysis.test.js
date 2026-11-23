@@ -35,6 +35,42 @@ test("lexical context", () => {
   assert.strictEqual(analysis.lexicalContext('x = "a\\"b"; y', 13).kind, "code");
 });
 
+test("block comments", () => {
+  const text = 'int a = 1; /* { "\n  x }\n */ int b = 2 /* } */;';
+  const masked = analysis.mask(text);
+  assert.strictEqual(masked.length, text.length);
+  assert.strictEqual(masked.split("\n").length, 3);
+  assert.ok(!masked.includes("{") && !masked.includes("}") && !masked.includes("x"));
+  assert.ok(masked.includes("int b = 2"));
+  // An unclosed one runs to the end.
+  assert.strictEqual(analysis.mask("a /* b\nc").trim(), "a");
+
+  const at = (source) => analysis.lexicalContext(cursor(source).text, cursor(source).offset).kind;
+  assert.strictEqual(at("/* one\n  two| */"), "comment");
+  assert.strictEqual(at("/* one\n */ x|"), "code");
+  assert.strictEqual(at("x = 1 /* a */ + y|"), "code");
+  assert.strictEqual(at("/* never closed\n\n x|"), "comment");
+  assert.strictEqual(at('s = "/* not|'), "string");
+  assert.strictEqual(at('s = "/* not";\nx|'), "code");
+  assert.strictEqual(at("x = 1; // /* \ny|"), "code");
+});
+
+test("block doc comments", () => {
+  const text = [
+    "/**",
+    " * Adds two numbers.",
+    " * Returns the sum.",
+    " */",
+    "function add(int a, int b): int { return a + b; }",
+    "/* Says hi. */",
+    "function hi(): void {}",
+    "// Line doc.",
+    "function line(): void {}",
+  ].join("\n");
+  const docs = Object.fromEntries(analysis.parseDocument(text).functions.map((f) => [f.name, f.doc]));
+  assert.deepStrictEqual(docs, { add: "Adds two numbers.\nReturns the sum.", hi: "Says hi.", line: "Line doc." });
+});
+
 const SAMPLE = `import Mux as WebMux, helper from "views/mux";
 import File, file_get_contents from "std/file";
 

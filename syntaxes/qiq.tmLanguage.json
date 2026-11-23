@@ -33,8 +33,24 @@
       ]
     },
     "comment": {
-      "match": "//.*$",
-      "name": "comment.line.double-slash.qiq"
+      "patterns": [
+        {
+          "match": "//.*$",
+          "name": "comment.line.double-slash.qiq"
+        },
+        {
+          "comment": "/** ... */ before a declaration: shown in hovers.",
+          "begin": "/\\*\\*(?!/)",
+          "end": "\\*/",
+          "name": "comment.block.documentation.qiq"
+        },
+        {
+          "comment": "/* ... */, which may span lines and doesn't nest.",
+          "begin": "/\\*",
+          "end": "\\*/",
+          "name": "comment.block.qiq"
+        }
+      ]
     },
     "string": {
       "begin": "\"",

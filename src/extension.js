@@ -96,9 +96,22 @@ function importEdit(document, context, name, modulePath) {
     const last = document.positionAt(imports[imports.length - 1].end);
     return vscode.TextEdit.insert(last, "\n" + line);
   }
-  // After the comments at the top of the file.
+  // After the comments at the top of the file, // lines or /* */ blocks.
   let lineNumber = 0;
-  while (lineNumber < document.lineCount && document.lineAt(lineNumber).text.trim().startsWith("//")) lineNumber++;
+  while (lineNumber < document.lineCount) {
+    const text = document.lineAt(lineNumber).text.trim();
+    if (text.startsWith("//")) {
+      lineNumber++;
+    } else if (text.startsWith("/*")) {
+      let closing = lineNumber;
+      const closes = (line) => (line === lineNumber ? text.slice(2) : document.lineAt(line).text).includes("*/");
+      while (closing < document.lineCount && !closes(closing)) closing++;
+      if (closing >= document.lineCount) break;
+      lineNumber = closing + 1;
+    } else {
+      break;
+    }
+  }
   const next = lineNumber < document.lineCount ? document.lineAt(lineNumber).text.trim() : "";
   return vscode.TextEdit.insert(new vscode.Position(lineNumber, 0), line + "\n" + (next === "" ? "" : "\n"));
 }

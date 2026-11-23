@@ -111,6 +111,10 @@ if (shape instanceof Circle circle) {
     total += 2;
     mask <<= 1;
 }
+/* A block comment with class
+   and "quotes" */ int after = 1;
+/** Documented. */
+int y = 2 /* inline */ + 3;
 `;
 
 (async () => {
@@ -128,6 +132,12 @@ if (shape instanceof Circle circle) {
     ["++", 1, "keyword.operator.increment.qiq"],
     ["+=", 1, "keyword.operator.assignment.compound.qiq"],
     ["<<=", 1, "keyword.operator.assignment.compound.qiq"],
+    ["/* A block", 1, "comment.block.qiq"],
+    ["and \"quotes\"", 1, "comment.block.qiq"],
+    ["int after", 1, "storage.type.primitive.qiq"],
+    ["/** Documented", 1, "comment.block.documentation.qiq"],
+    ["/* inline", 1, "comment.block.qiq"],
+    ["+ 3", 1, "keyword.operator.arithmetic.qiq"],
     ["// A comment", 1, "comment.line.double-slash.qiq"],
     ["class", 1, "comment.line.double-slash.qiq"],
     ["import", 1, "keyword.control.import.qiq"],

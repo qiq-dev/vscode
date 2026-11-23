@@ -26,6 +26,12 @@ function mask(text) {
     const c = text[i];
     if (c === "/" && text[i + 1] === "/") {
       while (i < n && text[i] !== "\n") out[i++] = " ";
+    } else if (c === "/" && text[i + 1] === "*") {
+      // A block comment: blanked up to and including the first */, keeping
+      // line breaks. One that isn't closed runs to the end of the text.
+      const end = text.indexOf("*/", i + 2);
+      const stop = end < 0 ? n : end + 2;
+      for (; i < stop; i++) if (text[i] !== "\n") out[i] = " ";
     } else if (c === '"' || c === "'") {
       i++;
       while (i < n && text[i] !== c && text[i] !== "\n") {
@@ -43,16 +49,28 @@ function mask(text) {
 }
 
 /** What the position is inside: "comment", "string" (with the text so far
- * and where the string starts), "char", or "code". Strings don't span lines. */
+ * and where the string starts), "char", or "code". Strings don't span
+ * lines; block comments can, so the scan starts at the top of the text. */
 function lexicalContext(text, offset) {
-  let i = text.lastIndexOf("\n", offset - 1) + 1;
+  let i = 0;
   while (i < offset) {
     const c = text[i];
-    if (c === "/" && text[i + 1] === "/") return { kind: "comment" };
+    if (c === "/" && text[i + 1] === "/") {
+      const end = text.indexOf("\n", i);
+      if (end < 0 || end >= offset) return { kind: "comment" };
+      i = end + 1;
+      continue;
+    }
+    if (c === "/" && text[i + 1] === "*") {
+      const end = text.indexOf("*/", i + 2);
+      if (end < 0 || end + 2 > offset) return { kind: "comment" };
+      i = end + 2;
+      continue;
+    }
     if (c === '"' || c === "'") {
       const start = i;
       i++;
-      while (i < offset && text[i] !== c) i += text[i] === "\\" ? 2 : 1;
+      while (i < offset && text[i] !== c && text[i] !== "\n") i += text[i] === "\\" ? 2 : 1;
       if (i >= offset) return { kind: c === '"' ? "string" : "char", start, value: text.slice(start + 1, offset) };
     }
     i++;
@@ -119,11 +137,26 @@ function normalizeType(type) {
   return type.replace(/\s+/g, " ").replace(/\s*\[\s*\]/g, "[]").replace(/\(\s+/g, "(").replace(/\s+\)/g, ")").trim();
 }
 
-/** The // comment lines just above `offset`'s line, joined. */
+/** The comment just above `offset`'s line: its // lines, or a block
+ * comment that ends there, joined without the comment markers. */
 function docCommentAbove(text, offset) {
   const lines = text.slice(0, text.lastIndexOf("\n", offset - 1) + 1).split("\n");
   lines.pop();
   const doc = [];
+  if (lines.length && lines[lines.length - 1].trim().endsWith("*/")) {
+    while (lines.length) {
+      const line = lines.pop().trim();
+      const opens = line.startsWith("/*");
+      const body = line
+        .replace(/^\/\*+/, "")
+        .replace(/\*+\/$/, "")
+        .replace(/^\*(?!\/)\s?/, "")
+        .trim();
+      doc.unshift(body);
+      if (opens) return doc.join("\n").trim();
+    }
+    return "";
+  }
   while (lines.length) {
     const line = lines[lines.length - 1].trim();
     if (!line.startsWith("//")) break;
