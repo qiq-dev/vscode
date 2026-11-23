@@ -55,6 +55,21 @@ test("block comments", () => {
   assert.strictEqual(at("x = 1; // /* \ny|"), "code");
 });
 
+test("raw strings", () => {
+  const text = "string p = `\\d { /* \"\n x // }`; int b = 2;";
+  const masked = analysis.mask(text);
+  assert.strictEqual(masked.length, text.length);
+  assert.strictEqual(masked.split("\n").length, 2);
+  assert.ok(!masked.includes("{") && !masked.includes("}") && !masked.includes("x"));
+  assert.ok(masked.includes("`; int b = 2;"));
+
+  const at = (source) => analysis.lexicalContext(cursor(source).text, cursor(source).offset).kind;
+  assert.strictEqual(at("s = `one\n  two|`"), "string");
+  assert.strictEqual(at("s = `a\\`; x|"), "code");
+  assert.strictEqual(at("s = `/* not a comment`; x|"), "code");
+  assert.strictEqual(at("s = `a\nb`;\nx|"), "code");
+});
+
 test("block doc comments", () => {
   const text = [
     "/**",

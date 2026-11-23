@@ -8,7 +8,8 @@
   "std/net/http",
   "std/net/http/server",
   "std/crypto",
-  "std/sql"
+  "std/sql",
+  "std/regex"
  ],
  "functions": {
   "len": {
@@ -413,6 +414,208 @@
    "doc": "Decodes `bytes` as UTF-8 text.",
    "module": null,
    "category": "Strings"
+  },
+  "preg_match": {
+   "name": "preg_match",
+   "params": [
+    {
+     "name": "pattern",
+     "type": "string",
+     "default": null,
+     "doc": "The pattern, between delimiters: ``/\\d+/``."
+    },
+    {
+     "name": "subject",
+     "type": "string",
+     "default": null,
+     "doc": "The text to search."
+    },
+    {
+     "name": "offset",
+     "type": "int",
+     "default": "0",
+     "doc": "The character to start searching from."
+    }
+   ],
+   "returns": "RegexMatch",
+   "summary": "Find the first match of a pattern",
+   "doc": "Searches `subject` for `pattern` and returns the first match as a RegexMatch, with its text, position, and groups. Like PHP's `preg_match($pattern, $subject, $matches)`, but the match is returned rather than written into `$matches`.",
+   "module": "std/regex",
+   "category": "Regular expressions"
+  },
+  "preg_match_all": {
+   "name": "preg_match_all",
+   "params": [
+    {
+     "name": "pattern",
+     "type": "string",
+     "default": null,
+     "doc": "The pattern."
+    },
+    {
+     "name": "subject",
+     "type": "string",
+     "default": null,
+     "doc": "The text to search."
+    },
+    {
+     "name": "offset",
+     "type": "int",
+     "default": "0",
+     "doc": "The character to start searching from."
+    }
+   ],
+   "returns": "RegexMatch[]",
+   "summary": "Find every match of a pattern",
+   "doc": "Returns every match of `pattern` in `subject`, in order, as RegexMatch objects. Matches don't overlap: each search starts where the previous match ended. This is PHP's `preg_match_all` with `PREG_SET_ORDER`: one object per match.",
+   "module": "std/regex",
+   "category": "Regular expressions"
+  },
+  "preg_test": {
+   "name": "preg_test",
+   "params": [
+    {
+     "name": "pattern",
+     "type": "string",
+     "default": null,
+     "doc": "The pattern."
+    },
+    {
+     "name": "subject",
+     "type": "string",
+     "default": null,
+     "doc": "The text to search."
+    }
+   ],
+   "returns": "bool",
+   "summary": "Check whether a pattern matches",
+   "doc": "Returns whether `pattern` matches anywhere in `subject`. Use it where PHP code writes `if (preg_match(...))`.",
+   "module": "std/regex",
+   "category": "Regular expressions"
+  },
+  "preg_replace": {
+   "name": "preg_replace",
+   "params": [
+    {
+     "name": "pattern",
+     "type": "string",
+     "default": null,
+     "doc": "The pattern."
+    },
+    {
+     "name": "replacement",
+     "type": "string",
+     "default": null,
+     "doc": "The text for each match, in which `$1` stands for the first group."
+    },
+    {
+     "name": "subject",
+     "type": "string",
+     "default": null,
+     "doc": "The text to change."
+    },
+    {
+     "name": "limit",
+     "type": "int",
+     "default": "-1",
+     "doc": "The most matches to replace; -1 for all."
+    }
+   ],
+   "returns": "string",
+   "summary": "Replace matches of a pattern",
+   "doc": "Returns `subject` with each match of `pattern` replaced by `replacement`. In the replacement, `$0` stands for the whole match, `$1` to `$99` for a group (`\\1` and `${1}` work too), `${name}` for a named group, and `$$` for a dollar sign. A group that took no part in the match gives an empty string.",
+   "module": "std/regex",
+   "category": "Regular expressions"
+  },
+  "preg_replace_callback": {
+   "name": "preg_replace_callback",
+   "params": [
+    {
+     "name": "pattern",
+     "type": "string",
+     "default": null,
+     "doc": "The pattern."
+    },
+    {
+     "name": "callback",
+     "type": "function(RegexMatch): string",
+     "default": null,
+     "doc": "Called with each match; returns its replacement."
+    },
+    {
+     "name": "subject",
+     "type": "string",
+     "default": null,
+     "doc": "The text to change."
+    },
+    {
+     "name": "limit",
+     "type": "int",
+     "default": "-1",
+     "doc": "The most matches to replace; -1 for all."
+    }
+   ],
+   "returns": "string",
+   "summary": "Replace matches with what a function returns",
+   "doc": "Returns `subject` with each match of `pattern` replaced by what `callback` returns for it, for replacements that need computing.",
+   "module": "std/regex",
+   "category": "Regular expressions"
+  },
+  "preg_split": {
+   "name": "preg_split",
+   "params": [
+    {
+     "name": "pattern",
+     "type": "string",
+     "default": null,
+     "doc": "The pattern that separates the pieces."
+    },
+    {
+     "name": "subject",
+     "type": "string",
+     "default": null,
+     "doc": "The text to split."
+    },
+    {
+     "name": "limit",
+     "type": "int",
+     "default": "-1",
+     "doc": "Above 0, the most pieces to return, the last holding the rest; -1 for no limit."
+    },
+    {
+     "name": "skipEmpty",
+     "type": "bool",
+     "default": "false",
+     "doc": "Leave out empty pieces, as PHP's `PREG_SPLIT_NO_EMPTY`."
+    }
+   ],
+   "returns": "string[]",
+   "summary": "Split a string at matches of a pattern",
+   "doc": "Splits `subject` at each match of `pattern` and returns the pieces between them. Like `explode`, but the separator is a pattern.",
+   "module": "std/regex",
+   "category": "Regular expressions"
+  },
+  "preg_quote": {
+   "name": "preg_quote",
+   "params": [
+    {
+     "name": "text",
+     "type": "string",
+     "default": null,
+     "doc": "The text to match literally."
+    },
+    {
+     "name": "delimiter",
+     "type": "string",
+     "default": "null",
+     "doc": "The pattern's delimiter, if it isn't one of the characters escaped anyway."
+    }
+   ],
+   "returns": "string",
+   "summary": "Escape text for use in a pattern",
+   "doc": "Returns `text` with a backslash before each character that has a meaning in a pattern (`. \\ + * ? [ ^ ] $ ( ) { } = ! < > | : - #`) and before `delimiter`, so text from a user or a file can go inside a pattern and match only itself.",
+   "module": "std/regex",
+   "category": "Regular expressions"
   },
   "range": {
    "name": "range",
@@ -2114,6 +2317,16 @@
    "final": false,
    "module": null,
    "doc": "An HTTP request got an error status (from Response::raiseForStatus, with the status as its code) or was redirected too many times.",
+   "properties": [],
+   "methods": []
+  },
+  "RegexException": {
+   "name": "RegexException",
+   "kind": "class",
+   "extends": "Exception",
+   "final": false,
+   "module": null,
+   "doc": "A regular expression (std/regex) is malformed, or needs too much backtracking on the text it's matched against.",
    "properties": [],
    "methods": []
   },
@@ -4464,6 +4677,128 @@
      ],
      "returns": "T",
      "doc": "The first row of a query read into an object of the class the result is used as, as in `User user = db->queryOneAs(sql, ...);`, or null when there is none."
+    }
+   ]
+  },
+  "RegexMatch": {
+   "name": "RegexMatch",
+   "kind": "class",
+   "extends": null,
+   "final": false,
+   "module": "std/regex",
+   "doc": "A match of a regular expression: the text it matched, where, and its groups.",
+   "properties": [
+    {
+     "name": "text",
+     "type": "string",
+     "static": false,
+     "readonly": true,
+     "doc": "The whole match."
+    },
+    {
+     "name": "start",
+     "type": "int",
+     "static": false,
+     "readonly": true,
+     "doc": "The positions of its first character and of the character after its last, so `end - start` is its length."
+    },
+    {
+     "name": "end",
+     "type": "int",
+     "static": false,
+     "readonly": true,
+     "doc": ""
+    },
+    {
+     "name": "groups",
+     "type": "string[]",
+     "static": false,
+     "readonly": true,
+     "doc": "The whole match (element 0), then each group, in the order their opening parentheses appear. A group that took no part in the match, such as an unused alternative, is null."
+    }
+   ],
+   "methods": [
+    {
+     "name": "__construct",
+     "static": false,
+     "params": [
+      {
+       "name": "groups",
+       "type": "string[]",
+       "default": null
+      },
+      {
+       "name": "offsets",
+       "type": "int[]",
+       "default": null
+      },
+      {
+       "name": "names",
+       "type": "string[]",
+       "default": null
+      }
+     ],
+     "returns": "void",
+     "doc": ""
+    },
+    {
+     "name": "group",
+     "static": false,
+     "params": [
+      {
+       "name": "number",
+       "type": "int",
+       "default": null
+      }
+     ],
+     "returns": "string",
+     "doc": "A group by number: 0 for the whole match, 1 for the first group. Null if the group took no part in the match. Throws OutOfRangeException if the pattern has no such group."
+    },
+    {
+     "name": "named",
+     "static": false,
+     "params": [
+      {
+       "name": "name",
+       "type": "string",
+       "default": null
+      }
+     ],
+     "returns": "string",
+     "doc": "A named group, written (?<name>...), or null if it took no part in the match. Throws InvalidArgumentException if the pattern has no group with that name."
+    },
+    {
+     "name": "groupStart",
+     "static": false,
+     "params": [
+      {
+       "name": "number",
+       "type": "int",
+       "default": null
+      }
+     ],
+     "returns": "int",
+     "doc": "Where a group starts and ends, by number, or -1 if it took no part in the match."
+    },
+    {
+     "name": "groupEnd",
+     "static": false,
+     "params": [
+      {
+       "name": "number",
+       "type": "int",
+       "default": null
+      }
+     ],
+     "returns": "int",
+     "doc": ""
+    },
+    {
+     "name": "namedGroups",
+     "static": false,
+     "params": [],
+     "returns": "map[string, string]",
+     "doc": "The names of the named groups, each with its value (null for one that took no part in the match)."
     }
    ]
   }

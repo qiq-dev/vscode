@@ -14,6 +14,7 @@
     "code": {
       "patterns": [
         { "include": "#comment" },
+        { "include": "#raw-string" },
         { "include": "#string" },
         { "include": "#char" },
         { "include": "#number" },
@@ -51,6 +52,12 @@
           "name": "comment.block.qiq"
         }
       ]
+    },
+    "raw-string": {
+      "comment": "`...`: no escapes, and it may span lines.",
+      "begin": "`",
+      "end": "`",
+      "name": "string.quoted.other.raw.qiq"
     },
     "string": {
       "begin": "\"",

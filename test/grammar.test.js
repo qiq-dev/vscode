@@ -115,6 +115,9 @@ if (shape instanceof Circle circle) {
    and "quotes" */ int after = 1;
 /** Documented. */
 int y = 2 /* inline */ + 3;
+string raw = \`^\\d+ "q" // no
+  /* no */ \`;
+int z = 4;
 `;
 
 (async () => {
@@ -138,6 +141,10 @@ int y = 2 /* inline */ + 3;
     ["/** Documented", 1, "comment.block.documentation.qiq"],
     ["/* inline", 1, "comment.block.qiq"],
     ["+ 3", 1, "keyword.operator.arithmetic.qiq"],
+    ["^", 1, "string.quoted.other.raw.qiq"],
+    ["// no", 1, "string.quoted.other.raw.qiq"],
+    ["/* no */", 1, "string.quoted.other.raw.qiq"],
+    ["int z", 1, "storage.type.primitive.qiq"],
     ["// A comment", 1, "comment.line.double-slash.qiq"],
     ["class", 1, "comment.line.double-slash.qiq"],
     ["import", 1, "keyword.control.import.qiq"],

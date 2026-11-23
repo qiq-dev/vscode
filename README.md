@@ -8,7 +8,8 @@ plus highlighting for `qiq.mod` and `qiq.sum`.
 ## Features
 
 - **Syntax highlighting** for qiq: keywords, types, strings and their
-  escapes (an unsupported escape such as `\q` is marked), chars, numbers,
+  escapes (an unsupported escape such as `\q` is marked), raw `...`
+  strings, chars, numbers, block comments,
   declarations, calls, `->`, `?->`, and `::` access, `::class`,
   `instanceof`, `++` and compound assignments, `const` and `readonly`, named
   arguments, imports, and anonymous functions. `qiq.mod` and `qiq.sum` are

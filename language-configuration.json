@@ -7,9 +7,10 @@
     { "open": "(", "close": ")" },
     { "open": "\"", "close": "\"", "notIn": ["string", "comment"] },
     { "open": "'", "close": "'", "notIn": ["string", "comment"] },
+    { "open": "`", "close": "`", "notIn": ["string", "comment"] },
     { "open": "/**", "close": " */", "notIn": ["string"] }
   ],
-  "surroundingPairs": [["{", "}"], ["[", "]"], ["(", ")"], ["\"", "\""], ["'", "'"]],
+  "surroundingPairs": [["{", "}"], ["[", "]"], ["(", ")"], ["\"", "\""], ["'", "'"], ["`", "`"]],
   "autoCloseBefore": ";:.,=}])> \n\t",
   "indentationRules": {
     "increaseIndentPattern": "^.*(\\{[^}\"']*|\\([^)\"']*|\\[[^\\]\"']*|^\\s*(case\\b.*|default)\\s*:)\\s*(//.*)?$",

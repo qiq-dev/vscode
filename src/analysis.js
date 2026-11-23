@@ -32,6 +32,15 @@ function mask(text) {
       const end = text.indexOf("*/", i + 2);
       const stop = end < 0 ? n : end + 2;
       for (; i < stop; i++) if (text[i] !== "\n") out[i] = " ";
+    } else if (c === "`") {
+      // A raw string: blanked up to the closing backtick, keeping line
+      // breaks, with no escapes. The backticks are kept.
+      i++;
+      while (i < n && text[i] !== "`") {
+        if (text[i] !== "\n") out[i] = " ";
+        i++;
+      }
+      i++;
     } else if (c === '"' || c === "'") {
       i++;
       while (i < n && text[i] !== c && text[i] !== "\n") {
@@ -49,8 +58,9 @@ function mask(text) {
 }
 
 /** What the position is inside: "comment", "string" (with the text so far
- * and where the string starts), "char", or "code". Strings don't span
- * lines; block comments can, so the scan starts at the top of the text. */
+ * and where the string starts), "char", or "code". Quoted strings don't
+ * span lines; block comments and raw strings can, so the scan starts at the
+ * top of the text. */
 function lexicalContext(text, offset) {
   let i = 0;
   while (i < offset) {
@@ -65,6 +75,12 @@ function lexicalContext(text, offset) {
       const end = text.indexOf("*/", i + 2);
       if (end < 0 || end + 2 > offset) return { kind: "comment" };
       i = end + 2;
+      continue;
+    }
+    if (c === "`") {
+      const end = text.indexOf("`", i + 1);
+      if (end < 0 || end >= offset) return { kind: "string", start: i, value: text.slice(i + 1, offset) };
+      i = end + 1;
       continue;
     }
     if (c === '"' || c === "'") {
