@@ -2078,6 +2078,22 @@
    "doc": "Writes its arguments on one line, separated by single spaces, followed by a newline. `print` is a statement built into the language, so it can't be passed around or redeclared.",
    "module": null,
    "category": "Output"
+  },
+  "println": {
+   "name": "println",
+   "params": [
+    {
+     "name": "values",
+     "type": "any...",
+     "default": null,
+     "doc": "Zero or more values of any type except `void`."
+    }
+   ],
+   "returns": "void",
+   "summary": "Write values to standard output, one per line",
+   "doc": "Writes each of its arguments as print writes it, each on its own line. With one value or none, it's the same as `print`. Like `print`, it's a statement built into the language.",
+   "module": null,
+   "category": "Output"
   }
  },
  "classes": {

@@ -12,7 +12,7 @@ const KEYWORDS = [
   "if", "else", "foreach", "while", "switch", "case", "default", "break", "continue", "return",
   "try", "catch", "finally", "throw", "as", "new", "function", "fn", "class", "interface", "extends",
   "implements", "abstract", "final", "static", "public", "private", "protected", "import", "from",
-  "true", "false", "null", "this", "self", "parent", "print", "map", "instanceof", "const", "readonly",
+  "true", "false", "null", "this", "self", "parent", "print", "println", "map", "instanceof", "const", "readonly",
 ];
 
 /** Whether an f-string starts at `i`: an `f` that begins a word, then `"`. */
@@ -851,7 +851,7 @@ function callAt(text, offset) {
       if (!expression) return null;
       const calleeSteps = steps(masked, expression.start, j);
       // `if (`, `while (`, ...: not calls.
-      if (calleeSteps && calleeSteps.length === 1 && calleeSteps[0].kind === "name" && KEYWORDS.includes(calleeSteps[0].name) && calleeSteps[0].name !== "print") return null;
+      if (calleeSteps && calleeSteps.length === 1 && calleeSteps[0].kind === "name" && KEYWORDS.includes(calleeSteps[0].name) && calleeSteps[0].name !== "print" && calleeSteps[0].name !== "println") return null;
       return { expression, argument, named, isNew, open: i };
     } else if (c === "," && depth === 0) {
       argument++;
