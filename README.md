@@ -1,6 +1,6 @@
 # qiq for Visual Studio Code
 
-Language support for [qiq](../qiq/README.md): syntax highlighting, compile errors
+Language support for [qiq](https://github.com/qiq-dev/qiq): syntax highlighting, compile errors
 as you type, completion, hovers, parameter hints, go to definition, and the
 outline, for `.qiq` files,
 plus highlighting for `qiq.mod` and `qiq.sum`.
@@ -75,8 +75,8 @@ To make a `.vsix` file to share or install with `code --install-extension`:
 npx @vscode/vsce package
 ```
 
-(`vsce` asks for a license; add a LICENSE file first. The `publisher` in
-`package.json` is the Marketplace publisher ID used when publishing.)
+(The `publisher` in `package.json` is the Marketplace publisher ID used when
+publishing.)
 
 ## How it works
 
@@ -147,3 +147,7 @@ ELECTRON_RUN_AS_NODE=1 /snap/code/current/usr/share/code/code test/run.js
 - `test/grammar.test.js`: highlighting scopes, with the TextMate engine
   VS Code uses (found inside VS Code, or set `QIQ_VSCODE_APP` to its
   `resources/app` directory)
+
+## License
+
+The extension is licensed under the [MIT license](LICENSE).

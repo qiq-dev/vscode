@@ -4,6 +4,11 @@
   "description": "qiq language support: syntax highlighting, compile errors as you type, completion with auto-import, hovers, parameter hints, go to definition, and the outline.",
   "version": "0.2.0",
   "publisher": "asimlqt",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/qiq-dev/vscode"
+  },
   "engines": {
     "vscode": "^1.85.0"
   },
