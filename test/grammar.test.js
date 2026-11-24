@@ -122,6 +122,8 @@ RegexMatch rm = preg_match(\`/^(?<year>\\d{4})-[a-z]+?\\.$/i\`, subject, 7);
 string t = preg_replace(\`#a|(?:b)\\1(?=c)#\`, "x", s) + preg_test("/q+/", s);
 string u = \`/(\\w)+/\`;
 string g = f"Hi {user->name}: {total:.2f} {{x}} {A::b} {len({"k" => 1})}!";
+string h = f"{n == 1 ? "" : "s"} {ok ? price : 0.0:.1f}";
+int t = ok ? 1 : 2;
 `;
 
 (async () => {
@@ -186,6 +188,13 @@ string g = f"Hi {user->name}: {total:.2f} {{x}} {A::b} {len({"k" => 1})}!";
     ["=> 1})}", 1, "keyword.operator.arrow.qiq"],
     ["}!\"", 1, "punctuation.section.interpolation.end.qiq"],
     ["!\";", 1, "string.quoted.double.interpolated.qiq"],
+    ["? \"\"", 1, "keyword.operator.ternary.qiq"],
+    [": \"s\"", 1, "keyword.operator.ternary.qiq"],
+    ["\"s\"}", 1, "punctuation.definition.string.begin.qiq"],
+    [": 0.0", 1, "keyword.operator.ternary.qiq"],
+    ["0.0:", 1, "constant.numeric.float.qiq"],
+    [".1f}", 1, "constant.other.format-spec.qiq"],
+    ["? 1 : 2", 1, "keyword.operator.ternary.qiq"],
     ["// A comment", 1, "comment.line.double-slash.qiq"],
     ["class", 1, "comment.line.double-slash.qiq"],
     ["import", 1, "keyword.control.import.qiq"],

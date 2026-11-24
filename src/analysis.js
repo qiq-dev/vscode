@@ -37,6 +37,8 @@ function fstringSpans(text, i) {
     } else if (c === "{") {
       const start = at + 1;
       let depth = 0;
+      // `?`s of `a ? b : c` waiting for their ':', which isn't a spec.
+      let questions = 0;
       let end = -1;
       let j = start;
       while (j < n && text[j] !== "\n") {
@@ -48,7 +50,13 @@ function fstringSpans(text, i) {
           j++;
           continue;
         }
-        if (d === "(" || d === "[" || d === "{") depth++;
+        if (d === "?" && depth === 0 && text[j + 1] === "?") {
+          j += 2;
+          continue;
+        }
+        if (d === "?" && depth === 0 && text[j + 1] !== "-") questions++;
+        else if (d === ":" && depth === 0 && questions > 0 && text[j + 1] !== ":") questions--;
+        else if (d === "(" || d === "[" || d === "{") depth++;
         else if ((d === ")" || d === "]") && depth > 0) depth--;
         else if (d === "}" && depth > 0) depth--;
         else if (d === "}" || (d === ":" && depth === 0 && text[j + 1] !== ":" && text[j - 1] !== ":")) {

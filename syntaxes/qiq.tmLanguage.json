@@ -287,6 +287,26 @@
           "contentName": "source.qiq",
           "patterns": [
             {
+              "comment": "The ':' of `a ? b : c` isn't a format spec.",
+              "begin": "\\?(?![?\\-])",
+              "end": "(?<!:):(?!:)",
+              "beginCaptures": {
+                "0": {
+                  "name": "keyword.operator.ternary.qiq"
+                }
+              },
+              "endCaptures": {
+                "0": {
+                  "name": "keyword.operator.ternary.qiq"
+                }
+              },
+              "patterns": [
+                {
+                  "include": "#code"
+                }
+              ]
+            },
+            {
               "comment": "Braces inside the expression, such as a map literal.",
               "begin": "\\{",
               "end": "\\}",
@@ -467,6 +487,7 @@
       "patterns": [
         { "match": "=>", "name": "keyword.operator.arrow.qiq" },
         { "match": "\\?\\?", "name": "keyword.operator.null-coalescing.qiq" },
+        { "match": "\\?(?![?\\-])", "name": "keyword.operator.ternary.qiq" },
         { "match": "\\+\\+|--", "name": "keyword.operator.increment.qiq" },
         { "match": "(?:<<|>>|[-+*/%&|^])=", "name": "keyword.operator.assignment.compound.qiq" },
         { "match": "==|!=|<=|>=|<(?!<)|>(?!>)", "name": "keyword.operator.comparison.qiq" },

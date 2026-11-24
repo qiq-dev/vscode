@@ -85,6 +85,10 @@ test("f-strings", () => {
   assert.strictEqual(at('s = f"{m["k|"]}"'), "string");
   assert.strictEqual(at('s = f"{x}"; y|'), "code");
   assert.strictEqual(at('s = elf"x|"'), "string");
+  // The ':' of `a ? b : c` isn't a format spec; one after it is.
+  assert.strictEqual(at('s = f"{ok ? a : bb|}"'), "code");
+  assert.strictEqual(at('s = f"{ok ? a : b:.2|f}"'), "string");
+  assert.strictEqual(at('s = f"{a ?? b:.2|f}"'), "string");
   // In an expression, completion sees the variables of the code around it.
   const doc = analysis.parseDocument('function f(string name): void { print(f"{nam}"); }');
   const { text: source, offset } = cursor('function f(string name): void { print(f"{nam|}"); }');
