@@ -10,7 +10,8 @@
   "std/crypto",
   "std/sql",
   "std/regex",
-  "std/math"
+  "std/math",
+  "std/testing"
  ],
  "functions": {
   "len": {
@@ -5326,6 +5327,234 @@
      "params": [],
      "returns": "map[string, string]",
      "doc": "The names of the named groups, each with its value (null for one that took no part in the match)."
+    }
+   ]
+  },
+  "T": {
+   "name": "T",
+   "kind": "class",
+   "extends": null,
+   "final": true,
+   "module": "std/testing",
+   "doc": "The test being run, for its assertions.",
+   "properties": [],
+   "methods": [
+    {
+     "name": "__construct",
+     "static": false,
+     "params": [
+      {
+       "name": "name",
+       "type": "string",
+       "default": null
+      }
+     ],
+     "returns": "void",
+     "doc": ""
+    },
+    {
+     "name": "name",
+     "static": false,
+     "params": [],
+     "returns": "string",
+     "doc": "The test's function name, such as \"test_add\"."
+    },
+    {
+     "name": "equal",
+     "static": false,
+     "params": [
+      {
+       "name": "actual",
+       "type": "string",
+       "default": null
+      },
+      {
+       "name": "expected",
+       "type": "string",
+       "default": null
+      },
+      {
+       "name": "at",
+       "type": "string",
+       "default": "\"\""
+      }
+     ],
+     "returns": "void",
+     "doc": "Fails unless `actual` equals `expected` (as == compares them). Either order works, but the message reads best with the value under test first: \"expected 5, found 4\"."
+    },
+    {
+     "name": "notEqual",
+     "static": false,
+     "params": [
+      {
+       "name": "actual",
+       "type": "string",
+       "default": null
+      },
+      {
+       "name": "unexpected",
+       "type": "string",
+       "default": null
+      },
+      {
+       "name": "at",
+       "type": "string",
+       "default": "\"\""
+      }
+     ],
+     "returns": "void",
+     "doc": "Fails if `actual` equals `unexpected`."
+    },
+    {
+     "name": "isTrue",
+     "static": false,
+     "params": [
+      {
+       "name": "condition",
+       "type": "bool",
+       "default": null
+      },
+      {
+       "name": "message",
+       "type": "string",
+       "default": "\"\""
+      },
+      {
+       "name": "at",
+       "type": "string",
+       "default": "\"\""
+      }
+     ],
+     "returns": "void",
+     "doc": "Fails unless `condition` is true; `message`, if given, says what was expected."
+    },
+    {
+     "name": "isFalse",
+     "static": false,
+     "params": [
+      {
+       "name": "condition",
+       "type": "bool",
+       "default": null
+      },
+      {
+       "name": "message",
+       "type": "string",
+       "default": "\"\""
+      },
+      {
+       "name": "at",
+       "type": "string",
+       "default": "\"\""
+      }
+     ],
+     "returns": "void",
+     "doc": "Fails unless `condition` is false."
+    },
+    {
+     "name": "near",
+     "static": false,
+     "params": [
+      {
+       "name": "actual",
+       "type": "double",
+       "default": null
+      },
+      {
+       "name": "expected",
+       "type": "double",
+       "default": null
+      },
+      {
+       "name": "tolerance",
+       "type": "double",
+       "default": "0.000000001"
+      },
+      {
+       "name": "at",
+       "type": "string",
+       "default": "\"\""
+      }
+     ],
+     "returns": "void",
+     "doc": "Fails unless `actual` is within `tolerance` of `expected`, for doubles that arithmetic leaves slightly off: t->near(0.1 + 0.2, 0.3)."
+    },
+    {
+     "name": "throws",
+     "static": false,
+     "params": [
+      {
+       "name": "body",
+       "type": "function(): void",
+       "default": null
+      },
+      {
+       "name": "exception",
+       "type": "string",
+       "default": "\"Exception\""
+      },
+      {
+       "name": "at",
+       "type": "string",
+       "default": "\"\""
+      }
+     ],
+     "returns": "void",
+     "doc": "Fails unless calling `body` throws an exception of class `exception` (its own class, by name), or any exception for \"Exception\"."
+    },
+    {
+     "name": "fail",
+     "static": false,
+     "params": [
+      {
+       "name": "message",
+       "type": "string",
+       "default": null
+      },
+      {
+       "name": "at",
+       "type": "string",
+       "default": "\"\""
+      }
+     ],
+     "returns": "void",
+     "doc": "Fails the test with `message`."
+    },
+    {
+     "name": "skip",
+     "static": false,
+     "params": [
+      {
+       "name": "reason",
+       "type": "string",
+       "default": "\"\""
+      },
+      {
+       "name": "at",
+       "type": "string",
+       "default": "\"\""
+      }
+     ],
+     "returns": "void",
+     "doc": "Stops the test, which counts as skipped rather than failed."
+    },
+    {
+     "name": "log",
+     "static": false,
+     "params": [
+      {
+       "name": "message",
+       "type": "string",
+       "default": null
+      },
+      {
+       "name": "at",
+       "type": "string",
+       "default": "\"\""
+      }
+     ],
+     "returns": "void",
+     "doc": "Notes `message`, shown if the test fails, or with qiq test -v."
     }
    ]
   }
