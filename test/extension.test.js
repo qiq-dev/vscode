@@ -270,6 +270,8 @@ test("untyped callback parameters take their types from where they're passed", a
   assert.deepStrictEqual(labels(reduced), ["sum"]);
   const mapped = await complete(MAIN, "class Item { public string name; }\nmap[string, Item] byName = {};\nprint(map_filter(byName, fn(key, it) => it->|));", ">");
   assert.deepStrictEqual(labels(mapped), ["name"]);
+  const sorted = await complete(MAIN, "class Item { public string name; }\nItem[] items = [];\nItem[] s = usort(items, fn(a, b) => strcmp(a->name, b->|));", ">");
+  assert.deepStrictEqual(labels(sorted), ["name"]);
 });
 
 test("newer syntax: ?->, ::class, instanceof, promotion, readonly, constants, and query values", async () => {

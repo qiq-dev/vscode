@@ -118,6 +118,28 @@
    "module": null,
    "category": "Strings"
   },
+  "strcmp": {
+   "name": "strcmp",
+   "params": [
+    {
+     "name": "a",
+     "type": "string",
+     "default": null,
+     "doc": "The first string."
+    },
+    {
+     "name": "b",
+     "type": "string",
+     "default": null,
+     "doc": "The second string."
+    }
+   ],
+   "returns": "int",
+   "summary": "Compare two strings for sorting",
+   "doc": "Returns -1 if `a` sorts before `b`, 0 if they're the same, and 1 if it sorts after, comparing by Unicode code point as `<` does, like PHP 8.2's `strcmp`. It's what a usort comparison returns to sort by a string.",
+   "module": null,
+   "category": "Strings"
+  },
   "str_starts_with": {
    "name": "str_starts_with",
    "params": [
@@ -1265,6 +1287,180 @@
    "returns": "T[]",
    "summary": "Remove or replace a range of elements",
    "doc": "Removes `length` elements starting at `offset`, inserts the elements of `replacement` in their place, and moves the rest of the array to close or open the gap, as PHP's `array_splice` does. Offsets and lengths beyond the array's ends are clipped rather than errors. With a length of `0`, it only inserts.",
+   "module": null,
+   "category": "Arrays"
+  },
+  "sort": {
+   "name": "sort",
+   "params": [
+    {
+     "name": "array",
+     "type": "T[]",
+     "default": null,
+     "doc": "An array of ints, doubles, strings, chars, bytes, or bools."
+    }
+   ],
+   "returns": "T[]",
+   "summary": "Sort an array",
+   "doc": "Returns a new array with the elements in ascending order: numbers by value, strings and chars by their characters' Unicode code points (as PHP compares them, so `\"Z\"` comes before `\"a\"`, and accented letters after both), and `false` before `true`. Unlike PHP's `sort`, the array itself isn't changed. To sort anything else, or in another order, use usort.",
+   "module": null,
+   "category": "Arrays"
+  },
+  "rsort": {
+   "name": "rsort",
+   "params": [
+    {
+     "name": "array",
+     "type": "T[]",
+     "default": null,
+     "doc": "An array of ints, doubles, strings, chars, bytes, or bools."
+    }
+   ],
+   "returns": "T[]",
+   "summary": "Sort an array in descending order",
+   "doc": "Like sort, with the largest first.",
+   "module": null,
+   "category": "Arrays"
+  },
+  "usort": {
+   "name": "usort",
+   "params": [
+    {
+     "name": "array",
+     "type": "T[]",
+     "default": null,
+     "doc": "The array, of any element type."
+    },
+    {
+     "name": "compare",
+     "type": "function(T, T): int",
+     "default": null,
+     "doc": "Returns a negative int if its first argument goes first, a positive one if its second does, and 0 if they're equal."
+    }
+   ],
+   "returns": "T[]",
+   "summary": "Sort an array with a comparison function",
+   "doc": "Returns a new array with the elements in the order `compare` gives. The sort is stable: elements that compare equal keep their order, as in PHP 8. The comparison's parameters can leave out their types, which are the array's element type. Unlike PHP's `usort`, the array itself isn't changed.",
+   "module": null,
+   "category": "Arrays"
+  },
+  "in_array": {
+   "name": "in_array",
+   "params": [
+    {
+     "name": "value",
+     "type": "T",
+     "default": null,
+     "doc": "The value to look for, of the array's element type."
+    },
+    {
+     "name": "array",
+     "type": "T[]",
+     "default": null,
+     "doc": "The array."
+    }
+   ],
+   "returns": "bool",
+   "summary": "Check whether an array has a value",
+   "doc": "Returns whether any element equals `value`, as `==` compares them: numbers and strings by value, arrays and maps by their contents, and objects by identity. A value of another type is a compile error, so `in_array(\"1\", [1, 2])` can't quietly match, as PHP's non-strict mode would.",
+   "module": null,
+   "category": "Arrays"
+  },
+  "array_search": {
+   "name": "array_search",
+   "params": [
+    {
+     "name": "value",
+     "type": "T",
+     "default": null,
+     "doc": "The value to look for, of the array's element type."
+    },
+    {
+     "name": "array",
+     "type": "T[]",
+     "default": null,
+     "doc": "The array."
+    }
+   ],
+   "returns": "int",
+   "summary": "Find a value's index",
+   "doc": "Returns the index of the first element equal to `value`, as `==` compares them, or -1 if there is none. PHP's `array_search` returns `false` instead, which is easy to mistake for index 0.",
+   "module": null,
+   "category": "Arrays"
+  },
+  "array_slice": {
+   "name": "array_slice",
+   "params": [
+    {
+     "name": "array",
+     "type": "T[]",
+     "default": null,
+     "doc": "The array."
+    },
+    {
+     "name": "offset",
+     "type": "int",
+     "default": null,
+     "doc": "Where to start; a negative offset counts from the end."
+    },
+    {
+     "name": "length",
+     "type": "int",
+     "default": "to the end",
+     "doc": "How many elements to take; a negative length stops that many before the end. Without it, the slice runs to the end."
+    }
+   ],
+   "returns": "T[]",
+   "summary": "Part of an array",
+   "doc": "Returns a new array of the elements from `offset`, as PHP's `array_slice`. Offsets and lengths beyond the array are clamped to it, so the result can be empty but there's no error.",
+   "module": null,
+   "category": "Arrays"
+  },
+  "array_reverse": {
+   "name": "array_reverse",
+   "params": [
+    {
+     "name": "array",
+     "type": "T[]",
+     "default": null,
+     "doc": "The array."
+    }
+   ],
+   "returns": "T[]",
+   "summary": "Reverse an array",
+   "doc": "Returns a new array with the elements in the opposite order.",
+   "module": null,
+   "category": "Arrays"
+  },
+  "array_unique": {
+   "name": "array_unique",
+   "params": [
+    {
+     "name": "array",
+     "type": "T[]",
+     "default": null,
+     "doc": "The array."
+    }
+   ],
+   "returns": "T[]",
+   "summary": "Remove repeated values",
+   "doc": "Returns a new array with each value once, where it first appears, comparing as `==` does. Unlike PHP's `array_unique`, the result's indexes are 0, 1, 2, ..., as an array's always are.",
+   "module": null,
+   "category": "Arrays"
+  },
+  "array_sum": {
+   "name": "array_sum",
+   "params": [
+    {
+     "name": "array",
+     "type": "T[]",
+     "default": null,
+     "doc": "An array of ints or doubles."
+    }
+   ],
+   "returns": "int|double",
+   "summary": "Add up an array",
+   "doc": "Returns the sum of the elements, an int for an `int[]` (which wraps on overflow, as `+` does) and a double for a `double[]`. For an empty array, it's 0.",
    "module": null,
    "category": "Arrays"
   },
