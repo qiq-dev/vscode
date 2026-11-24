@@ -11,7 +11,8 @@
   "std/sql",
   "std/regex",
   "std/math",
-  "std/testing"
+  "std/testing",
+  "std/csv"
  ],
  "functions": {
   "len": {
@@ -1527,6 +1528,212 @@
    "module": "std/file",
    "category": "Files"
   },
+  "csv_parse": {
+   "name": "csv_parse",
+   "params": [
+    {
+     "name": "text",
+     "type": "string",
+     "default": null,
+     "doc": "The CSV."
+    },
+    {
+     "name": "delimiter",
+     "type": "string",
+     "default": "\",\"",
+     "doc": "The character between fields: `\",\"`, `\";\"` for files from Excel in many European locales, or `\"\\t\"` for tab-separated values."
+    }
+   ],
+   "returns": "string[][]",
+   "summary": "Read CSV text as rows",
+   "doc": "Reads every record of `text`, each as an array of its fields, like PHP's `str_getcsv` for a whole text, or Python's `csv.reader`.",
+   "module": "std/csv",
+   "category": "CSV"
+  },
+  "csv_parse_maps": {
+   "name": "csv_parse_maps",
+   "params": [
+    {
+     "name": "text",
+     "type": "string",
+     "default": null,
+     "doc": "The CSV, with a header row."
+    },
+    {
+     "name": "delimiter",
+     "type": "string",
+     "default": "\",\"",
+     "doc": "The character between fields: `\",\"`, `\";\"` for files from Excel in many European locales, or `\"\\t\"` for tab-separated values."
+    }
+   ],
+   "returns": "map[string, string][]",
+   "summary": "Read CSV text by column name",
+   "doc": "Reads the first record as a header of column names, and each record after it as a map from those names to its fields.",
+   "module": "std/csv",
+   "category": "CSV"
+  },
+  "csv_decode": {
+   "name": "csv_decode",
+   "params": [
+    {
+     "name": "text",
+     "type": "string",
+     "default": null,
+     "doc": "The CSV, with a header row."
+    },
+    {
+     "name": "delimiter",
+     "type": "string",
+     "default": "\",\"",
+     "doc": "The character between fields: `\",\"`, `\";\"` for files from Excel in many European locales, or `\"\\t\"` for tab-separated values."
+    }
+   ],
+   "returns": "T[]",
+   "summary": "Read CSV text into objects",
+   "doc": "Reads each record after the header into a new object of the class the result is used as, as json_decode does for JSON: each public property is set from the column with its name, converted to the property's type. Columns without a property are ignored, and the columns can be in any order. Around ints, doubles, and bools, spaces are ignored; bools are `true`, `false`, `1`, `0`, `yes`, or `no`, in any case.",
+   "module": "std/csv",
+   "category": "CSV"
+  },
+  "csv_encode": {
+   "name": "csv_encode",
+   "params": [
+    {
+     "name": "objects",
+     "type": "T[]",
+     "default": null,
+     "doc": "The objects, of a class whose public properties are ints, doubles, bools, or strings."
+    },
+    {
+     "name": "delimiter",
+     "type": "string",
+     "default": "\",\"",
+     "doc": "The character between fields: `\",\"`, `\";\"` for files from Excel in many European locales, or `\"\\t\"` for tab-separated values."
+    },
+    {
+     "name": "lineEnding",
+     "type": "string",
+     "default": "\"\\n\"",
+     "doc": "What ends each row: `\"\\n\"` or `\"\\r\\n\"`."
+    }
+   ],
+   "returns": "string",
+   "summary": "Write objects as CSV text",
+   "doc": "Writes a header of the class's public property names, then a row for each object, with each property as `print` would write it (bools as `true` and `false`, and a null string as an empty field). What it writes, csv_decode reads back.",
+   "module": "std/csv",
+   "category": "CSV"
+  },
+  "csv_format": {
+   "name": "csv_format",
+   "params": [
+    {
+     "name": "rows",
+     "type": "string[][]",
+     "default": null,
+     "doc": "The rows."
+    },
+    {
+     "name": "delimiter",
+     "type": "string",
+     "default": "\",\"",
+     "doc": "The character between fields: `\",\"`, `\";\"` for files from Excel in many European locales, or `\"\\t\"` for tab-separated values."
+    },
+    {
+     "name": "lineEnding",
+     "type": "string",
+     "default": "\"\\n\"",
+     "doc": "What ends each row: `\"\\n\"` or `\"\\r\\n\"`."
+    }
+   ],
+   "returns": "string",
+   "summary": "Write rows as CSV text",
+   "doc": "Writes each row as a line of CSV, quoting a field only when it holds the delimiter, a quote, or a line break.",
+   "module": "std/csv",
+   "category": "CSV"
+  },
+  "csv_read": {
+   "name": "csv_read",
+   "params": [
+    {
+     "name": "path",
+     "type": "string",
+     "default": null,
+     "doc": "The file."
+    },
+    {
+     "name": "delimiter",
+     "type": "string",
+     "default": "\",\"",
+     "doc": "The character between fields: `\",\"`, `\";\"` for files from Excel in many European locales, or `\"\\t\"` for tab-separated values."
+    }
+   ],
+   "returns": "string[][]",
+   "summary": "Read a CSV file as rows",
+   "doc": "Reads the whole file, as csv_parse reads text. For files too large to read at once, use CsvReader.",
+   "module": "std/csv",
+   "category": "CSV"
+  },
+  "csv_read_maps": {
+   "name": "csv_read_maps",
+   "params": [
+    {
+     "name": "path",
+     "type": "string",
+     "default": null,
+     "doc": "The file, with a header row."
+    },
+    {
+     "name": "delimiter",
+     "type": "string",
+     "default": "\",\"",
+     "doc": "The character between fields: `\",\"`, `\";\"` for files from Excel in many European locales, or `\"\\t\"` for tab-separated values."
+    }
+   ],
+   "returns": "map[string, string][]",
+   "summary": "Read a CSV file by column name",
+   "doc": "Reads the whole file, as csv_parse_maps reads text.",
+   "module": "std/csv",
+   "category": "CSV"
+  },
+  "csv_write": {
+   "name": "csv_write",
+   "params": [
+    {
+     "name": "path",
+     "type": "string",
+     "default": null,
+     "doc": "The file."
+    },
+    {
+     "name": "rows",
+     "type": "string[][]",
+     "default": null,
+     "doc": "The rows."
+    },
+    {
+     "name": "delimiter",
+     "type": "string",
+     "default": "\",\"",
+     "doc": "The character between fields: `\",\"`, `\";\"` for files from Excel in many European locales, or `\"\\t\"` for tab-separated values."
+    },
+    {
+     "name": "lineEnding",
+     "type": "string",
+     "default": "\"\\n\"",
+     "doc": "What ends each row: `\"\\n\"` or `\"\\r\\n\"`."
+    },
+    {
+     "name": "append",
+     "type": "bool",
+     "default": "false",
+     "doc": "Add to the end of the file instead of replacing it."
+    }
+   ],
+   "returns": "void",
+   "summary": "Write rows to a CSV file",
+   "doc": "Writes `rows` to the file as csv_format formats them, creating the file if it doesn't exist. For a row at a time, use CsvWriter.",
+   "module": "std/csv",
+   "category": "CSV"
+  },
   "time": {
    "name": "time",
    "params": [],
@@ -2855,6 +3062,16 @@
    "final": false,
    "module": null,
    "doc": "A regular expression (std/regex) is malformed, or needs too much backtracking on the text it's matched against.",
+   "properties": [],
+   "methods": []
+  },
+  "CsvException": {
+   "name": "CsvException",
+   "kind": "class",
+   "extends": "Exception",
+   "final": false,
+   "module": null,
+   "doc": "CSV (std/csv) is malformed, such as a quoted field that's never closed, or doesn't fit what it's read into: a missing column, or a value that isn't a number where one is needed. The message names the line.",
    "properties": [],
    "methods": []
   },
@@ -5555,6 +5772,115 @@
      ],
      "returns": "void",
      "doc": "Notes `message`, shown if the test fails, or with qiq test -v."
+    }
+   ]
+  },
+  "CsvReader": {
+   "name": "CsvReader",
+   "kind": "class",
+   "extends": null,
+   "final": true,
+   "module": "std/csv",
+   "doc": "Reads a CSV file a record at a time, for files too large to read at once.",
+   "properties": [],
+   "methods": [
+    {
+     "name": "open",
+     "static": true,
+     "params": [
+      {
+       "name": "path",
+       "type": "string",
+       "default": null
+      },
+      {
+       "name": "delimiter",
+       "type": "string",
+       "default": "\",\""
+      }
+     ],
+     "returns": "CsvReader",
+     "doc": "Opens the CSV file at `path`. Throws FileNotFoundException, PermissionDeniedException, or IOException if it can't."
+    },
+    {
+     "name": "next",
+     "static": false,
+     "params": [],
+     "returns": "string[]",
+     "doc": "The next record's fields, or null at the end of the file."
+    },
+    {
+     "name": "line",
+     "static": false,
+     "params": [],
+     "returns": "int",
+     "doc": "The line the last record read starts on, for messages."
+    },
+    {
+     "name": "close",
+     "static": false,
+     "params": [],
+     "returns": "void",
+     "doc": "Closes the file; closing twice does nothing."
+    }
+   ]
+  },
+  "CsvWriter": {
+   "name": "CsvWriter",
+   "kind": "class",
+   "extends": null,
+   "final": true,
+   "module": "std/csv",
+   "doc": "Writes a CSV file a row at a time.",
+   "properties": [],
+   "methods": [
+    {
+     "name": "open",
+     "static": true,
+     "params": [
+      {
+       "name": "path",
+       "type": "string",
+       "default": null
+      },
+      {
+       "name": "delimiter",
+       "type": "string",
+       "default": "\",\""
+      },
+      {
+       "name": "lineEnding",
+       "type": "string",
+       "default": "\"\\n\""
+      },
+      {
+       "name": "append",
+       "type": "bool",
+       "default": "false"
+      }
+     ],
+     "returns": "CsvWriter",
+     "doc": "Creates (or replaces) the file at `path`, or adds to it with `append`."
+    },
+    {
+     "name": "write",
+     "static": false,
+     "params": [
+      {
+       "name": "row",
+       "type": "string[]",
+       "default": null
+      }
+     ],
+     "returns": "void",
+     "doc": "Writes one row."
+    },
+    {
+     "name": "close",
+     "static": false,
+     "params": [],
+     "returns": "void",
+     "doc": "Writes the rest of the file and closes it."
     }
    ]
   }

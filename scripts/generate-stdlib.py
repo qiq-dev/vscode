@@ -66,10 +66,22 @@ def markdown(text):
 
 
 def split_params(text):
-    """Splits a parameter list at top-level commas (function types have their own)."""
-    parts, depth, current = [], 0, ""
+    """Splits a parameter list at top-level commas (function types have
+    their own, and a default such as "," is a string)."""
+    parts, depth, current, quoted, escaped = [], 0, "", False, False
     for c in text:
-        if c in "([":
+        if quoted:
+            current += c
+            if escaped:
+                escaped = False
+            elif c == "\\":
+                escaped = True
+            elif c == '"':
+                quoted = False
+            continue
+        if c == '"':
+            quoted = True
+        elif c in "([":
             depth += 1
         elif c in ")]":
             depth -= 1
