@@ -263,6 +263,13 @@ test("untyped callback parameters take their types from where they're passed", a
   assert.deepStrictEqual(labels(own), ["name"]);
   const declared = await complete(MAIN, "class Item { public string name; }\nfunction(Item): string f = fn(it) => it->|;", ">");
   assert.deepStrictEqual(labels(declared), ["name"]);
+  // Built-ins with placeholder types: T from the array, K and V from the map, U from the initial value.
+  const filtered = await complete(MAIN, "class Item { public string name; }\nItem[] items = [];\nItem[] some = array_filter(items, fn(it) => it->|);", ">");
+  assert.deepStrictEqual(labels(filtered), ["name"]);
+  const reduced = await complete(MAIN, "class Item { public string name; }\nclass Total { public int sum; }\nItem[] items = [];\nTotal t = array_reduce(items, fn(total, it) => total->|, new Total());", ">");
+  assert.deepStrictEqual(labels(reduced), ["sum"]);
+  const mapped = await complete(MAIN, "class Item { public string name; }\nmap[string, Item] byName = {};\nprint(map_filter(byName, fn(key, it) => it->|));", ">");
+  assert.deepStrictEqual(labels(mapped), ["name"]);
 });
 
 test("newer syntax: ?->, ::class, instanceof, promotion, readonly, constants, and query values", async () => {

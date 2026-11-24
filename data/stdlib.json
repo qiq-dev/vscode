@@ -1268,6 +1268,166 @@
    "module": null,
    "category": "Arrays"
   },
+  "array_filter": {
+   "name": "array_filter",
+   "params": [
+    {
+     "name": "array",
+     "type": "T[]",
+     "default": null,
+     "doc": "The array."
+    },
+    {
+     "name": "callback",
+     "type": "function(T): bool",
+     "default": null,
+     "doc": "Called with each element; returns whether to keep it."
+    }
+   ],
+   "returns": "T[]",
+   "summary": "The elements a callback accepts",
+   "doc": "Returns a new array of the elements for which `callback` returns `true`, in order. Unlike PHP's `array_filter`, the result's indexes are 0, 1, 2, ..., as an array's always are. The callback can be an anonymous function, whose parameters can leave out their types (they come from the array's elements), a named function, or a function value.",
+   "module": null,
+   "category": "Arrays"
+  },
+  "array_map": {
+   "name": "array_map",
+   "params": [
+    {
+     "name": "array",
+     "type": "T[]",
+     "default": null,
+     "doc": "The array."
+    },
+    {
+     "name": "callback",
+     "type": "function(T): U",
+     "default": null,
+     "doc": "Called with each element; returns its replacement, of any type."
+    }
+   ],
+   "returns": "U[]",
+   "summary": "Transform each element",
+   "doc": "Returns a new array of what `callback` returns for each element, in order. The result's element type is the callback's return type, so it can differ from the array's. The callback can be an anonymous function, whose parameters can leave out their types (they come from the array's elements), a named function, or a function value.",
+   "module": null,
+   "category": "Arrays"
+  },
+  "array_reduce": {
+   "name": "array_reduce",
+   "params": [
+    {
+     "name": "array",
+     "type": "T[]",
+     "default": null,
+     "doc": "The array."
+    },
+    {
+     "name": "callback",
+     "type": "function(U, T): U",
+     "default": null,
+     "doc": "Called with the value so far and each element; returns the new value so far."
+    },
+    {
+     "name": "initial",
+     "type": "U",
+     "default": null,
+     "doc": "The value to start from, which is also the result for an empty array."
+    }
+   ],
+   "returns": "U",
+   "summary": "Combine the elements into one value",
+   "doc": "Calls `callback` with `initial` and the first element, then with its result and the second element, and so on, and returns the last result. The result's type is `initial`'s; an empty `[]` or `{}` takes the type the result is used as.",
+   "module": null,
+   "category": "Arrays"
+  },
+  "array_find": {
+   "name": "array_find",
+   "params": [
+    {
+     "name": "array",
+     "type": "T[]",
+     "default": null,
+     "doc": "An array of strings, arrays, maps, or objects."
+    },
+    {
+     "name": "callback",
+     "type": "function(T): bool",
+     "default": null,
+     "doc": "Called with each element until it returns true."
+    }
+   ],
+   "returns": "T",
+   "summary": "The first element a callback accepts",
+   "doc": "Returns the first element for which `callback` returns `true`, or `null` if there is none, like PHP 8.4's `array_find`. The rest of the elements aren't looked at. Ints, doubles, bools, bytes, and chars can't be `null`, so for arrays of them, use array_find_index.",
+   "module": null,
+   "category": "Arrays"
+  },
+  "array_find_index": {
+   "name": "array_find_index",
+   "params": [
+    {
+     "name": "array",
+     "type": "T[]",
+     "default": null,
+     "doc": "The array."
+    },
+    {
+     "name": "callback",
+     "type": "function(T): bool",
+     "default": null,
+     "doc": "Called with each element until it returns true."
+    }
+   ],
+   "returns": "int",
+   "summary": "The index of the first element a callback accepts",
+   "doc": "Returns the index of the first element for which `callback` returns `true`, or -1 if there is none, like PHP 8.4's `array_find_key`. It works for arrays of any type.",
+   "module": null,
+   "category": "Arrays"
+  },
+  "array_any": {
+   "name": "array_any",
+   "params": [
+    {
+     "name": "array",
+     "type": "T[]",
+     "default": null,
+     "doc": "The array."
+    },
+    {
+     "name": "callback",
+     "type": "function(T): bool",
+     "default": null,
+     "doc": "Called with each element until it returns true."
+    }
+   ],
+   "returns": "bool",
+   "summary": "Whether a callback accepts any element",
+   "doc": "Returns whether `callback` returns `true` for at least one element, like PHP 8.4's `array_any`, stopping at the first. For an empty array, it's `false`.",
+   "module": null,
+   "category": "Arrays"
+  },
+  "array_all": {
+   "name": "array_all",
+   "params": [
+    {
+     "name": "array",
+     "type": "T[]",
+     "default": null,
+     "doc": "The array."
+    },
+    {
+     "name": "callback",
+     "type": "function(T): bool",
+     "default": null,
+     "doc": "Called with each element until it returns false."
+    }
+   ],
+   "returns": "bool",
+   "summary": "Whether a callback accepts every element",
+   "doc": "Returns whether `callback` returns `true` for every element, like PHP 8.4's `array_all`, stopping at the first that fails. For an empty array, it's `true`.",
+   "module": null,
+   "category": "Arrays"
+  },
   "map_key_exists": {
    "name": "map_key_exists",
    "params": [
@@ -1461,6 +1621,50 @@
    "returns": "map[V, K]",
    "summary": "Swap keys and values",
    "doc": "Returns a new map whose keys are `map`'s values and whose values are its keys, like PHP's `array_flip`. A value that appears more than once becomes one key, with the last key it had.",
+   "module": null,
+   "category": "Maps"
+  },
+  "map_filter": {
+   "name": "map_filter",
+   "params": [
+    {
+     "name": "map",
+     "type": "map[K, V]",
+     "default": null,
+     "doc": "The map."
+    },
+    {
+     "name": "callback",
+     "type": "function(K, V): bool",
+     "default": null,
+     "doc": "Called with each key and value; returns whether to keep the entry."
+    }
+   ],
+   "returns": "map[K, V]",
+   "summary": "The entries a callback accepts",
+   "doc": "Returns a new map of the entries for which `callback` returns `true`, in the map's order, like PHP's `array_filter` with `ARRAY_FILTER_USE_BOTH`. The callback can be an anonymous function, whose parameters can leave out their types (they come from the map), a named function, or a function value.",
+   "module": null,
+   "category": "Maps"
+  },
+  "map_map": {
+   "name": "map_map",
+   "params": [
+    {
+     "name": "map",
+     "type": "map[K, V]",
+     "default": null,
+     "doc": "The map."
+    },
+    {
+     "name": "callback",
+     "type": "function(V): W",
+     "default": null,
+     "doc": "Called with each value; returns its replacement, of any type."
+    }
+   ],
+   "returns": "map[K, W]",
+   "summary": "Transform each value, keeping the keys",
+   "doc": "Returns a new map with the same keys, in the same order, and what `callback` returns for each value, like PHP's `array_map` on an associative array. The new values' type is the callback's return type. The callback can be an anonymous function, whose parameters can leave out their types (they come from the map), a named function, or a function value.",
    "module": null,
    "category": "Maps"
   },

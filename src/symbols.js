@@ -338,7 +338,31 @@ class Context {
     const params = this.callParameters(call, offset);
     if (!params) return null;
     const param = call.named ? params.find((p) => p.name === call.named) : params[call.argument];
-    return param ? param.type : null;
+    if (!param) return null;
+    return this.substituteTypeParameters(param.type, params, call, offset);
+  }
+
+  /** For a built-in such as array_filter, whose parameters are written
+   * with placeholders (T[], function(T): bool, map[K, V], U), `type` with
+   * each placeholder replaced by what the call's arguments make it: T and
+   * K and V from the array or map, U from array_reduce's initial value. */
+  substituteTypeParameters(type, params, call, offset) {
+    if (!/\b[TUKVW]\b/.test(type || "")) return type;
+    const masked = this.document.masked;
+    const close = analysis.matching(masked, call.open);
+    const argumentTexts = analysis.splitTopLevel(this.text.slice(call.open + 1, close));
+    const bindings = {};
+    params.forEach((p, index) => {
+      const text = argumentTexts[index];
+      if (!text || !p.type) return;
+      const argumentType = this.typeOfText(text, offset);
+      if (!argumentType) return;
+      if (/^T\s*\[\s*\]$/.test(p.type)) bindings.T = analysis.elementTypes(argumentType)[1];
+      const map = p.type.match(/^map\s*\[\s*K\s*,\s*V\s*\]$/);
+      if (map) [bindings.K, bindings.V] = analysis.elementTypes(argumentType);
+      if (/^U$/.test(p.type.trim())) bindings.U = argumentType;
+    });
+    return type.replace(/\b([TUKVW])\b/g, (letter) => bindings[letter] || letter);
   }
 
   /** The parameters of the function, method, or constructor `call` (from
