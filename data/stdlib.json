@@ -1344,6 +1344,126 @@
    "module": null,
    "category": "Maps"
   },
+  "map_merge": {
+   "name": "map_merge",
+   "params": [
+    {
+     "name": "maps",
+     "type": "map[K, V]...",
+     "default": null,
+     "doc": "Two or more maps of the same type."
+    }
+   ],
+   "returns": "map[K, V]",
+   "summary": "Combine maps",
+   "doc": "Returns a new map with every entry of every map. For a key in more than one, the value from the last map wins, in the place the key first appeared, as with PHP's `array_merge` for string keys (and unlike it for int keys, which keep their values rather than being renumbered). The maps aren't changed.",
+   "module": null,
+   "category": "Maps"
+  },
+  "map_diff_keys": {
+   "name": "map_diff_keys",
+   "params": [
+    {
+     "name": "map",
+     "type": "map[K, V]",
+     "default": null,
+     "doc": "The map to take entries from."
+    },
+    {
+     "name": "other",
+     "type": "map[K, W]",
+     "default": null,
+     "doc": "The map whose keys to leave out; its values can be of any type."
+    }
+   ],
+   "returns": "map[K, V]",
+   "summary": "The entries whose keys another map doesn't have",
+   "doc": "Returns a new map with the entries of `map` whose key isn't in `other`, in `map`'s order, like PHP's `array_diff_key`. Only keys are compared, so the two maps need the same key type but not the same value type.",
+   "module": null,
+   "category": "Maps"
+  },
+  "map_intersect_keys": {
+   "name": "map_intersect_keys",
+   "params": [
+    {
+     "name": "map",
+     "type": "map[K, V]",
+     "default": null,
+     "doc": "The map to take entries from."
+    },
+    {
+     "name": "other",
+     "type": "map[K, W]",
+     "default": null,
+     "doc": "The map whose keys to keep; its values can be of any type."
+    }
+   ],
+   "returns": "map[K, V]",
+   "summary": "The entries whose keys another map has",
+   "doc": "Returns a new map with the entries of `map` whose key is also in `other`, in `map`'s order, with `map`'s values, like PHP's `array_intersect_key`. Only keys are compared, so the two maps need the same key type but not the same value type.",
+   "module": null,
+   "category": "Maps"
+  },
+  "map_diff": {
+   "name": "map_diff",
+   "params": [
+    {
+     "name": "map",
+     "type": "map[K, V]",
+     "default": null,
+     "doc": "The map to take entries from."
+    },
+    {
+     "name": "other",
+     "type": "map[K, V]",
+     "default": null,
+     "doc": "A map of the same type."
+    }
+   ],
+   "returns": "map[K, V]",
+   "summary": "The entries another map doesn't have",
+   "doc": "Returns a new map with the entries of `map` that `other` doesn't have: whose key isn't in `other`, or is with a different value. Like PHP's `array_diff_assoc`. Values compare as `==` compares them, as in in_map.",
+   "module": null,
+   "category": "Maps"
+  },
+  "map_intersect": {
+   "name": "map_intersect",
+   "params": [
+    {
+     "name": "map",
+     "type": "map[K, V]",
+     "default": null,
+     "doc": "The map to take entries from."
+    },
+    {
+     "name": "other",
+     "type": "map[K, V]",
+     "default": null,
+     "doc": "A map of the same type."
+    }
+   ],
+   "returns": "map[K, V]",
+   "summary": "The entries another map has too",
+   "doc": "Returns a new map with the entries of `map` that `other` also has, with the same key and an equal value. Like PHP's `array_intersect_assoc`. Values compare as `==` compares them.",
+   "module": null,
+   "category": "Maps"
+  },
+  "map_flip": {
+   "name": "map_flip",
+   "params": [
+    {
+     "name": "map",
+     "type": "map[K, V]",
+     "default": null,
+     "doc": "A map whose values can be keys: ints, doubles, bools, strings, or chars."
+    }
+   ],
+   "returns": "map[V, K]",
+   "summary": "Swap keys and values",
+   "doc": "Returns a new map whose keys are `map`'s values and whose values are its keys, like PHP's `array_flip`. A value that appears more than once becomes one key, with the last key it had.",
+   "module": null,
+   "category": "Maps"
+  },
   "unset": {
    "name": "unset",
    "params": [
