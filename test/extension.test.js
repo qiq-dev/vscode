@@ -251,6 +251,20 @@ test("standard library members and statics", async () => {
   assert.deepStrictEqual(labels(exception).sort(), ["getCode", "getMessage"], "inherited from Exception");
 });
 
+test("untyped callback parameters take their types from where they're passed", async () => {
+  // A standard library function, imported.
+  const regex = await complete(MAIN, 'import preg_replace_callback from "std/regex";\nstring s = preg_replace_callback(`/x/`, fn(m) => m->|, "x");', ">");
+  assert.ok(labels(regex).includes("group") && labels(regex).includes("text"), labels(regex).join());
+  // A method's callback with two parameters.
+  const router = await complete(MAIN, 'import Router from "std/net/http/server";\nRouter r = new Router();\nr->handle("GET /", fn(request, w) => w->|);', ">");
+  assert.ok(labels(router).includes("write") && labels(router).includes("status"), labels(router).join());
+  // A function of this file, by name, and a declared function-typed variable.
+  const own = await complete(MAIN, "class Item { public string name; }\nfunction each(Item[] items, function(int, Item): void visit): void {}\neach(visit: fn(index, item) => item->|, items: []);", ">");
+  assert.deepStrictEqual(labels(own), ["name"]);
+  const declared = await complete(MAIN, "class Item { public string name; }\nfunction(Item): string f = fn(it) => it->|;", ">");
+  assert.deepStrictEqual(labels(declared), ["name"]);
+});
+
 test("newer syntax: ?->, ::class, instanceof, promotion, readonly, constants, and query values", async () => {
   const classes =
     "class Point {\n    const ORIGIN = 0;\n    const string LABEL = \"pt\";\n    function __construct(public readonly int x, private int y = 0, int plain = 1) {}\n    function norm(): int { return 0; }\n}\n" +

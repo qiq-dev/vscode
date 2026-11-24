@@ -489,7 +489,11 @@ function enclosingFunctions(text, masked, offset) {
     if (match.index >= offset) break;
     const open = pattern.lastIndex - 1;
     const close = matching(masked, open);
-    const params = splitTopLevel(masked.slice(open + 1, close)).map(parseParameter).filter(Boolean);
+    // A parameter without a type, `fn(x) => ...`, is kept with a null type;
+    // variablesAt asks the resolver for it.
+    const params = splitTopLevel(masked.slice(open + 1, close))
+      .map((text) => parseParameter(text) || (new RegExp(`^\\s*(${IDENT})\\s*$`).test(text) ? { name: text.trim(), type: null, untyped: true } : null))
+      .filter(Boolean);
     let bodyStart;
     let bodyEnd;
     if (match[1] === "fn") {
@@ -516,7 +520,7 @@ function enclosingFunctions(text, masked, offset) {
       bodyEnd = matching(masked, bodyStart);
     }
     if (bodyStart < offset && offset <= bodyEnd) {
-      result.push({ named: match[1] === "function" && match[2] !== "", name: match[2], params, bodyStart, bodyEnd });
+      result.push({ named: match[1] === "function" && match[2] !== "", name: match[2], params, bodyStart, bodyEnd, start: match.index });
     }
   }
   return result;
@@ -543,7 +547,14 @@ function variablesAt(text, doc, offset, resolver) {
   });
   const visible = outermostNamed >= 0 ? functions.slice(outermostNamed) : functions;
   if (outermostNamed >= 0) scopeStart = functions[outermostNamed].bodyStart;
-  for (const fn of visible) for (const param of fn.params) add(param.name, param.type);
+  for (const fn of visible) {
+    // An anonymous function's untyped parameters: the types of the function
+    // type expected where it's written, such as a callback parameter's.
+    const inferred = !fn.named && fn.params.some((param) => param.untyped) && resolver && resolver.closureParameterTypes
+      ? resolver.closureParameterTypes(fn.start) || []
+      : [];
+    fn.params.forEach((param, index) => add(param.name, param.untyped ? inferred[index] || null : param.type));
+  }
 
   const cls = doc.classes.find((c) => c.bodyStart < offset && offset < c.bodyEnd);
   if (cls && outermostNamed >= 0) add("this", cls.name);

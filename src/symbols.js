@@ -240,6 +240,11 @@ class Context {
     if (imported && imported.kind === "class") return imported.symbol;
     const prelude = STDLIB.classes[name];
     if (prelude && !prelude.module) return stdlibClass(prelude);
+    // A standard library class this file doesn't import, but that an
+    // untyped callback parameter has (see closureParameterTypes), such as
+    // RegexMatch in preg_replace_callback(..., fn(m) => m->...). Names the
+    // file writes itself still need their import.
+    if (prelude && this.inferredClasses && this.inferredClasses.has(name)) return stdlibClass(prelude);
     return null;
   }
 
@@ -296,7 +301,75 @@ class Context {
   variablesAt(offset) {
     return analysis.variablesAt(this.text, this.document, offset, {
       typeOfText: (text, at) => this.typeOfText(text, at),
+      closureParameterTypes: (at) => this.closureParameterTypes(at),
     });
+  }
+
+  /** The parameter types (as written, such as "Item") expected of the
+   * anonymous function that starts at `start`: those of the function type
+   * of the parameter it's passed to, or of the variable it's declared as.
+   * Null if they can't be told. */
+  closureParameterTypes(start) {
+    if (this.inferring >= 3) return null;
+    this.inferring = (this.inferring || 0) + 1;
+    try {
+      const type = this.expectedFunctionType(start);
+      if (!type || !/^function\s*\(/.test(type)) return null;
+      const open = type.indexOf("(");
+      const close = analysis.matching(type, open);
+      const types = analysis.splitTopLevel(type.slice(open + 1, close)).map((t) => analysis.normalizeType(t.trim())).filter((t) => t !== "");
+      // Their classes need no import: the code doesn't name them.
+      this.inferredClasses = this.inferredClasses || new Set();
+      for (const t of types) this.inferredClasses.add(t.replace(/(\[\])+$/, ""));
+      return types;
+    } finally {
+      this.inferring--;
+    }
+  }
+
+  /** The type expected at `offset`: a call argument's parameter type, or a
+   * declared function-typed variable's type. */
+  expectedFunctionType(offset) {
+    const before = this.document.masked.slice(Math.max(0, offset - 300), offset);
+    const declared = before.match(/(function\s*\(.*\)\s*:\s*[^=;{]+?)\s+[A-Za-z_][A-Za-z0-9_]*\s*=\s*$/s);
+    if (declared) return analysis.normalizeType(declared[1]);
+    const call = analysis.callAt(this.text, offset);
+    if (!call) return null;
+    const params = this.callParameters(call, offset);
+    if (!params) return null;
+    const param = call.named ? params.find((p) => p.name === call.named) : params[call.argument];
+    return param ? param.type : null;
+  }
+
+  /** The parameters of the function, method, or constructor `call` (from
+   * analysis.callAt) calls, or null. */
+  callParameters(call, offset) {
+    const parts = analysis.steps(this.document.masked, call.expression.start, call.expression.end);
+    if (!parts || !parts.length) return null;
+    const last = parts[parts.length - 1];
+    if (call.isNew || last.kind === "new") {
+      const cls = this.findClass(last.name);
+      const constructor = cls && this.members(cls, "own").methods.find((m) => m.name === "__construct");
+      return constructor ? constructor.params : null;
+    }
+    if (parts.length === 1 && (last.kind === "name" || last.kind === "call")) {
+      const variable = this.variablesAt(offset).find((v) => v.name === last.name);
+      if (variable && variable.type && variable.type.startsWith("function")) {
+        const open = variable.type.indexOf("(");
+        const close = analysis.matching(variable.type, open);
+        return analysis.splitTopLevel(variable.type.slice(open + 1, close)).map((t, index) => ({ name: `arg${index + 1}`, type: t.trim() }));
+      }
+      const fn = this.findFunction(last.name);
+      return fn ? fn.params : null;
+    }
+    if (last.kind === "member" || last.kind === "staticMember") {
+      const receiver = this.typeOfSteps(parts.slice(0, -1), offset);
+      if (!receiver || !receiver.type) return null;
+      const cls = receiver.context.findClass(receiver.type) || this.findClass(receiver.type);
+      const method = cls && this.members(cls, "own").methods.find((m) => m.name === last.name);
+      return method ? method.params : null;
+    }
+    return null;
   }
 
   /** The type of the expression text (as written at `offset`). */
