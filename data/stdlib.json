@@ -6457,8 +6457,8 @@
     }
    ]
   },
-  "T": {
-   "name": "T",
+  "Test": {
+   "name": "Test",
    "kind": "class",
    "extends": null,
    "final": true,
