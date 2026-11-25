@@ -3727,6 +3727,13 @@
      "params": [],
      "returns": "int",
      "doc": "The line it was thrown on, or 0 if unknown."
+    },
+    {
+     "name": "getTrace",
+     "static": false,
+     "params": [],
+     "returns": "string[]",
+     "doc": "The functions in the program's own code that the exception passed through on its way here, innermost first, each as \"name (file:line)\": where it was thrown, then where each caller made the call. An uncaught exception's trace goes back to main."
     }
    ]
   },
