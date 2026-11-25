@@ -93,6 +93,11 @@
     "body": ["switch (${1:value}) {", "\tcase ${2:1}:", "\t\t$3", "\tdefault:", "\t\t$0", "}"],
     "description": "switch (cases don't fall through)"
   },
+  "match": {
+    "prefix": "match",
+    "body": ["match (${1:value}) {", "\t${2:first} => ${3:result},", "\tdefault => ${4:other},", "}"],
+    "description": "A match expression"
+  },
   "try catch": {
     "prefix": "try",
     "body": ["try {", "\t$1", "} catch (${2:Exception} ${3:e}) {", "\t$0", "}"],

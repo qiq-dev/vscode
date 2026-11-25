@@ -3747,6 +3747,16 @@
    "properties": [],
    "methods": []
   },
+  "UnhandledMatchException": {
+   "name": "UnhandledMatchException",
+   "kind": "class",
+   "extends": "RuntimeException",
+   "final": false,
+   "module": null,
+   "doc": "A match expression without a default had no arm for its value.",
+   "properties": [],
+   "methods": []
+  },
   "IOException": {
    "name": "IOException",
    "kind": "class",
