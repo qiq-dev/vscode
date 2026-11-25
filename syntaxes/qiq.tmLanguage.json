@@ -416,6 +416,7 @@
         { "match": "\\b(this)\\b", "name": "variable.language.this.qiq" },
         { "match": "\\b(self|parent|static)\\b(?=\\s*::)", "name": "variable.language.qiq" },
         { "match": "\\b(print|println)\\b", "name": "support.function.builtin.qiq" },
+        { "match": "\\?(?=(?:int|double|bool|byte)\\b)", "name": "storage.type.nullable.qiq" },
         { "match": "\\b(int|double|bool|byte|string|char|void|map)\\b", "name": "storage.type.primitive.qiq" }
       ]
     },

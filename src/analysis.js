@@ -584,7 +584,8 @@ function enclosingFunctions(text, masked, offset) {
   return result;
 }
 
-const TYPE_PATTERN = `(?:int|double|bool|byte|string|char|map\\s*\\[[^;{}=]*?\\]|[A-Z][A-Za-z0-9_]*)(?:\\s*\\[\\s*\\])*`;
+// `?int` is the nullable form of int (and of double, bool, and byte).
+const TYPE_PATTERN = `(?:\\?(?:int|double|bool|byte)\\b|int|double|bool|byte|string|char|map\\s*\\[[^;{}=]*?\\]|[A-Z][A-Za-z0-9_]*)(?:\\s*\\[\\s*\\])*`;
 
 /** The variables visible at `offset`, each {name, type}, with `type` null
  * when it can't be told. `doc` is from parseDocument(text). Later

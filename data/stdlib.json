@@ -2873,7 +2873,7 @@
    ],
    "returns": "string",
    "summary": "Convert a value to JSON",
-   "doc": "Returns the JSON text for `value`. Objects are written with their public properties, in the order they're declared (inherited properties first); private and protected properties are left out. Maps are written in insertion order, as PHP writes arrays.",
+   "doc": "Returns the JSON text for `value`. Objects are written with their public properties, in the order they're declared (inherited properties first); private and protected properties are left out. Maps are written in insertion order, as PHP writes arrays. A case of a backed enum is written as its value.",
    "module": null,
    "category": "JSON"
   },
@@ -5965,6 +5965,45 @@
      ],
      "returns": "bool",
      "doc": "A column holding 0 or 1, or `fallback` when it's NULL."
+    },
+    {
+     "name": "getIntOrNull",
+     "static": false,
+     "params": [
+      {
+       "name": "column",
+       "type": "string",
+       "default": null
+      }
+     ],
+     "returns": "?int",
+     "doc": "An INTEGER column, or null when it's NULL."
+    },
+    {
+     "name": "getDoubleOrNull",
+     "static": false,
+     "params": [
+      {
+       "name": "column",
+       "type": "string",
+       "default": null
+      }
+     ],
+     "returns": "?double",
+     "doc": "A REAL or INTEGER column, or null when it's NULL."
+    },
+    {
+     "name": "getBoolOrNull",
+     "static": false,
+     "params": [
+      {
+       "name": "column",
+       "type": "string",
+       "default": null
+      }
+     ],
+     "returns": "?bool",
+     "doc": "A column holding 0 or 1, or null when it's NULL."
     },
     {
      "name": "getString",

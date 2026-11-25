@@ -167,6 +167,16 @@ count = 3;
 greeting = "hi";
 `;
 
+test("nullable scalar types", () => {
+  const { text, offset } = cursor("?int count = null;\n?double[] ratios = [];\nfunction f(?bool flag, ?int limit = 5): ?int { return limit; }\n|");
+  const doc = analysis.parseDocument(text);
+  const variables = analysis.variablesAt(text, doc, offset);
+  assert.strictEqual(variables.find((v) => v.name === "count").type, "?int");
+  assert.strictEqual(variables.find((v) => v.name === "ratios").type, "?double[]");
+  assert.deepStrictEqual(doc.functions[0].params, [{ type: "?bool", name: "flag", default: null }, { type: "?int", name: "limit", default: "5" }]);
+  assert.strictEqual(doc.functions[0].returns, "?int");
+});
+
 test("enums", () => {
   const doc = analysis.parseDocument('enum Status: string implements HasLabel {\n    case Active = "active";\n    case Archived = "archived";\n    const Default = "active";\n}\nenum Suit { case Hearts; case Spades; }');
   const [status, suit] = doc.classes;
