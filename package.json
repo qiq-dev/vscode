@@ -2,7 +2,7 @@
   "name": "qiq",
   "displayName": "qiq",
   "description": "qiq language support: syntax highlighting, compile errors as you type, completion with auto-import, hovers, parameter hints, go to definition, and the outline.",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "icon": "images/icon.png",
   "publisher": "asimlqt",
   "license": "MIT",

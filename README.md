@@ -62,12 +62,12 @@ the module cache, `~/.cache/qiq/mod`), and `std/` paths.
 
 ## Installing
 
-1. Download the `.vsix` file (for example `qiq-0.2.0.vsix`) from the
+1. Download the `.vsix` file (for example `qiq-0.4.0.vsix`) from the
    [releases page](https://github.com/qiq-dev/vscode/releases).
 2. Install it:
 
    ```sh
-   code --install-extension qiq-0.2.0.vsix
+   code --install-extension qiq-0.4.0.vsix
    ```
 
    Or, in VS Code, open the Extensions view, click the **...** menu at the
