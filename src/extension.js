@@ -58,9 +58,11 @@ function functionDocs(fn) {
 
 function classDocs(cls) {
   const markdown = new vscode.MarkdownString();
-  const keyword = cls.kind === "interface" ? "interface" : `${cls.abstract ? "abstract " : ""}${cls.final ? "final " : ""}class`;
+  const keyword = cls.kind === "interface" ? "interface" : cls.kind === "enum" ? "enum" : `${cls.abstract ? "abstract " : ""}${cls.final ? "final " : ""}class`;
+  // `enum Status: string`
+  const backing = cls.kind === "enum" && cls.backing ? `: ${cls.backing}` : "";
   const parents = (cls.extends ? ` extends ${cls.extends}` : "") + (cls.interfaces && cls.interfaces.length && cls.kind !== "interface" ? ` implements ${cls.interfaces.join(", ")}` : "");
-  markdown.appendCodeblock(`${keyword} ${cls.name}${parents}`, LANGUAGE);
+  markdown.appendCodeblock(`${keyword} ${cls.name}${backing}${parents}`, LANGUAGE);
   if (cls.doc) markdown.appendMarkdown(cls.doc + "\n\n");
   if (cls.module) markdown.appendMarkdown(`Import with \`import ${cls.name} from "${cls.module}";\``);
   return markdown;
@@ -71,6 +73,9 @@ function memberDocs(member, owner) {
   if (member.params) {
     const modifiers = `${member.visibility && member.visibility !== "public" ? member.visibility + " " : ""}${member.static ? "static " : ""}`;
     markdown.appendCodeblock(`${modifiers}function ${owner}::${signature(member.name, member.params, member.returns)}`, LANGUAGE);
+  } else if (member.enumCase) {
+    // `case Status::Active = "active"`
+    markdown.appendCodeblock(`case ${owner}::${member.name}${member.value !== null && member.value !== undefined ? ` = ${member.value}` : ""}`, LANGUAGE);
   } else if (member.constant) {
     markdown.appendCodeblock(`${member.visibility && member.visibility !== "public" ? member.visibility + " " : ""}const ${member.type} ${owner}::${member.name} = ${member.value}`, LANGUAGE);
   } else {
@@ -145,7 +150,7 @@ function functionItem(fn, sortGroup, extra = {}) {
 function classItem(cls, sortGroup, options = {}) {
   const item = new vscode.CompletionItem(
     { label: options.alias || cls.name, description: options.description || (cls.module ? cls.module : cls.kind === "interface" ? "interface" : "") },
-    cls.kind === "interface" ? Kind.Interface : Kind.Class
+    cls.kind === "interface" ? Kind.Interface : cls.kind === "enum" ? Kind.Enum : Kind.Class
   );
   item.documentation = classDocs(cls);
   item.sortText = sortGroup + (options.alias || cls.name);
@@ -382,7 +387,7 @@ const completionProvider = {
       case "new": {
         const items = [];
         for (const [alias, cls] of knownClasses(context)) {
-          if (cls.kind === "interface" || cls.abstract) continue;
+          if (cls.kind === "interface" || cls.kind === "enum" || cls.abstract) continue;
           const item = classItem(cls, cls.origin === "file" ? "0" : "1", { alias });
           item.insertText = new vscode.SnippetString(`${alias}($0)`);
           item.command = triggerHints;

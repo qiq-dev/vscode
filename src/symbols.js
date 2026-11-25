@@ -179,6 +179,7 @@ function fileClass(cls, file, context) {
   return {
     name: cls.name,
     kind: cls.kind,
+    backing: cls.backing,
     extends: cls.extends,
     interfaces: cls.interfaces,
     abstract: cls.abstract,

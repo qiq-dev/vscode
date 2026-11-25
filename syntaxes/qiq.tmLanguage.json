@@ -376,15 +376,16 @@
       "captures": { "1": { "name": "storage.modifier.extern.qiq" } }
     },
     "class-declaration": {
-      "match": "\\b(?:(abstract|final)\\s+)*(class|interface)\\s+([A-Za-z_][A-Za-z0-9_]*)(?:\\s+(extends)\\s+([A-Za-z_][A-Za-z0-9_]*(?:\\s*,\\s*[A-Za-z_][A-Za-z0-9_]*)*))?(?:\\s+(implements)\\s+([A-Za-z_][A-Za-z0-9_]*(?:\\s*,\\s*[A-Za-z_][A-Za-z0-9_]*)*))?",
+      "match": "\\b(?:(abstract|final)\\s+)*(class|interface|enum)\\s+([A-Za-z_][A-Za-z0-9_]*)(?:\\s*:\\s*(int|string))?(?:\\s+(extends)\\s+([A-Za-z_][A-Za-z0-9_]*(?:\\s*,\\s*[A-Za-z_][A-Za-z0-9_]*)*))?(?:\\s+(implements)\\s+([A-Za-z_][A-Za-z0-9_]*(?:\\s*,\\s*[A-Za-z_][A-Za-z0-9_]*)*))?",
       "captures": {
         "1": { "name": "storage.modifier.qiq" },
         "2": { "name": "storage.type.class.qiq" },
         "3": { "name": "entity.name.type.class.qiq" },
-        "4": { "name": "storage.modifier.extends.qiq" },
-        "5": { "name": "entity.other.inherited-class.qiq" },
-        "6": { "name": "storage.modifier.implements.qiq" },
-        "7": { "name": "entity.other.inherited-class.qiq" }
+        "4": { "name": "storage.type.primitive.qiq" },
+        "5": { "name": "storage.modifier.extends.qiq" },
+        "6": { "name": "entity.other.inherited-class.qiq" },
+        "7": { "name": "storage.modifier.implements.qiq" },
+        "8": { "name": "entity.other.inherited-class.qiq" }
       }
     },
     "function-declaration": {

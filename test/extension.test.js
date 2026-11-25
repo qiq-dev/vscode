@@ -251,6 +251,16 @@ test("standard library members and statics", async () => {
   assert.deepStrictEqual(labels(exception).sort(), ["getCode", "getFile", "getLine", "getMessage"], "inherited from Exception");
 });
 
+test("enums: cases and built-in methods after ::, name and value after ->", async () => {
+  const declared = 'enum Status: string {\n    case Active = "active";\n    case Archived = "archived";\n    function label(): string { return this->name; }\n}\n';
+  const statics = await complete(MAIN, declared + "Status::|", ":");
+  assert.deepStrictEqual(labels(statics).sort(), ["Active", "Archived", "cases", "class", "from", "tryFrom"]);
+  const members = await complete(MAIN, declared + "Status s = Status::Active;\ns->|", ">");
+  assert.deepStrictEqual(labels(members).sort(), ["label", "name", "value"]);
+  const pure = await complete(MAIN, "enum Suit { case Hearts; }\nSuit::|", ":");
+  assert.deepStrictEqual(labels(pure).sort(), ["Hearts", "cases", "class"], "a pure enum has no from or tryFrom");
+});
+
 test("untyped callback parameters take their types from where they're passed", async () => {
   // A standard library function, imported.
   const regex = await complete(MAIN, 'import preg_replace_callback from "std/regex";\nstring s = preg_replace_callback(`/x/`, fn(m) => m->|, "x");', ">");

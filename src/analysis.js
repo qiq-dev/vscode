@@ -10,7 +10,7 @@ const IDENT = "[A-Za-z_][A-Za-z0-9_]*";
 const PRIMITIVES = ["int", "double", "bool", "byte", "string", "char", "void"];
 const KEYWORDS = [
   "if", "else", "foreach", "while", "switch", "case", "default", "break", "continue", "return",
-  "try", "catch", "finally", "throw", "as", "new", "function", "fn", "class", "interface", "extends",
+  "try", "catch", "finally", "throw", "as", "new", "function", "fn", "class", "interface", "enum", "extends",
   "implements", "abstract", "final", "static", "public", "private", "protected", "import", "from",
   "true", "false", "null", "this", "self", "parent", "print", "println", "map", "instanceof", "const", "readonly",
 ];
@@ -379,7 +379,7 @@ function parseDocument(text) {
 
   const classes = [];
   const classPattern = new RegExp(
-    `\\b((?:(?:abstract|final|private)\\s+)*)(class|interface)\\s+(${IDENT})(?:\\s+extends\\s+(${IDENT}(?:\\s*,\\s*${IDENT})*))?(?:\\s+implements\\s+(${IDENT}(?:\\s*,\\s*${IDENT})*))?\\s*\\{`,
+    `\\b((?:(?:abstract|final|private)\\s+)*)(class|interface|enum)\\s+(${IDENT})(?:\\s*:\\s*(int|string))?(?:\\s+extends\\s+(${IDENT}(?:\\s*,\\s*${IDENT})*))?(?:\\s+implements\\s+(${IDENT}(?:\\s*,\\s*${IDENT})*))?\\s*\\{`,
     "g"
   );
   while ((match = classPattern.exec(masked))) {
@@ -388,15 +388,16 @@ function parseDocument(text) {
     const bodyEnd = matching(masked, bodyStart);
     const list = (names) => (names ? names.split(",").map((name) => name.trim()) : []);
     const isInterface = match[2] === "interface";
-    const parents = list(match[4]);
+    const parents = list(match[5]);
     const cls = {
       name: match[3],
       kind: match[2],
       abstract: /\babstract\b/.test(match[1]),
-      final: /\bfinal\b/.test(match[1]),
+      // An enum is a final class whose values are its cases.
+      final: /\bfinal\b/.test(match[1]) || match[2] === "enum",
       private: /\bprivate\b/.test(match[1]),
       extends: isInterface ? null : parents[0] || null,
-      interfaces: isInterface ? parents : list(match[5]),
+      interfaces: isInterface ? parents : list(match[6]),
       start: match.index,
       nameOffset: match.index + match[0].indexOf(match[3], match[1].length + match[2].length),
       bodyStart,
@@ -406,10 +407,39 @@ function parseDocument(text) {
       methods: [],
     };
     parseMembers(text, masked, cls);
+    if (cls.kind === "enum") addEnumMembers(cls, match[4] || null);
     classes.push(cls);
     classPattern.lastIndex = bodyEnd;
   }
   return { imports, functions, classes, masked, depth };
+}
+
+/** The members every enum has: readonly `name` (and, for a backed enum,
+ * `value`) on each case, and the static methods cases(), from(), and
+ * tryFrom(), as the compiler adds them. */
+function addEnumMembers(cls, backing) {
+  cls.backing = backing;
+  const property = (name, type, doc) => ({ name, type, visibility: "public", static: false, readonly: true, offset: cls.nameOffset, doc });
+  cls.properties.push(property("name", "string", "The case's name."));
+  if (backing) cls.properties.push(property("value", backing, "The case's value."));
+  const method = (name, params, returns, doc) => ({
+    name,
+    params,
+    returns,
+    start: cls.start,
+    nameOffset: cls.nameOffset,
+    bodyStart: -1,
+    bodyEnd: -1,
+    visibility: "public",
+    static: true,
+    abstract: false,
+    doc,
+  });
+  cls.methods.push(method("cases", [], `${cls.name}[]`, "All the cases, in the order they're declared."));
+  if (!backing) return;
+  const value = [{ type: backing, name: "value", default: null }];
+  cls.methods.push(method("from", value, cls.name, "The case with this value. Throws InvalidArgumentException if there's none."));
+  cls.methods.push(method("tryFrom", value, cls.name, "The case with this value, or null if there's none."));
 }
 
 /** Fills in a class's properties and methods: the statements directly in
@@ -451,6 +481,23 @@ function parseMembers(text, masked, cls) {
             }
           }
           i = method.bodyEnd > 0 ? method.bodyEnd : i;
+        }
+      } else if (c === ";" && cls.kind === "enum" && /^case\s/.test(rest)) {
+        // `case Name [= value];`: one of the enum's values, read with Enum::Name.
+        const enumCase = rest.match(new RegExp(`^case\\s+(${IDENT})\\s*(?:=\\s*([\\s\\S]*))?$`));
+        if (enumCase) {
+          const value = enumCase[2] !== undefined ? text.slice(start, i).replace(/^[\s\S]*?=\s*/, "").trim() : null;
+          cls.properties.push({
+            name: enumCase[1],
+            type: cls.name,
+            visibility: "public",
+            static: true,
+            constant: true,
+            enumCase: true,
+            value,
+            offset: start,
+            doc: docCommentAbove(text, start),
+          });
         }
       } else if (c === ";" && /^const\s/.test(rest)) {
         // `const [type] NAME = value;`: a constant, read with Class::NAME.

@@ -33,6 +33,16 @@
     "body": ["interface ${1:Name} {", "\tfunction ${2:method}(${3}): ${4:void};", "}"],
     "description": "An interface"
   },
+  "enum": {
+    "prefix": "enum",
+    "body": ["enum ${1:Name} {", "\tcase ${2:First};", "\tcase ${3:Second};", "}"],
+    "description": "An enum"
+  },
+  "enumbacked": {
+    "prefix": "enumb",
+    "body": ["enum ${1:Name}: ${2|string,int|} {", "\tcase ${3:First} = ${4:\"first\"};", "}"],
+    "description": "A backed enum, whose cases have values"
+  },
   "method": {
     "prefix": "method",
     "body": ["${1|public,private,protected|} function ${2:name}(${3}): ${4:void} {", "\t$0", "}"],

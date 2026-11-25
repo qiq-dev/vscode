@@ -167,6 +167,23 @@ count = 3;
 greeting = "hi";
 `;
 
+test("enums", () => {
+  const doc = analysis.parseDocument('enum Status: string implements HasLabel {\n    case Active = "active";\n    case Archived = "archived";\n    const Default = "active";\n}\nenum Suit { case Hearts; case Spades; }');
+  const [status, suit] = doc.classes;
+  assert.strictEqual(status.kind, "enum");
+  assert.strictEqual(status.backing, "string");
+  assert.ok(status.final);
+  assert.deepStrictEqual(status.interfaces, ["HasLabel"]);
+  const cases = status.properties.filter((p) => p.enumCase);
+  assert.deepStrictEqual(cases.map((p) => [p.name, p.type, p.value]), [["Active", "Status", '"active"'], ["Archived", "Status", '"archived"']]);
+  assert.deepStrictEqual(status.properties.filter((p) => !p.static).map((p) => [p.name, p.type]), [["name", "string"], ["value", "string"]]);
+  assert.deepStrictEqual(status.methods.map((m) => [m.name, m.returns]), [["cases", "Status[]"], ["from", "Status"], ["tryFrom", "Status"]]);
+  assert.deepStrictEqual(suit.properties.filter((p) => p.enumCase).map((p) => p.name), ["Hearts", "Spades"]);
+  assert.deepStrictEqual(suit.methods.map((m) => m.name), ["cases"]);
+  // `enum` as a name isn't a declaration.
+  assert.strictEqual(analysis.parseDocument('string enum = "x";').classes.length, 0);
+});
+
 test("variadic parameters", () => {
   assert.deepStrictEqual(analysis.parseParameter("string ...parts"), { type: "string[]", name: "parts", default: null, variadic: true });
   assert.deepStrictEqual(analysis.parseParameter("map[string, int]... counts"), { type: "map[string, int][]", name: "counts", default: null, variadic: true });
