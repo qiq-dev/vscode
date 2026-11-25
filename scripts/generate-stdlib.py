@@ -112,6 +112,16 @@ def parse_param(text):
     return {"name": match.group(2), "type": match.group(1), "default": default}
 
 
+def param_entry(p):
+    """A function parameter from the manual; a variadic one (`string ...parts`)
+    is written there with its element type, and is an array in the function."""
+    entry = {"name": p["name"], "type": p["type"], "default": p.get("default"), "doc": markdown(p["description"])}
+    if p.get("variadic"):
+        entry["type"] += "[]"
+        entry["variadic"] = True
+    return entry
+
+
 def functions():
     result = {}
     for category in stdlib.CATEGORIES:
@@ -119,10 +129,7 @@ def functions():
             name = function["name"]
             result[name] = {
                 "name": name,
-                "params": [
-                    {"name": p["name"], "type": p["type"], "default": p.get("default"), "doc": markdown(p["description"])}
-                    for p in function["params"]
-                ],
+                "params": [param_entry(p) for p in function["params"]],
                 "returns": function["returns"],
                 "summary": markdown(function["purpose"]),
                 "doc": markdown(function["description"]),

@@ -2048,6 +2048,343 @@
    "module": "std/file",
    "category": "Files"
   },
+  "basename": {
+   "name": "basename",
+   "params": [
+    {
+     "name": "path",
+     "type": "string",
+     "default": null,
+     "doc": "The path."
+    }
+   ],
+   "returns": "string",
+   "summary": "The last part of a path",
+   "doc": "Gives the name at the end of `path`, ignoring trailing slashes. It works on the text alone and doesn't look at the disk.",
+   "module": "std/file",
+   "category": "Files"
+  },
+  "dirname": {
+   "name": "dirname",
+   "params": [
+    {
+     "name": "path",
+     "type": "string",
+     "default": null,
+     "doc": "The path."
+    }
+   ],
+   "returns": "string",
+   "summary": "A path without its last part",
+   "doc": "Gives the directory part of `path`: everything before the last part, ignoring trailing slashes, cleaned as `path_clean` does. It works on the text alone.",
+   "module": "std/file",
+   "category": "Files"
+  },
+  "path_ext": {
+   "name": "path_ext",
+   "params": [
+    {
+     "name": "path",
+     "type": "string",
+     "default": null,
+     "doc": "The path."
+    }
+   ],
+   "returns": "string",
+   "summary": "A path's file extension",
+   "doc": "Gives the extension of the last part of `path`: from its last `.` to the end.",
+   "module": "std/file",
+   "category": "Files"
+  },
+  "path_join": {
+   "name": "path_join",
+   "params": [
+    {
+     "name": "parts",
+     "type": "string[]",
+     "default": null,
+     "doc": "The parts, in order. Pass an array with `...parts`.",
+     "variadic": true
+    }
+   ],
+   "returns": "string",
+   "summary": "Join parts into one path",
+   "doc": "Joins the parts with `/` and cleans the result as `path_clean` does. Empty parts are skipped. An absolute part doesn't start the path again: `path_join(\"a\", \"/b\")` is `a/b`.",
+   "module": "std/file",
+   "category": "Files"
+  },
+  "path_clean": {
+   "name": "path_clean",
+   "params": [
+    {
+     "name": "path",
+     "type": "string",
+     "default": null,
+     "doc": "The path."
+    }
+   ],
+   "returns": "string",
+   "summary": "Simplify a path",
+   "doc": "Gives the shortest path to the same place, by the text alone: one `/` between parts, no `.` parts, no trailing slash, and each `..` removed along with the part before it. At the root, `..` stays at the root; a relative path keeps the `..` parts it can't remove.",
+   "module": "std/file",
+   "category": "Files"
+  },
+  "path_is_absolute": {
+   "name": "path_is_absolute",
+   "params": [
+    {
+     "name": "path",
+     "type": "string",
+     "default": null,
+     "doc": "The path."
+    }
+   ],
+   "returns": "bool",
+   "summary": "Check whether a path starts at the root",
+   "doc": "Checks whether `path` starts with `/`.",
+   "module": "std/file",
+   "category": "Files"
+  },
+  "path_rel": {
+   "name": "path_rel",
+   "params": [
+    {
+     "name": "base",
+     "type": "string",
+     "default": null,
+     "doc": "Where the relative path starts."
+    },
+    {
+     "name": "target",
+     "type": "string",
+     "default": null,
+     "doc": "Where it leads."
+    }
+   ],
+   "returns": "string",
+   "summary": "The relative path from one path to another",
+   "doc": "Gives a relative path that leads from `base` to `target`, so that `path_join(base, path_rel(base, target))` is `path_clean(target)`. Only the text is compared.",
+   "module": "std/file",
+   "category": "Files"
+  },
+  "realpath": {
+   "name": "realpath",
+   "params": [
+    {
+     "name": "path",
+     "type": "string",
+     "default": null,
+     "doc": "An existing file or directory."
+    }
+   ],
+   "returns": "string",
+   "summary": "The absolute path, with links resolved",
+   "doc": "Resolves `path` on the disk: makes it absolute from the current directory, and resolves `.`, `..`, and symbolic links.",
+   "module": "std/file",
+   "category": "Files"
+  },
+  "mkdir": {
+   "name": "mkdir",
+   "params": [
+    {
+     "name": "path",
+     "type": "string",
+     "default": null,
+     "doc": "The directory to create."
+    },
+    {
+     "name": "recursive",
+     "type": "bool",
+     "default": "false",
+     "doc": "When `true`, also create the missing directories above it, and don't fail if it already exists."
+    }
+   ],
+   "returns": "void",
+   "summary": "Create a directory",
+   "doc": "Creates the directory `path`, which anyone can read and enter (as the system's umask allows).",
+   "module": "std/file",
+   "category": "Files"
+  },
+  "rmdir": {
+   "name": "rmdir",
+   "params": [
+    {
+     "name": "path",
+     "type": "string",
+     "default": null,
+     "doc": "The directory to remove."
+    },
+    {
+     "name": "recursive",
+     "type": "bool",
+     "default": "false",
+     "doc": "When `true`, remove everything in it first."
+    }
+   ],
+   "returns": "void",
+   "summary": "Remove a directory",
+   "doc": "Removes the directory `path`. Without `recursive` it must be empty. With it, the files and directories inside are removed too; symbolic links inside are removed, not followed.",
+   "module": "std/file",
+   "category": "Files"
+  },
+  "unlink": {
+   "name": "unlink",
+   "params": [
+    {
+     "name": "path",
+     "type": "string",
+     "default": null,
+     "doc": "The file to delete."
+    }
+   ],
+   "returns": "void",
+   "summary": "Delete a file",
+   "doc": "Deletes the file (or symbolic link) at `path`. A program that still has the file open can go on using it.",
+   "module": "std/file",
+   "category": "Files"
+  },
+  "rename": {
+   "name": "rename",
+   "params": [
+    {
+     "name": "from",
+     "type": "string",
+     "default": null,
+     "doc": "The file or directory to move."
+    },
+    {
+     "name": "to",
+     "type": "string",
+     "default": null,
+     "doc": "Its new path."
+    }
+   ],
+   "returns": "void",
+   "summary": "Move or rename a file or directory",
+   "doc": "Moves `from` to `to` in one step, replacing a file already at `to`. Writing a new file and renaming it over the old one replaces a file so that readers never see it half written.",
+   "module": "std/file",
+   "category": "Files"
+  },
+  "copy": {
+   "name": "copy",
+   "params": [
+    {
+     "name": "from",
+     "type": "string",
+     "default": null,
+     "doc": "The file to copy."
+    },
+    {
+     "name": "to",
+     "type": "string",
+     "default": null,
+     "doc": "Where to put the copy."
+    }
+   ],
+   "returns": "void",
+   "summary": "Copy a file",
+   "doc": "Copies the contents and permissions of the file `from` to `to`, replacing a file already there.",
+   "module": "std/file",
+   "category": "Files"
+  },
+  "filesize": {
+   "name": "filesize",
+   "params": [
+    {
+     "name": "path",
+     "type": "string",
+     "default": null,
+     "doc": "The file."
+    }
+   ],
+   "returns": "int",
+   "summary": "A file's size",
+   "doc": "Gives the size of the file at `path`.",
+   "module": "std/file",
+   "category": "Files"
+  },
+  "filemtime": {
+   "name": "filemtime",
+   "params": [
+    {
+     "name": "path",
+     "type": "string",
+     "default": null,
+     "doc": "The file or directory."
+    }
+   ],
+   "returns": "int",
+   "summary": "When a file was last changed",
+   "doc": "Gives the time the contents of `path` last changed.",
+   "module": "std/file",
+   "category": "Files"
+  },
+  "getcwd": {
+   "name": "getcwd",
+   "params": [],
+   "returns": "string",
+   "summary": "The current directory",
+   "doc": "Gives the directory the program is running in. Relative paths start from it.",
+   "module": "std/file",
+   "category": "Files"
+  },
+  "chdir": {
+   "name": "chdir",
+   "params": [
+    {
+     "name": "path",
+     "type": "string",
+     "default": null,
+     "doc": "The new current directory."
+    }
+   ],
+   "returns": "void",
+   "summary": "Change the current directory",
+   "doc": "Makes `path` the directory the program runs in, so relative paths start from there. It also changes the directory of programs started afterwards with `exec` and `shell` (unless they're given a `cwd`).",
+   "module": "std/file",
+   "category": "Files"
+  },
+  "temp_dir": {
+   "name": "temp_dir",
+   "params": [],
+   "returns": "string",
+   "summary": "The directory for temporary files",
+   "doc": "Gives the directory for temporary files: the `TMPDIR` environment variable, or `/tmp` when it isn't set.",
+   "module": "std/file",
+   "category": "Files"
+  },
+  "temp_file": {
+   "name": "temp_file",
+   "params": [
+    {
+     "name": "prefix",
+     "type": "string",
+     "default": "\"\"",
+     "doc": "The start of the file's name."
+    }
+   ],
+   "returns": "string",
+   "summary": "Create a new temporary file",
+   "doc": "Creates a new, empty file in `temp_dir()`, named `prefix` followed by six random characters, that only the user running the program can read and write. The name is chosen so that it can't clash with an existing file.",
+   "module": "std/file",
+   "category": "Files"
+  },
+  "glob": {
+   "name": "glob",
+   "params": [
+    {
+     "name": "pattern",
+     "type": "string",
+     "default": null,
+     "doc": "A path with wildcards."
+    }
+   ],
+   "returns": "string[]",
+   "summary": "Find paths that match a pattern",
+   "doc": "Finds the files and directories that match `pattern`: `*` matches any run of characters within one part of a path, `?` one character, and `[abc]` one of the characters listed (`[a-z]` one in a range). A name starting with `.` matches only a pattern part that starts with `.`.",
+   "module": "std/file",
+   "category": "Files"
+  },
   "csv_parse": {
    "name": "csv_parse",
    "params": [
