@@ -7,6 +7,11 @@
 "use strict";
 
 const IDENT = "[A-Za-z_][A-Za-z0-9_]*";
+// What's inside `<...>`: type parameters or arguments, with one level of
+// nesting (`T: Comparable<T>`, `Map<string, Box<int>>`).
+const ANGLED = "(?:[^<>{}();]|<(?:[^<>{}();]|<[^<>{}();]*>)*>)*";
+// A class or interface name, with type arguments: `Repository<User>`.
+const NAMED = `${IDENT}(?:\\s*<${ANGLED}>)?`;
 const PRIMITIVES = ["int", "double", "bool", "byte", "string", "char", "void"];
 const KEYWORDS = [
   "if", "else", "foreach", "while", "switch", "case", "default", "break", "continue", "return",
@@ -250,10 +255,10 @@ function normalizeType(type) {
     .trim();
 }
 
-/** `T, U: Bound` -> ["T", "U"]. */
+/** `T, U: Comparable<U>` -> ["T", "U"]. */
 function typeParamNames(text) {
   if (!text) return [];
-  return text.split(",").map((part) => part.split(":")[0].trim()).filter((name) => name !== "");
+  return splitTypeArguments(text).map((part) => part.split(":")[0].trim()).filter((name) => name !== "");
 }
 
 /** The parts of a list of types, split at top-level commas: `int, Box<int, string>`. */
@@ -308,7 +313,7 @@ function docCommentAbove(text, offset) {
  * parameters, return type, and body range. */
 function parseFunctionAt(text, masked, start) {
   // `function first<T>(...)`: the type parameters are group 2.
-  const header = new RegExp(`function\\s+(${IDENT})\\s*(?:<([^<>(]*)>)?\\s*\\(`, "y");
+  const header = new RegExp(`function\\s+(${IDENT})\\s*(?:<(${ANGLED})>)?\\s*\\(`, "y");
   header.lastIndex = start;
   const match = header.exec(masked);
   if (!match) return null;
@@ -399,7 +404,7 @@ function parseDocument(text) {
   }
 
   const functions = [];
-  const functionPattern = new RegExp(`\\bfunction\\s+(${IDENT})\\s*(?:<[^<>(]*>)?\\s*\\(`, "g");
+  const functionPattern = new RegExp(`\\bfunction\\s+(${IDENT})\\s*(?:<${ANGLED}>)?\\s*\\(`, "g");
   while ((match = functionPattern.exec(masked))) {
     if (depth[match.index] !== 0) continue;
     const parsed = parseFunctionAt(text, masked, match.index);
@@ -413,14 +418,14 @@ function parseDocument(text) {
 
   const classes = [];
   const classPattern = new RegExp(
-    `\\b((?:(?:abstract|final|private)\\s+)*)(class|interface|enum)\\s+(${IDENT})(?:\\s*<([^<>{]*)>)?(?:\\s*:\\s*(int|string))?(?:\\s+extends\\s+(${IDENT}(?:\\s*,\\s*${IDENT})*))?(?:\\s+implements\\s+(${IDENT}(?:\\s*,\\s*${IDENT})*))?\\s*\\{`,
+    `\\b((?:(?:abstract|final|private)\\s+)*)(class|interface|enum)\\s+(${IDENT})(?:\\s*<(${ANGLED})>)?(?:\\s*:\\s*(int|string))?(?:\\s+extends\\s+(${NAMED}(?:\\s*,\\s*${NAMED})*))?(?:\\s+implements\\s+(${NAMED}(?:\\s*,\\s*${NAMED})*))?\\s*\\{`,
     "g"
   );
   while ((match = classPattern.exec(masked))) {
     if (depth[match.index] !== 0) continue;
     const bodyStart = classPattern.lastIndex - 1;
     const bodyEnd = matching(masked, bodyStart);
-    const list = (names) => (names ? names.split(",").map((name) => name.trim()) : []);
+    const list = (names) => (names ? splitTypeArguments(names).map((name) => normalizeType(name)) : []);
     const isInterface = match[2] === "interface";
     const parents = list(match[6]);
     const cls = {

@@ -261,6 +261,14 @@ test("generics: members of Box<Word> have Word where Box has T", async () => {
   assert.deepStrictEqual(labels(property).sort(), ["text", "upper"]);
 });
 
+test("generic interfaces: members of Repository<Word> have Word where it has T", async () => {
+  const declared = "class Word {\n    public string text;\n}\ninterface Repository<T> {\n    function find(int id): T;\n}\nRepository<Word> words = null;\n";
+  const members = await complete(MAIN, declared + "words->|", ">");
+  assert.deepStrictEqual(labels(members), ["find"]);
+  const found = await complete(MAIN, declared + "words->find(1)->|", ">");
+  assert.deepStrictEqual(labels(found), ["text"]);
+});
+
 test("enums: cases and built-in methods after ::, name and value after ->", async () => {
   const declared = 'enum Status: string {\n    case Active = "active";\n    case Archived = "archived";\n    function label(): string { return this->name; }\n}\n';
   const statics = await complete(MAIN, declared + "Status::|", ":");

@@ -191,6 +191,14 @@ test("generic classes and functions", () => {
   assert.deepStrictEqual(analysis.splitTypeArguments("int, Box<int, string>, map[string, int]"), ["int", "Box<int, string>", "map[string, int]"]);
 });
 
+test("generic interfaces, bounds, and methods", () => {
+  const doc = analysis.parseDocument("interface Repository<T> {\n    function find(int id): T;\n}\nclass Money implements Comparable<Money>, Repository<Box<int>> {\n    function convert<U: Comparable<U>>(U x): U { return x; }\n}\nfunction largest<T: Comparable<T>>(T[] items): T { return items[0]; }");
+  assert.deepStrictEqual(doc.classes.map((c) => [c.name, c.kind, c.typeParams]), [["Repository", "interface", ["T"]], ["Money", "class", []]]);
+  assert.deepStrictEqual(doc.classes[1].interfaces, ["Comparable<Money>", "Repository<Box<int>>"]);
+  assert.deepStrictEqual(doc.classes[1].methods[0].typeParams, ["U"]);
+  assert.deepStrictEqual(doc.functions[0].typeParams, ["T"]);
+});
+
 test("enums", () => {
   const doc = analysis.parseDocument('enum Status: string implements HasLabel {\n    case Active = "active";\n    case Archived = "archived";\n    const Default = "active";\n}\nenum Suit { case Hearts; case Spades; }');
   const [status, suit] = doc.classes;
