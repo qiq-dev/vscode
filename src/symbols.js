@@ -159,6 +159,8 @@ function stdlibClass(cls) {
   return {
     name: cls.name,
     kind: cls.kind,
+    typeParams: cls.typeParams || [],
+    interfaces: cls.interfaces || [],
     extends: cls.extends,
     final: cls.final,
     abstract: false,
@@ -342,8 +344,16 @@ class Context {
       if (!name || seen.has(name)) continue;
       seen.add(name);
       const iterable = name.match(/^(?:Iterable|Iterator)\s*<(.*)>$/s);
-      if (iterable) return iterable[1].trim();
-      const cls = this.findClass(name);
+      if (iterable) {
+        // Its class needs no import: the code doesn't name it.
+        const element = iterable[1].trim();
+        this.inferredClasses = this.inferredClasses || new Set();
+        this.inferredClasses.add(element.replace(/(\[\])+$/, "").replace(/<.*$/, ""));
+        return element;
+      }
+      // A standard library class reached through a method's return type
+      // (db->cursor(...)) needs no import.
+      const cls = this.findClass(name) || (STDLIB.classes[name] ? stdlibClass(STDLIB.classes[name]) : null);
       if (!cls) continue;
       pending.push(...(cls.interfaces || []));
       if (cls.extends) pending.push(cls.extends);

@@ -158,7 +158,9 @@ def parse_member(line):
         returns = re.split(r"\s*[{;]\s*$|\s*\{", rest[1:].strip())[0].strip()
     return start.group(1), start.group(2), params, returns
 PROPERTY = re.compile(r"^\s*((?:(?:public|private|protected|static|final|readonly)\s+)+)(.+?)\s+(\w+)\s*(?:=.*)?;")
-CLASS = re.compile(r"^(?:(?:final|abstract)\s+)*(class|interface)\s+(\w+)(?:\s+extends\s+(\w+))?(?:\s+implements\s+([\w\s,]+?))?\s*\{")
+# A class or interface, with type parameters (`interface Iterator<T>`) and
+# generic interfaces (`implements Iterator<Row>`).
+CLASS = re.compile(r"^(?:(?:final|abstract)\s+)*(class|interface)\s+(\w+)(?:\s*<([^>{]*)>)?(?:\s+extends\s+(\w+))?(?:\s+implements\s+([\w\s,<>\[\]]+?))?\s*\{")
 
 
 def classes():
@@ -180,7 +182,9 @@ def classes():
                     current = {
                         "name": match.group(2),
                         "kind": match.group(1),
-                        "extends": match.group(3),
+                        "extends": match.group(4),
+                        "typeParams": [part.split(":")[0].strip() for part in (match.group(3) or "").split(",") if part.strip()],
+                        "interfaces": [part.strip() for part in re.split(r",(?![^<]*>)", match.group(5) or "") if part.strip()],
                         "final": line.lstrip().startswith("final"),
                         "module": module,
                         "doc": " ".join(comment).strip(),

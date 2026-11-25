@@ -261,6 +261,19 @@ test("generics: members of Box<Word> have Word where Box has T", async () => {
   assert.deepStrictEqual(labels(property).sort(), ["text", "upper"]);
 });
 
+test("generic parents: members inherited from Stack<Word> have Word where it has T", async () => {
+  const declared = "class Word {\n    public string text;\n}\nclass Stack<T> {\n    function pop(): T { return null; }\n}\nclass Words extends Stack<Word> {\n    function count(): int { return 0; }\n}\nWords words = new Words();\n";
+  const members = await complete(MAIN, declared + "words->|", ">");
+  assert.deepStrictEqual(labels(members).sort(), ["count", "pop"]);
+  const popped = await complete(MAIN, declared + "words->pop()->|", ">");
+  assert.deepStrictEqual(labels(popped), ["text"]);
+});
+
+test("foreach over the standard library's iterators gives their T", async () => {
+  const cursor = await complete(MAIN, 'import Database from "std/sql";\nDatabase db = Database::open("x");\nforeach (db->cursor("select 1") as row) {\n    row->|\n}', ">");
+  assert.ok(labels(cursor).includes("getInt"), "a Cursor is an Iterator<Row>");
+});
+
 test("foreach over an Iterable<T> or Iterator<T> gives T", async () => {
   const declared = "class Word {\n    public string text;\n}\nclass Bag<T> implements Iterable<T> {\n    function iterator(): Iterator<T> { return null; }\n}\nclass Words implements Iterator<Word> {\n    function hasNext(): bool { return false; }\n    function next(): Word { return null; }\n}\n";
   const bag = await complete(MAIN, declared + "Bag<Word> bag = null;\nforeach (bag as word) {\n    word->|\n}", ">");
