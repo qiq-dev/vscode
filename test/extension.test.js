@@ -251,6 +251,16 @@ test("standard library members and statics", async () => {
   assert.deepStrictEqual(labels(exception).sort(), ["getCode", "getFile", "getLine", "getMessage"], "inherited from Exception");
 });
 
+test("generics: members of Box<Word> have Word where Box has T", async () => {
+  const declared = "class Word {\n    public string text;\n    function upper(): string { return this->text; }\n}\nclass Box<T> {\n    public T value;\n    function get(): T { return this->value; }\n}\nBox<Word> box = null;\n";
+  const members = await complete(MAIN, declared + "box->|", ">");
+  assert.deepStrictEqual(labels(members).sort(), ["get", "value"]);
+  const inner = await complete(MAIN, declared + "box->get()->|", ">");
+  assert.deepStrictEqual(labels(inner).sort(), ["text", "upper"]);
+  const property = await complete(MAIN, declared + "box->value->|", ">");
+  assert.deepStrictEqual(labels(property).sort(), ["text", "upper"]);
+});
+
 test("enums: cases and built-in methods after ::, name and value after ->", async () => {
   const declared = 'enum Status: string {\n    case Active = "active";\n    case Archived = "archived";\n    function label(): string { return this->name; }\n}\n';
   const statics = await complete(MAIN, declared + "Status::|", ":");

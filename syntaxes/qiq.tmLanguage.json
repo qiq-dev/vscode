@@ -376,7 +376,7 @@
       "captures": { "1": { "name": "storage.modifier.extern.qiq" } }
     },
     "class-declaration": {
-      "match": "\\b(?:(abstract|final)\\s+)*(class|interface|enum)\\s+([A-Za-z_][A-Za-z0-9_]*)(?:\\s*:\\s*(int|string))?(?:\\s+(extends)\\s+([A-Za-z_][A-Za-z0-9_]*(?:\\s*,\\s*[A-Za-z_][A-Za-z0-9_]*)*))?(?:\\s+(implements)\\s+([A-Za-z_][A-Za-z0-9_]*(?:\\s*,\\s*[A-Za-z_][A-Za-z0-9_]*)*))?",
+      "match": "\\b(?:(abstract|final)\\s+)*(class|interface|enum)\\s+([A-Za-z_][A-Za-z0-9_]*)(?:\\s*<[^<>{]*>)?(?:\\s*:\\s*(int|string))?(?:\\s+(extends)\\s+([A-Za-z_][A-Za-z0-9_]*(?:\\s*,\\s*[A-Za-z_][A-Za-z0-9_]*)*))?(?:\\s+(implements)\\s+([A-Za-z_][A-Za-z0-9_]*(?:\\s*,\\s*[A-Za-z_][A-Za-z0-9_]*)*))?",
       "captures": {
         "1": { "name": "storage.modifier.qiq" },
         "2": { "name": "storage.type.class.qiq" },

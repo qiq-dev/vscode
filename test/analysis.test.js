@@ -177,6 +177,20 @@ test("nullable scalar types", () => {
   assert.strictEqual(doc.functions[0].returns, "?int");
 });
 
+test("generic classes and functions", () => {
+  const doc = analysis.parseDocument("class Pair<A, B: Show> implements Show {\n    public A first;\n    function swap(): Pair<B, A> { return null; }\n}\nfunction first<T>(T[] items): T { return items[0]; }");
+  assert.deepStrictEqual(doc.classes[0].typeParams, ["A", "B"]);
+  assert.deepStrictEqual(doc.classes[0].interfaces, ["Show"]);
+  assert.strictEqual(doc.classes[0].methods[0].returns, "Pair<B, A>");
+  assert.deepStrictEqual(doc.functions[0].typeParams, ["T"]);
+  assert.deepStrictEqual(doc.functions[0].params, [{ type: "T[]", name: "items", default: null }]);
+  const { text, offset } = cursor("Box<Box<int>> nested = null;\nPair<int, string> pair = null;\n|");
+  const variables = analysis.variablesAt(text, analysis.parseDocument(text), offset);
+  assert.strictEqual(variables.find((v) => v.name === "nested").type, "Box<Box<int>>");
+  assert.strictEqual(variables.find((v) => v.name === "pair").type, "Pair<int, string>");
+  assert.deepStrictEqual(analysis.splitTypeArguments("int, Box<int, string>, map[string, int]"), ["int", "Box<int, string>", "map[string, int]"]);
+});
+
 test("enums", () => {
   const doc = analysis.parseDocument('enum Status: string implements HasLabel {\n    case Active = "active";\n    case Archived = "archived";\n    const Default = "active";\n}\nenum Suit { case Hearts; case Spades; }');
   const [status, suit] = doc.classes;

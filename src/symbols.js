@@ -175,10 +175,27 @@ function fileFunction(fn, file, context) {
   return { name: fn.name, params: fn.params, returns: fn.returns, doc: fn.doc, private: fn.private, file, offset: fn.nameOffset, origin: "file", context };
 }
 
+/** A generic class with its type parameters replaced by `types`, in its
+ * members' types: Box<int>'s get() returns int. */
+function specialize(cls, types) {
+  const params = cls.typeParams || [];
+  if (!params.length) return cls;
+  const replace = (type) =>
+    type ? type.replace(/\b[A-Za-z_][A-Za-z0-9_]*\b/g, (word) => (params.includes(word) ? types[params.indexOf(word)] || word : word)) : type;
+  return {
+    ...cls,
+    name: `${cls.name}<${types.join(", ")}>`,
+    typeParams: [],
+    properties: cls.properties.map((p) => ({ ...p, type: replace(p.type) })),
+    methods: cls.methods.map((m) => ({ ...m, returns: replace(m.returns), params: m.params.map((p) => ({ ...p, type: replace(p.type) })) })),
+  };
+}
+
 function fileClass(cls, file, context) {
   return {
     name: cls.name,
     kind: cls.kind,
+    typeParams: cls.typeParams,
     backing: cls.backing,
     extends: cls.extends,
     interfaces: cls.interfaces,
@@ -235,6 +252,12 @@ class Context {
   /** A class or interface by the name this file uses for it. */
   findClass(name) {
     if (!name) return null;
+    // `Box<int>`: Box, with its type parameters replaced in its members' types.
+    const generic = name.match(/^([A-Za-z_][A-Za-z0-9_]*)\s*<(.*)>$/s);
+    if (generic) {
+      const cls = this.findClass(generic[1]);
+      return cls ? specialize(cls, analysis.splitTypeArguments(generic[2])) : null;
+    }
     const own = this.document.classes.find((cls) => cls.name === name);
     if (own) return fileClass(own, this.file, this);
     const imported = this.imported.get(name);

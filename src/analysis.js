@@ -240,7 +240,39 @@ function parseParameter(text) {
 }
 
 function normalizeType(type) {
-  return type.replace(/\s+/g, " ").replace(/\s*\[\s*\]/g, "[]").replace(/\(\s+/g, "(").replace(/\s+\)/g, ")").trim();
+  return type
+    .replace(/\s+/g, " ")
+    .replace(/\s*\[\s*\]/g, "[]")
+    .replace(/\(\s+/g, "(")
+    .replace(/\s+\)/g, ")")
+    .replace(/\s*<\s*/g, "<")
+    .replace(/\s*>/g, ">")
+    .trim();
+}
+
+/** `T, U: Bound` -> ["T", "U"]. */
+function typeParamNames(text) {
+  if (!text) return [];
+  return text.split(",").map((part) => part.split(":")[0].trim()).filter((name) => name !== "");
+}
+
+/** The parts of a list of types, split at top-level commas: `int, Box<int, string>`. */
+function splitTypeArguments(text) {
+  const parts = [];
+  let depth = 0;
+  let current = "";
+  for (const c of text) {
+    if (c === "<" || c === "(" || c === "[") depth++;
+    if (c === ">" || c === ")" || c === "]") depth--;
+    if (c === "," && depth === 0) {
+      parts.push(current.trim());
+      current = "";
+    } else {
+      current += c;
+    }
+  }
+  if (current.trim() !== "") parts.push(current.trim());
+  return parts;
 }
 
 /** The comment just above `offset`'s line: its // lines, or a block
@@ -275,7 +307,8 @@ function docCommentAbove(text, offset) {
 /** A function header starting at `start` (at "function"): its name,
  * parameters, return type, and body range. */
 function parseFunctionAt(text, masked, start) {
-  const header = new RegExp(`function\\s+(${IDENT})\\s*\\(`, "y");
+  // `function first<T>(...)`: the type parameters are group 2.
+  const header = new RegExp(`function\\s+(${IDENT})\\s*(?:<([^<>(]*)>)?\\s*\\(`, "y");
   header.lastIndex = start;
   const match = header.exec(masked);
   if (!match) return null;
@@ -317,6 +350,7 @@ function parseFunctionAt(text, masked, start) {
   }
   return {
     name: match[1],
+    typeParams: typeParamNames(match[2]),
     params,
     returns,
     start,
@@ -365,7 +399,7 @@ function parseDocument(text) {
   }
 
   const functions = [];
-  const functionPattern = new RegExp(`\\bfunction\\s+(${IDENT})\\s*\\(`, "g");
+  const functionPattern = new RegExp(`\\bfunction\\s+(${IDENT})\\s*(?:<[^<>(]*>)?\\s*\\(`, "g");
   while ((match = functionPattern.exec(masked))) {
     if (depth[match.index] !== 0) continue;
     const parsed = parseFunctionAt(text, masked, match.index);
@@ -379,7 +413,7 @@ function parseDocument(text) {
 
   const classes = [];
   const classPattern = new RegExp(
-    `\\b((?:(?:abstract|final|private)\\s+)*)(class|interface|enum)\\s+(${IDENT})(?:\\s*:\\s*(int|string))?(?:\\s+extends\\s+(${IDENT}(?:\\s*,\\s*${IDENT})*))?(?:\\s+implements\\s+(${IDENT}(?:\\s*,\\s*${IDENT})*))?\\s*\\{`,
+    `\\b((?:(?:abstract|final|private)\\s+)*)(class|interface|enum)\\s+(${IDENT})(?:\\s*<([^<>{]*)>)?(?:\\s*:\\s*(int|string))?(?:\\s+extends\\s+(${IDENT}(?:\\s*,\\s*${IDENT})*))?(?:\\s+implements\\s+(${IDENT}(?:\\s*,\\s*${IDENT})*))?\\s*\\{`,
     "g"
   );
   while ((match = classPattern.exec(masked))) {
@@ -388,7 +422,7 @@ function parseDocument(text) {
     const bodyEnd = matching(masked, bodyStart);
     const list = (names) => (names ? names.split(",").map((name) => name.trim()) : []);
     const isInterface = match[2] === "interface";
-    const parents = list(match[5]);
+    const parents = list(match[6]);
     const cls = {
       name: match[3],
       kind: match[2],
@@ -397,7 +431,9 @@ function parseDocument(text) {
       final: /\bfinal\b/.test(match[1]) || match[2] === "enum",
       private: /\bprivate\b/.test(match[1]),
       extends: isInterface ? null : parents[0] || null,
-      interfaces: isInterface ? parents : list(match[6]),
+      interfaces: isInterface ? parents : list(match[7]),
+      // `class Box<T, U: Bound>`: the type parameters' names.
+      typeParams: typeParamNames(match[4]),
       start: match.index,
       nameOffset: match.index + match[0].indexOf(match[3], match[1].length + match[2].length),
       bodyStart,
@@ -407,7 +443,7 @@ function parseDocument(text) {
       methods: [],
     };
     parseMembers(text, masked, cls);
-    if (cls.kind === "enum") addEnumMembers(cls, match[4] || null);
+    if (cls.kind === "enum") addEnumMembers(cls, match[5] || null);
     classes.push(cls);
     classPattern.lastIndex = bodyEnd;
   }
@@ -584,8 +620,9 @@ function enclosingFunctions(text, masked, offset) {
   return result;
 }
 
-// `?int` is the nullable form of int (and of double, bool, and byte).
-const TYPE_PATTERN = `(?:\\?(?:int|double|bool|byte)\\b|int|double|bool|byte|string|char|map\\s*\\[[^;{}=]*?\\]|[A-Z][A-Za-z0-9_]*)(?:\\s*\\[\\s*\\])*`;
+// `?int` is the nullable form of int (and of double, bool, and byte); a
+// generic class takes type arguments, as in Box<int>.
+const TYPE_PATTERN = `(?:\\?(?:int|double|bool|byte)\\b|int|double|bool|byte|string|char|map\\s*\\[[^;{}=]*?\\]|[A-Z][A-Za-z0-9_]*(?:\\s*<[^;{}=()]*>)?)(?:\\s*\\[\\s*\\])*`;
 
 /** The variables visible at `offset`, each {name, type}, with `type` null
  * when it can't be told. `doc` is from parseDocument(text). Later
@@ -941,6 +978,7 @@ module.exports = {
   matching,
   splitTopLevel,
   parseParameter,
+  splitTypeArguments,
   parseDocument,
   enclosingFunctions,
   variablesAt,
