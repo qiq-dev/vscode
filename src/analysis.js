@@ -697,7 +697,12 @@ function variablesAt(text, doc, offset, resolver) {
   const loop = new RegExp(`\\bforeach\\s*\\(\\s*(.+?)\\s+as\\s+(?:(${IDENT})\\s*=>\\s*)?(${IDENT})\\s*\\)`, "g");
   while ((match = loop.exec(region))) {
     const collection = resolver ? resolver.typeOfText(text.slice(scopeStart + match.index, scopeStart + match.index + match[0].length).match(/\(\s*(.+?)\s+as\s/s)[1], offset) : null;
-    const [keyType, valueType] = elementTypes(collection, match[1]);
+    let [keyType, valueType] = elementTypes(collection, match[1]);
+    // An object that implements Iterable<T> or Iterator<T>: its T.
+    if (!valueType && collection && resolver && resolver.iteratedType) {
+      valueType = resolver.iteratedType(collection);
+      if (valueType) keyType = "int";
+    }
     if (match[2]) add(match[2], keyType);
     add(match[3], valueType);
   }

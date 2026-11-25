@@ -261,6 +261,14 @@ test("generics: members of Box<Word> have Word where Box has T", async () => {
   assert.deepStrictEqual(labels(property).sort(), ["text", "upper"]);
 });
 
+test("foreach over an Iterable<T> or Iterator<T> gives T", async () => {
+  const declared = "class Word {\n    public string text;\n}\nclass Bag<T> implements Iterable<T> {\n    function iterator(): Iterator<T> { return null; }\n}\nclass Words implements Iterator<Word> {\n    function hasNext(): bool { return false; }\n    function next(): Word { return null; }\n}\n";
+  const bag = await complete(MAIN, declared + "Bag<Word> bag = null;\nforeach (bag as word) {\n    word->|\n}", ">");
+  assert.deepStrictEqual(labels(bag), ["text"]);
+  const words = await complete(MAIN, declared + "foreach (new Words() as i => word) {\n    word->|\n}", ">");
+  assert.deepStrictEqual(labels(words), ["text"]);
+});
+
 test("generic interfaces: members of Repository<Word> have Word where it has T", async () => {
   const declared = "class Word {\n    public string text;\n}\ninterface Repository<T> {\n    function find(int id): T;\n}\nRepository<Word> words = null;\n";
   const members = await complete(MAIN, declared + "words->|", ">");

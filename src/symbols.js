@@ -186,6 +186,8 @@ function specialize(cls, types) {
     ...cls,
     name: `${cls.name}<${types.join(", ")}>`,
     typeParams: [],
+    interfaces: (cls.interfaces || []).map(replace),
+    extends: replace(cls.extends),
     properties: cls.properties.map((p) => ({ ...p, type: replace(p.type) })),
     methods: cls.methods.map((m) => ({ ...m, returns: replace(m.returns), params: m.params.map((p) => ({ ...p, type: replace(p.type) })) })),
   };
@@ -326,7 +328,27 @@ class Context {
     return analysis.variablesAt(this.text, this.document, offset, {
       typeOfText: (text, at) => this.typeOfText(text, at),
       closureParameterTypes: (at) => this.closureParameterTypes(at),
+      iteratedType: (type) => this.iteratedType(type),
     });
+  }
+
+  /** The T of the Iterable<T> or Iterator<T> that `type` is or implements
+   * (through its interfaces and parents), for foreach; null if none. */
+  iteratedType(type) {
+    const seen = new Set();
+    const pending = [type];
+    while (pending.length) {
+      const name = pending.pop();
+      if (!name || seen.has(name)) continue;
+      seen.add(name);
+      const iterable = name.match(/^(?:Iterable|Iterator)\s*<(.*)>$/s);
+      if (iterable) return iterable[1].trim();
+      const cls = this.findClass(name);
+      if (!cls) continue;
+      pending.push(...(cls.interfaces || []));
+      if (cls.extends) pending.push(cls.extends);
+    }
+    return null;
   }
 
   /** The parameter types (as written, such as "Item") expected of the
