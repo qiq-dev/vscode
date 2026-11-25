@@ -248,7 +248,7 @@ test("standard library members and statics", async () => {
   const statics = await complete(MAIN, 'import File from "std/file";\nFile::|', ":");
   assert.deepStrictEqual(labels(statics).sort(), ["class", "open", "stderr", "stdin", "stdout"]);
   const exception = await complete(MAIN, "try { } catch (RuntimeException e) {\n    e->|\n}", ">");
-  assert.deepStrictEqual(labels(exception).sort(), ["getCode", "getMessage"], "inherited from Exception");
+  assert.deepStrictEqual(labels(exception).sort(), ["getCode", "getFile", "getLine", "getMessage"], "inherited from Exception");
 });
 
 test("untyped callback parameters take their types from where they're passed", async () => {

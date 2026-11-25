@@ -37,7 +37,9 @@ async function contextFor(document) {
 
 function parameterText(p) {
   // `...`: any number of values for a query's placeholders (std/sql).
-  if (p.variadic) return `...${p.name}`;
+  if (p.variadic && p.type === "...") return `...${p.name}`;
+  // `string ...parts`, whose type is string[].
+  if (p.variadic) return `${p.type.replace(/\[\]$/, "")} ...${p.name}`;
   return `${p.type} ${p.name}${p.default !== null && p.default !== undefined ? ` = ${p.default}` : ""}`;
 }
 

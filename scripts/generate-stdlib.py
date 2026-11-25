@@ -100,6 +100,10 @@ def parse_param(text):
     # query's placeholders (see Function::binds_values in src/compiler.rs).
     if text.strip() == "...":
         return {"name": "values", "type": "...", "default": None, "variadic": True}
+    # `string ...parts`: any number of strings, a string[] in the function.
+    variadic = re.match(r"(.*?\S)\s*\.\.\.\s*([A-Za-z_]\w*)$", text.strip())
+    if variadic:
+        return {"name": variadic.group(2), "type": variadic.group(1) + "[]", "default": None, "variadic": True}
     default = None
     if "=" in text:
         text, default = text.split("=", 1)

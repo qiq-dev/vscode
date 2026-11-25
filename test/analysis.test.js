@@ -167,6 +167,14 @@ count = 3;
 greeting = "hi";
 `;
 
+test("variadic parameters", () => {
+  assert.deepStrictEqual(analysis.parseParameter("string ...parts"), { type: "string[]", name: "parts", default: null, variadic: true });
+  assert.deepStrictEqual(analysis.parseParameter("map[string, int]... counts"), { type: "map[string, int][]", name: "counts", default: null, variadic: true });
+  assert.deepStrictEqual(analysis.parseParameter("..."), { type: "...", name: "values", default: null, variadic: true });
+  const doc = analysis.parseDocument("function join(string separator, string ...parts): string { return separator; }");
+  assert.deepStrictEqual(doc.functions[0].params[1], { type: "string[]", name: "parts", default: null, variadic: true });
+});
+
 test("parses imports, functions, and classes", () => {
   const doc = analysis.parseDocument(SAMPLE);
   assert.deepStrictEqual(doc.imports.map((i) => i.path), ["views/mux", "std/file"]);

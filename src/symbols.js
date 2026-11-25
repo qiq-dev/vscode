@@ -337,9 +337,12 @@ class Context {
     if (!call) return null;
     const params = this.callParameters(call, offset);
     if (!params) return null;
-    const param = call.named ? params.find((p) => p.name === call.named) : params[call.argument];
+    const last = params[params.length - 1];
+    const param = call.named ? params.find((p) => p.name === call.named) : params[call.argument] || (last && last.variadic ? last : null);
     if (!param) return null;
-    return this.substituteTypeParameters(param.type, params, call, offset);
+    // Each value for a variadic parameter is one of the array's elements.
+    const type = param.variadic && param.type !== "..." ? param.type.replace(/\[\]$/, "") : param.type;
+    return this.substituteTypeParameters(type, params, call, offset);
   }
 
   /** For a built-in such as array_filter, whose parameters are written

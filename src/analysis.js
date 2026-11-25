@@ -222,13 +222,16 @@ function parseParameter(text) {
   if (declaration === "...") return { type: "...", name: "values", default: null, variadic: true };
   const modifiers = declaration.match(/^((?:(?:public|protected|private|readonly)\s+)*)/)[1];
   declaration = declaration.slice(modifiers.length);
-  const match = declaration.match(new RegExp(`^(.*\\S)\\s+(${IDENT})$`, "s"));
+  // `string ...parts`: any number of strings, a string[] in the function.
+  const variadic = declaration.match(new RegExp(`^(.*?\\S)\\s*\\.\\.\\.\\s*(${IDENT})$`, "s"));
+  const match = variadic || declaration.match(new RegExp(`^(.*\\S)\\s+(${IDENT})$`, "s"));
   if (!match) return null;
   const parameter = {
-    type: normalizeType(match[1]),
+    type: normalizeType(match[1]) + (variadic ? "[]" : ""),
     name: match[2],
-    default: rest.length ? rest.join("=").trim() : null,
+    default: rest.length && !variadic ? rest.join("=").trim() : null,
   };
+  if (variadic) parameter.variadic = true;
   if (modifiers) {
     parameter.promoted = (modifiers.match(/\b(public|protected|private)\b/) || [, "public"])[1];
     parameter.readonly = /\breadonly\b/.test(modifiers);
