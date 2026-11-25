@@ -3376,6 +3376,20 @@
      "params": [],
      "returns": "int",
      "doc": ""
+    },
+    {
+     "name": "getFile",
+     "static": false,
+     "params": [],
+     "returns": "string",
+     "doc": "The source file the exception was thrown in, or \"\" if unknown."
+    },
+    {
+     "name": "getLine",
+     "static": false,
+     "params": [],
+     "returns": "int",
+     "doc": "The line it was thrown on, or 0 if unknown."
     }
    ]
   },
