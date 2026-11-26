@@ -93,6 +93,11 @@
     "body": ["switch (${1:value}) {", "\tcase ${2:1}:", "\t\t$3", "\tdefault:", "\t\t$0", "}"],
     "description": "switch (cases don't fall through)"
   },
+  "do": {
+    "prefix": "do",
+    "body": ["do {", "\t$0", "} while (${1:condition});"],
+    "description": "do-while"
+  },
   "match": {
     "prefix": "match",
     "body": ["match (${1:value}) {", "\t${2:first} => ${3:result},", "\tdefault => ${4:other},", "}"],

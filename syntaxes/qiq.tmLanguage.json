@@ -408,6 +408,7 @@
       "patterns": [
         { "match": "\\b(if|else|foreach|while|switch|case|default|break|continue|return|try|catch|finally|throw|as)\\b", "name": "keyword.control.qiq" },
         { "match": "\\bmatch(?=\\s*\\()", "name": "keyword.control.qiq" },
+        { "match": "\\bdo(?=\\s*\\{)", "name": "keyword.control.qiq" },
         { "match": "\\b(instanceof)\\b", "name": "keyword.operator.instanceof.qiq" },
         { "match": "\\b(public|private|protected|static|final|abstract|readonly)\\b", "name": "storage.modifier.qiq" },
         { "match": "\\b(const)\\b", "name": "storage.type.const.qiq" },
