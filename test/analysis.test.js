@@ -317,7 +317,7 @@ test("expression steps before ->", () => {
     { kind: "new", name: "Basket" },
     { kind: "method", name: "add", args: ["i", " 2"] },
     { kind: "member", name: "items" },
-    { kind: "index" },
+    { kind: "index", index: "0" },
   ]);
 });
 
@@ -330,7 +330,7 @@ test("calls that give type arguments", () => {
   assert.strictEqual(expression.start, 4);
   assert.deepStrictEqual(analysis.steps(masked, expression.start, end), [
     { kind: "call", name: "wrap", args: ["b"], typeArgs: ["Box<int>"] },
-    { kind: "index" },
+    { kind: "index", index: "0" },
     { kind: "method", name: "apply", args: ["f"], typeArgs: ["string"] },
   ]);
   // A comparison isn't a call's type arguments.
@@ -373,6 +373,22 @@ test("type parameter bounds and inferred type arguments", async () => {
   assert.strictEqual(analysis.completionContext("function f<K: ", 14).kind, "bound");
   assert.strictEqual(analysis.completionContext("class Box<T: Comparable<T>, U: Ha", 33).kind, "bound");
   assert.strictEqual(analysis.completionContext("int a = b < c ? d : ", 20).kind, "general");
+});
+
+test("tuples", async () => {
+  assert.deepStrictEqual(analysis.tupleElements("(int, Box<int, string>, (bool, char))"), ["int", "Box<int, string>", "(bool, char)"]);
+  assert.strictEqual(analysis.tupleElements("(function(int): int)"), null, "grouping isn't a tuple");
+  const text = "class User { public string name; }\nfunction load(): (User, int) { return (null, 0); }\n(User, string) pair = null;\n(User u, int count) = load();\n(other, _) = load();\n(User, int)[] list = [];\nforeach (list as i => (who, int k)) {\n}\n";
+  const context = await new Project().contextFor(path.join(os.tmpdir(), "qiq-tuples.qiq"), text + "pair[0]->name");
+  const types = Object.fromEntries(context.variablesAt(text.length).map((v) => [v.name, v.type]));
+  assert.deepStrictEqual(
+    { pair: types.pair, u: types.u, count: types.count, other: types.other, who: types.who, k: types.k, i: types.i },
+    { pair: "(User, string)", u: "User", count: "int", other: "User", who: "User", k: "int", i: "int" }
+  );
+  assert.ok(!("_" in types), "_ isn't a variable");
+  const end = text.length + "pair[0]->name".length;
+  assert.strictEqual(context.typeOfExpression(text.length, end, end)?.type, "string");
+  assert.strictEqual(context.typeOfExpression(text.length, text.length + "pair[0]".length, end)?.type, "User");
 });
 
 test("calls for parameter hints", () => {

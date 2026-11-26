@@ -696,6 +696,20 @@ function variablesAt(text, doc, offset, resolver) {
   const add = (name, type) => {
     if (!variables.has(name) || (type && !variables.get(name).type)) variables.set(name, { name, type: type || null });
   };
+  // The variables of `int a, b, _` (the inside of a destructuring pattern):
+  // typed ones as written, bare names from `tupleType()`'s values.
+  const addTargets = (targetsText, tupleType) => {
+    let elements;
+    splitTopLevel(targetsText).forEach((target, position) => {
+      const typed = target.trim().match(new RegExp(`^(.*\\S)\\s+(${IDENT})$`, "s"));
+      if (typed) {
+        add(typed[2], normalizeType(typed[1]));
+      } else if (new RegExp(`^${IDENT}$`).test(target.trim()) && target.trim() !== "_") {
+        if (elements === undefined) elements = tupleElements(tupleType()) || [];
+        add(target.trim(), elements[position] || null);
+      }
+    });
+  };
   const functions = enclosingFunctions(text, masked, offset);
   // Variables of the top level aren't visible inside named functions;
   // anonymous functions see their enclosing function's variables.
@@ -764,6 +778,27 @@ function variablesAt(text, doc, offset, resolver) {
     if (match[2]) add(match[2], keyType);
     add(match[3], valueType);
   }
+  // Tuple-typed declarations: `(int, string) pair = ...;`
+  const tupleTyped = new RegExp(`(?:^|[;{}])\\s*(\\((?:[^()]|\\([^()]*\\))*,(?:[^()]|\\([^()]*\\))*\\)(?:\\s*\\[\\s*\\])*)\\s+(${IDENT})\\s*(?=[=;])`, "g");
+  while ((match = tupleTyped.exec(region))) add(match[2], normalizeType(match[1]));
+  // Taking a tuple apart: `(int a, b, _) = value;`. A bare name takes its
+  // type from the tuple's value at that position.
+  const destructured = new RegExp(`(?:^|[;{}])\\s*\\(((?:[^()]|\\([^()]*\\))*,(?:[^()]|\\([^()]*\\))*)\\)\\s*=(?![=>])\\s*([^;]*)`, "g");
+  while ((match = destructured.exec(region))) {
+    const valueOffset = scopeStart + match.index + match[0].length - match[2].length;
+    const valueType = () => (resolver ? resolver.typeOfText(text.slice(valueOffset, valueOffset + match[2].length), offset) : literalType(match[2]));
+    addTargets(match[1], valueType);
+  }
+  // foreach (pairs as (string name, int age)) and foreach (m as k => (a, b))
+  const loopApart = new RegExp(`\\bforeach\\s*\\(\\s*(.+?)\\s+as\\s+(?:(${IDENT})\\s*=>\\s*)?\\(([^()]*)\\)\\s*\\)`, "g");
+  while ((match = loopApart.exec(region))) {
+    const start = scopeStart + match.index;
+    const collectionText = text.slice(start, start + match[0].length).match(/\(\s*(.+?)\s+as\s/s)[1];
+    const collection = resolver ? resolver.typeOfText(collectionText, offset) : null;
+    const [keyType, valueType] = elementTypes(collection, match[1]);
+    if (match[2]) add(match[2], keyType);
+    addTargets(match[3], () => valueType);
+  }
   // Inferred declarations: `name = value;` the first time a name is assigned.
   const assigned = new RegExp(`(?:^|[;{}])\\s*(${IDENT})\\s*=(?![=>])\\s*([^;]*)`, "g");
   while ((match = assigned.exec(region))) {
@@ -772,6 +807,14 @@ function variablesAt(text, doc, offset, resolver) {
     add(match[1], resolver ? resolver.typeOfText(text.slice(valueOffset, valueOffset + match[2].length), offset) : literalType(match[2]));
   }
   return [...variables.values()];
+}
+
+/** The value types of a tuple type, `(int, string)` -> ["int", "string"],
+ * or null when `type` isn't one. */
+function tupleElements(type) {
+  if (!type || !type.startsWith("(") || matching(type, 0) !== type.length - 1) return null;
+  const elements = splitTypeArguments(type.slice(1, -1)).map(normalizeType);
+  return elements.length >= 2 ? elements : null;
 }
 
 /** The key and value types of a foreach over a value of type `type`. */
@@ -953,8 +996,9 @@ function steps(masked, start, end) {
     skipSpace();
     if (i >= end) break;
     if (masked[i] === "[") {
+      const open = i;
       skipBrackets();
-      result.push({ kind: "index" });
+      result.push({ kind: "index", index: masked.slice(open + 1, i - 1).trim() });
     } else if (masked.startsWith("->", i) || masked.startsWith("?->", i) || masked.startsWith("::", i)) {
       // `?->` reads a member like `->`, giving null for a null object.
       const staticAccess = masked[i] === ":";
@@ -1124,6 +1168,7 @@ module.exports = {
   enclosingFunctions,
   variablesAt,
   elementTypes,
+  tupleElements,
   literalType,
   expressionBefore,
   steps,

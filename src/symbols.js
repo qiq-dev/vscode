@@ -552,7 +552,10 @@ class Context {
     for (const step of rest) {
       if (!current || !current.type) return null;
       if (step.kind === "index") {
-        current = { type: analysis.elementTypes(current.type)[1], context: current.context };
+        // A tuple's value at a constant index has that position's type.
+        const tuple = analysis.tupleElements(current.type);
+        const type = tuple ? (/^\d+$/.test(step.index || "") ? tuple[Number(step.index)] : null) : analysis.elementTypes(current.type)[1];
+        current = { type, context: current.context };
         continue;
       }
       if (step.kind === "invoke") {

@@ -44,6 +44,9 @@ plus highlighting for `qiq.mod` and `qiq.sum`.
     arguments it gives (`emptyOf<User>()`), and inside generic code a `T`
     with a bound (`T: HasLength`) has its bound's members. After `T:` in a
     type parameter list, `key`, `object`, and interfaces complete.
+  - **Tuples**: variables declared with tuple types (`(User, int) pair`),
+    taken apart (`(User u, int count) = load();`, also in `foreach`), and
+    read by index (`pair[0]->`) have the right types.
   - **Static members and constants after `::`**, `class` after `Class::`
     and `value::`, and `parent::` / `self::` / `static::`.
   - **After `new`**: classes you can instantiate, with constructor hints.
