@@ -8346,6 +8346,254 @@
     }
    ]
   },
+  "HashMap": {
+   "name": "HashMap",
+   "kind": "class",
+   "extends": "AbstractCollection<(K, V)>",
+   "typeParams": [
+    "K",
+    "V"
+   ],
+   "typeBounds": {
+    "K": "key",
+    "V": null
+   },
+   "interfaces": [],
+   "final": true,
+   "abstract": false,
+   "module": "std/collections",
+   "doc": "A map from keys to values, as a class with methods: a built-in map wrapped, so it can be passed as a Collection and transformed in chains. It keeps the order keys were first set in. As a collection, its values are (key, value) tuples, so foreach can take each entry apart:  foreach (ages as (string name, int age)) { ... }",
+   "properties": [],
+   "methods": [
+    {
+     "name": "__construct",
+     "typeParams": [],
+     "typeBounds": {},
+     "static": false,
+     "params": [
+      {
+       "name": "entries",
+       "type": "map[K, V]",
+       "default": "{}"
+      }
+     ],
+     "returns": "void",
+     "doc": "A map of `entries` (a copy: changing the map later doesn't change it)."
+    },
+    {
+     "name": "size",
+     "typeParams": [],
+     "typeBounds": {},
+     "static": false,
+     "params": [],
+     "returns": "int",
+     "doc": ""
+    },
+    {
+     "name": "toArray",
+     "typeParams": [],
+     "typeBounds": {},
+     "static": false,
+     "params": [],
+     "returns": "(K, V)[]",
+     "doc": "The entries as (key, value) tuples, in order."
+    },
+    {
+     "name": "iterator",
+     "typeParams": [],
+     "typeBounds": {},
+     "static": false,
+     "params": [],
+     "returns": "Iterator<(K, V)>",
+     "doc": ""
+    },
+    {
+     "name": "get",
+     "typeParams": [],
+     "typeBounds": {},
+     "static": false,
+     "params": [
+      {
+       "name": "key",
+       "type": "K",
+       "default": null
+      }
+     ],
+     "returns": "V",
+     "doc": "The value for `key`; KeyNotFoundException if it has none."
+    },
+    {
+     "name": "getOr",
+     "typeParams": [],
+     "typeBounds": {},
+     "static": false,
+     "params": [
+      {
+       "name": "key",
+       "type": "K",
+       "default": null
+      },
+      {
+       "name": "fallback",
+       "type": "V",
+       "default": null
+      }
+     ],
+     "returns": "V",
+     "doc": "The value for `key`, or `fallback` if it has none."
+    },
+    {
+     "name": "has",
+     "typeParams": [],
+     "typeBounds": {},
+     "static": false,
+     "params": [
+      {
+       "name": "key",
+       "type": "K",
+       "default": null
+      }
+     ],
+     "returns": "bool",
+     "doc": "Whether it has a value for `key`."
+    },
+    {
+     "name": "set",
+     "typeParams": [],
+     "typeBounds": {},
+     "static": false,
+     "params": [
+      {
+       "name": "key",
+       "type": "K",
+       "default": null
+      },
+      {
+       "name": "value",
+       "type": "V",
+       "default": null
+      }
+     ],
+     "returns": "void",
+     "doc": "Sets the value for `key`, replacing any it had."
+    },
+    {
+     "name": "setAll",
+     "typeParams": [],
+     "typeBounds": {},
+     "static": false,
+     "params": [
+      {
+       "name": "entries",
+       "type": "map[K, V]",
+       "default": null
+      }
+     ],
+     "returns": "void",
+     "doc": "Sets each of `entries`' keys to its value."
+    },
+    {
+     "name": "remove",
+     "typeParams": [],
+     "typeBounds": {},
+     "static": false,
+     "params": [
+      {
+       "name": "key",
+       "type": "K",
+       "default": null
+      }
+     ],
+     "returns": "bool",
+     "doc": "Removes `key` and its value: whether it had one."
+    },
+    {
+     "name": "clear",
+     "typeParams": [],
+     "typeBounds": {},
+     "static": false,
+     "params": [],
+     "returns": "void",
+     "doc": "Removes every entry."
+    },
+    {
+     "name": "keys",
+     "typeParams": [],
+     "typeBounds": {},
+     "static": false,
+     "params": [],
+     "returns": "K[]",
+     "doc": "The keys, in order."
+    },
+    {
+     "name": "values",
+     "typeParams": [],
+     "typeBounds": {},
+     "static": false,
+     "params": [],
+     "returns": "V[]",
+     "doc": "The values, in the keys' order."
+    },
+    {
+     "name": "toMap",
+     "typeParams": [],
+     "typeBounds": {},
+     "static": false,
+     "params": [],
+     "returns": "map[K, V]",
+     "doc": "The entries as a new built-in map."
+    },
+    {
+     "name": "filter",
+     "typeParams": [],
+     "typeBounds": {},
+     "static": false,
+     "params": [
+      {
+       "name": "test",
+       "type": "function(K, V): bool",
+       "default": null
+      }
+     ],
+     "returns": "HashMap<K, V>",
+     "doc": "A new map of the entries `test`, given each key and value, returns true for."
+    },
+    {
+     "name": "mapValues",
+     "typeParams": [
+      "W"
+     ],
+     "typeBounds": {
+      "W": null
+     },
+     "static": false,
+     "params": [
+      {
+       "name": "change",
+       "type": "function(V): W",
+       "default": null
+      }
+     ],
+     "returns": "HashMap<K, W>",
+     "doc": "A new map with the same keys and what `change` returns for each value."
+    },
+    {
+     "name": "forEach",
+     "typeParams": [],
+     "typeBounds": {},
+     "static": false,
+     "params": [
+      {
+       "name": "action",
+       "type": "function(K, V): void",
+       "default": null
+      }
+     ],
+     "returns": "void",
+     "doc": "Calls `action` with each key and value, in order."
+    }
+   ]
+  },
   "Deque": {
    "name": "Deque",
    "kind": "class",

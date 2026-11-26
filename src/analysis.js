@@ -795,7 +795,12 @@ function variablesAt(text, doc, offset, resolver) {
     const start = scopeStart + match.index;
     const collectionText = text.slice(start, start + match[0].length).match(/\(\s*(.+?)\s+as\s/s)[1];
     const collection = resolver ? resolver.typeOfText(collectionText, offset) : null;
-    const [keyType, valueType] = elementTypes(collection, match[1]);
+    let [keyType, valueType] = elementTypes(collection, match[1]);
+    // An Iterable<(K, V)>, such as a HashMap: its tuples.
+    if (!valueType && collection && resolver && resolver.iteratedType) {
+      valueType = resolver.iteratedType(collection);
+      if (valueType) keyType = "int";
+    }
     if (match[2]) add(match[2], keyType);
     addTargets(match[3], () => valueType);
   }

@@ -408,6 +408,11 @@ test("std/collections", async () => {
   assert.strictEqual(context.variablesAt(text.indexOf("{\n}") + 1).find((v) => v.name === "u").type, "User");
   assert.ok(context.members(context.findClass("ArrayList<User>"), "public").methods.some((m) => m.name === "any"));
   assert.strictEqual(analysis.literalType("fn(int n, string s): bool => true"), "function(int, string): bool");
+  // HashMap: a collection of (key, value) tuples, through AbstractCollection<(K, V)>.
+  const maps = "import HashMap from \"std/collections\";\nclass User { public string name; }\nHashMap<string, User> users = new HashMap<string, User>();\nforeach (users as (string key, user)) {\n}\n";
+  const mapContext = await new Project().contextFor(path.join(os.tmpdir(), "qiq-hashmap.qiq"), maps + "users->get(\"a\")->name");
+  assert.strictEqual(mapContext.typeOfExpression(maps.length, maps.length + "users->get(\"a\")->name".length, maps.length + 30)?.type, "string");
+  assert.strictEqual(mapContext.variablesAt(maps.indexOf("{\n}") + 1).find((v) => v.name === "user").type, "User");
   assert.strictEqual(analysis.literalType("fn(n) => n"), null);
 });
 

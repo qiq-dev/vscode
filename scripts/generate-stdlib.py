@@ -175,8 +175,8 @@ PROPERTY = re.compile(r"^\s*((?:(?:public|private|protected|static|final|readonl
 # A class or interface, with type parameters (`interface Iterator<T>`) and
 # generic interfaces (`implements Iterator<Row>`).
 # The parent (or, for an interface, the interfaces it extends) can be
-# generic too: `extends AbstractCollection<T>`.
-CLASS = re.compile(r"^(?:(?:final|abstract)\s+)*(class|interface)\s+(\w+)(?:\s*<([^{]*?)>)?(?:\s+extends\s+([\w\s,<>\[\]]+?))?(?:\s+implements\s+([\w\s,<>\[\]]+?))?\s*\{")
+# generic too, even with a tuple type: `extends AbstractCollection<(K, V)>`.
+CLASS = re.compile(r"^(?:(?:final|abstract)\s+)*(class|interface)\s+(\w+)(?:\s*<([^{]*?)>)?(?:\s+extends\s+([\w\s,<>\[\]()]+?))?(?:\s+implements\s+([\w\s,<>\[\]()]+?))?\s*\{")
 
 
 def classes():
