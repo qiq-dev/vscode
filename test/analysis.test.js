@@ -321,6 +321,41 @@ test("expression steps before ->", () => {
   ]);
 });
 
+test("calls that give type arguments", () => {
+  const source = "x = wrap<Box<int>>(b)[0]->apply<string>(f)->";
+  const masked = analysis.mask(source);
+  const end = source.length - 2;
+  const expression = analysis.expressionBefore(masked, end);
+  assert.ok(expression);
+  assert.strictEqual(expression.start, 4);
+  assert.deepStrictEqual(analysis.steps(masked, expression.start, end), [
+    { kind: "call", name: "wrap", typeArgs: ["Box<int>"] },
+    { kind: "index" },
+    { kind: "method", name: "apply", typeArgs: ["string"] },
+  ]);
+  // A comparison isn't a call's type arguments.
+  const compare = analysis.mask("ok = a < b && c > (d)->");
+  assert.strictEqual(analysis.expressionBefore(compare, compare.length - 2), null);
+  assert.strictEqual(analysis.withTypeArguments("Box<U>[]", ["U"], ["map[string, int]"]), "Box<map[string, int]>[]");
+  assert.strictEqual(analysis.withTypeArguments("T", ["T"], null), "T");
+  const hint = cursor("emptyList<int>(|");
+  assert.strictEqual(analysis.callAt(hint.text, hint.offset).argument, 0);
+  const callee = analysis.callAt(hint.text, hint.offset).expression;
+  assert.deepStrictEqual(analysis.steps(analysis.mask(hint.text), callee.start, callee.end), [{ kind: "name", name: "emptyList" }]);
+});
+
+test("types of calls that give type arguments", async () => {
+  const text = "function emptyList<T>(): T[] { return []; }\nclass Box<T> { public T value; function apply<U>(function(T): U f): Box<U> { return null; } }\nclass Maker { static function make<V>(): V[] { return []; } }\nBox<int> b = null;\n";
+  const typeOf = async (expression) => {
+    const source = text + expression;
+    const context = await new Project().contextFor(path.join(os.tmpdir(), "qiq-type-arguments.qiq"), source);
+    return context.typeOfExpression(text.length, source.length, source.length)?.type;
+  };
+  assert.strictEqual(await typeOf("emptyList<int>()"), "int[]");
+  assert.strictEqual(await typeOf("b->apply<string>(f)->value"), "string");
+  assert.strictEqual(await typeOf("Maker::make<Box<int>>()"), "Box<int>[]");
+});
+
 test("calls for parameter hints", () => {
   const { text, offset } = cursor('file_put_contents("a", "b", |);');
   const call = analysis.callAt(text, offset);

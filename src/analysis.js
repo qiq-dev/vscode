@@ -767,6 +767,13 @@ function expressionBefore(masked, end) {
       if (j < 0) return null;
       i = j;
       skipSpace();
+      // A call's type arguments: `first<int>(...)`.
+      if (close === ")" && masked[i - 1] === ">") {
+        const open = typeArgumentsStart(masked, i);
+        if (open < 0) return null;
+        i = open;
+        skipSpace();
+      }
     }
     let start = i;
     while (start > 0 && /[A-Za-z0-9_]/.test(masked[start - 1])) start--;
@@ -799,8 +806,26 @@ function expressionBefore(masked, end) {
   }
 }
 
+/** The `<` that opens the type arguments ending just before `end` (at a
+ * `>`), when a name comes before it; -1 otherwise. */
+function typeArgumentsStart(masked, end) {
+  let depth = 0;
+  for (let j = end - 1; j >= 0; j--) {
+    const c = masked[j];
+    if (c === ">") depth++;
+    else if (c === "<") {
+      if (--depth > 0) continue;
+      let k = j;
+      while (k > 0 && /\s/.test(masked[k - 1])) k--;
+      return k > 0 && /[A-Za-z0-9_]/.test(masked[k - 1]) ? k : -1;
+    } else if (!/[A-Za-z0-9_\s,\[\]?():]/.test(c)) return -1;
+  }
+  return -1;
+}
+
 /** Splits an expression such as `new A(1)->b->c(2)[0]` into steps:
- * {kind: "new"|"name"|"call"|"member"|"method"|"static"|"staticCall"|"index", name}. */
+ * {kind: "new"|"name"|"call"|"member"|"method"|"static"|"staticCall"|"index", name},
+ * with `typeArgs` on a call that gives them (`first<int>(xs)`). */
 function steps(masked, start, end) {
   const result = [];
   let i = start;
@@ -819,6 +844,25 @@ function steps(masked, start, end) {
     const close = matching(masked, i);
     i = close + 1;
   };
+  // `<int, string>` before a call's `(`: its type arguments, or null (and
+  // nothing read) when there are none.
+  const readTypeArguments = () => {
+    if (masked[i] !== "<") return null;
+    let depth = 0;
+    for (let j = i; j < end; j++) {
+      if (masked[j] === "<") depth++;
+      else if (masked[j] === ">") {
+        if (--depth > 0) continue;
+        let k = j + 1;
+        while (k < end && /\s/.test(masked[k])) k++;
+        if (masked[k] !== "(") return null;
+        const types = splitTypeArguments(masked.slice(i + 1, j)).map(normalizeType);
+        i = k;
+        return types;
+      } else if (!/[A-Za-z0-9_\s,\[\]?():<>]/.test(masked[j])) return null;
+    }
+    return null;
+  };
   skipSpace();
   if (masked[i] === '"') {
     result.push({ kind: "literal", type: "string" });
@@ -835,9 +879,10 @@ function steps(masked, start, end) {
     const name = readName();
     if (!name) return null;
     skipSpace();
+    const typeArgs = readTypeArguments();
     if (i < end && masked[i] === "(") {
       skipBrackets();
-      result.push({ kind: "call", name });
+      result.push(typeArgs ? { kind: "call", name, typeArgs } : { kind: "call", name });
     } else {
       result.push({ kind: "name", name });
     }
@@ -856,9 +901,12 @@ function steps(masked, start, end) {
       const name = readName();
       if (!name) return null;
       skipSpace();
+      const typeArgs = readTypeArguments();
       if (i < end && masked[i] === "(") {
         skipBrackets();
-        result.push({ kind: staticAccess ? "staticCall" : "method", name });
+        const step = { kind: staticAccess ? "staticCall" : "method", name };
+        if (typeArgs) step.typeArgs = typeArgs;
+        result.push(step);
       } else {
         result.push({ kind: staticAccess ? "staticMember" : "member", name });
       }
@@ -871,6 +919,16 @@ function steps(masked, start, end) {
     }
   }
   return result;
+}
+
+/** `type` with each of `params` (type parameter names) replaced by the
+ * matching one of `args`, the type arguments a call gave. */
+function withTypeArguments(type, params, args) {
+  if (!type || !args || !params || params.length !== args.length) return type;
+  return type.replace(/\b[A-Za-z_][A-Za-z0-9_]*\b/g, (name) => {
+    const index = params.indexOf(name);
+    return index >= 0 ? args[index] : name;
+  });
 }
 
 /** The return type of a function type: "function(int): string" -> "string". */
@@ -963,6 +1021,11 @@ function callAt(text, offset) {
       named = name ? name[1] : null;
       let j = i;
       while (j > 0 && /\s/.test(masked[j - 1])) j--;
+      // `first<int>(`: the callee is the name before the type arguments.
+      if (masked[j - 1] === ">" && typeArgumentsStart(masked, j) >= 0) {
+        j = typeArgumentsStart(masked, j);
+        while (j > 0 && /\s/.test(masked[j - 1])) j--;
+      }
       const isNew = /\bnew\s+[A-Za-z_][A-Za-z0-9_]*$/.test(masked.slice(Math.max(0, j - 80), j));
       const expression = expressionBefore(masked, j);
       if (!expression) return null;
@@ -997,6 +1060,7 @@ module.exports = {
   expressionBefore,
   steps,
   functionReturnType,
+  withTypeArguments,
   completionContext,
   callAt,
   normalizeType,

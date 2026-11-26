@@ -174,7 +174,7 @@ function stdlibClass(cls) {
 }
 
 function fileFunction(fn, file, context) {
-  return { name: fn.name, params: fn.params, returns: fn.returns, doc: fn.doc, private: fn.private, file, offset: fn.nameOffset, origin: "file", context };
+  return { name: fn.name, params: fn.params, returns: fn.returns, typeParams: fn.typeParams, doc: fn.doc, private: fn.private, file, offset: fn.nameOffset, origin: "file", context };
 }
 
 /** A generic class with its type parameters replaced by `types`, in its
@@ -505,7 +505,7 @@ class Context {
       if (variable && variable.type) current = { type: analysis.functionReturnType(variable.type), context: this };
       else {
         const fn = this.findFunction(first.name);
-        if (fn) current = { type: fn.returns, context: fn.context || this };
+        if (fn) current = { type: analysis.withTypeArguments(fn.returns, fn.typeParams, first.typeArgs), context: fn.context || this };
       }
     }
     for (const step of rest) {
@@ -534,7 +534,7 @@ class Context {
       } else {
         const method = methods.find((m) => m.name === step.name);
         if (!method) return null;
-        const returns = method.returns === "static" ? cls.name : method.returns;
+        const returns = method.returns === "static" ? cls.name : analysis.withTypeArguments(method.returns, method.typeParams, step.typeArgs);
         current = { type: returns, context };
       }
     }
