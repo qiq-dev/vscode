@@ -3653,6 +3653,50 @@
    "module": "std/async",
    "category": "Tasks"
   },
+  "parallel": {
+   "name": "parallel",
+   "params": [
+    {
+     "name": "body",
+     "type": "function(): T",
+     "default": null,
+     "doc": "The function to run; its result is copied back."
+    }
+   ],
+   "returns": "Task<T>",
+   "summary": "Run a function in another process, on another core",
+   "doc": "Runs `body` in a worker process, on another processor core, and returns the Task, whose `await()` gives its result. The worker starts as a copy of the program at this moment, so `body` sees the values it captures as they are now, and what it changes stays in the worker. The result is copied back as JSON: any type json_encode writes (objects bring their public properties). See Using several processor cores.",
+   "module": "std/async",
+   "category": "Tasks"
+  },
+  "parallel_map": {
+   "name": "parallel_map",
+   "params": [
+    {
+     "name": "items",
+     "type": "T[]",
+     "default": null,
+     "doc": "The items."
+    },
+    {
+     "name": "change",
+     "type": "function(T): U",
+     "default": null,
+     "doc": "Called with each item, in a worker process."
+    },
+    {
+     "name": "processes",
+     "type": "int",
+     "default": "0",
+     "doc": "How many worker processes; `0` means one per processor core."
+    }
+   ],
+   "returns": "U[]",
+   "summary": "Map an array in several processes",
+   "doc": "Shares `items` among worker processes, each taking a run of them in order, and returns what `change` returns for each, in the items' order, like array_map on several cores. The results are copied back as parallel's are.",
+   "module": "std/async",
+   "category": "Tasks"
+  },
   "yield_now": {
    "name": "yield_now",
    "params": [],
@@ -8993,6 +9037,20 @@
    "abstract": false,
    "module": "std/async",
    "doc": "Thrown by with_timeout when the function takes longer than the limit.",
+   "properties": [],
+   "methods": []
+  },
+  "WorkerException": {
+   "name": "WorkerException",
+   "kind": "class",
+   "extends": "RuntimeException",
+   "typeParams": [],
+   "typeBounds": {},
+   "interfaces": [],
+   "final": false,
+   "abstract": false,
+   "module": "std/async",
+   "doc": "Thrown by await on a parallel task whose function threw (the message starts with the exception's class), or whose process crashed.",
    "properties": [],
    "methods": []
   },
