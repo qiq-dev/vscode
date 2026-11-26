@@ -3103,11 +3103,17 @@
      "type": "bool",
      "default": "false",
      "doc": "Whether the server is behind a proxy such as nginx. If so, `Request::remoteAddress` is the client address the proxy forwarded (the last entry of `X-Forwarded-For`, or `X-Real-IP`), and `Request::scheme` comes from `X-Forwarded-Proto`. Only set it when clients can't reach the server except through the proxy, because anyone else could send those headers."
+    },
+    {
+     "name": "concurrency",
+     "type": "int",
+     "default": "1",
+     "doc": "How many requests each worker serves at once. With more than `1`, each request is a task, so a worker serves other requests while a handler waits for a database, another service, or a slow client; see Several requests per worker."
     }
    ],
    "returns": "void",
    "summary": "Run an HTTP server",
-   "doc": "Listens on the address, starts the workers, and serves requests until the program gets SIGINT (Ctrl-C) or SIGTERM. Each worker serves one connection at a time; see How the server works.",
+   "doc": "Listens on the address, starts the workers, and serves requests until the program gets SIGINT (Ctrl-C) or SIGTERM. Each worker serves one request at a time, or `concurrency` at a time; see How the server works.",
    "module": "std/net/http/server",
    "category": "HTTP server"
   },
