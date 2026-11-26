@@ -160,10 +160,11 @@ function stdlibClass(cls) {
     name: cls.name,
     kind: cls.kind,
     typeParams: cls.typeParams || [],
+    typeBounds: cls.typeBounds || {},
     interfaces: cls.interfaces || [],
     extends: cls.extends,
     final: cls.final,
-    abstract: false,
+    abstract: Boolean(cls.abstract),
     doc: cls.doc,
     module: cls.module,
     origin: "stdlib",
@@ -171,6 +172,16 @@ function stdlibClass(cls) {
     methods: cls.methods.map((m) => ({ ...m, visibility: "public" })),
     context: null,
   };
+}
+
+/** A standard library class by name, `AbstractCollection<User>` with its
+ * type parameters replaced, whether or not it's imported; or null. */
+function stdlibClassNamed(name) {
+  const generic = name.match(/^([A-Za-z_][A-Za-z0-9_]*)\s*<(.*)>$/s);
+  const found = STDLIB.classes[generic ? generic[1] : name];
+  if (!found) return null;
+  const cls = stdlibClass(found);
+  return generic ? specialize(cls, analysis.splitTypeArguments(generic[2])) : cls;
 }
 
 function fileFunction(fn, file, context) {
@@ -360,7 +371,8 @@ class Context {
       // Interfaces "extend" others through their interfaces list.
       const parentName = current.extends || (current.kind === "interface" && current.interfaces && current.interfaces[0]);
       const resolver = current.context || this;
-      current = parentName ? resolver.findClass(parentName) : null;
+      // A standard library class's parent needn't be imported where it's used.
+      current = parentName ? resolver.findClass(parentName) || (current.origin === "stdlib" ? stdlibClassNamed(parentName) : null) : null;
       if (level === "own") level = "child";
     }
     return { properties, methods };
@@ -394,7 +406,7 @@ class Context {
       }
       // A standard library class reached through a method's return type
       // (db->cursor(...)) needs no import.
-      const cls = this.findClass(name) || (STDLIB.classes[name] ? stdlibClass(STDLIB.classes[name]) : null);
+      const cls = this.findClass(name) || stdlibClassNamed(name);
       if (!cls) continue;
       pending.push(...(cls.interfaces || []));
       if (cls.extends) pending.push(cls.extends);

@@ -391,6 +391,26 @@ test("tuples", async () => {
   assert.strictEqual(context.typeOfExpression(text.length, text.length + "pair[0]".length, end)?.type, "User");
 });
 
+test("std/collections", async () => {
+  const text = "import ArrayList, Set, Deque from \"std/collections\";\nclass User { public string name; }\nArrayList<User> users = new ArrayList<User>();\nSet<string> tags = new Set([\"a\"]);\nforeach (users as u) {\n}\n";
+  const typeOf = async (expression) => {
+    const source = text + expression;
+    const context = await new Project().contextFor(path.join(os.tmpdir(), "qiq-collections.qiq"), source);
+    return context.typeOfExpression(text.length, source.length, source.length)?.type;
+  };
+  assert.strictEqual(await typeOf("users->get(0)->name"), "string");
+  assert.strictEqual(await typeOf("users->filter(fn(u) => true)->first()"), "User");
+  // Inherited from AbstractCollection<T>, which the file doesn't import.
+  assert.strictEqual(await typeOf("users->reduce(fn(n, u) => n + 1, 0)"), "int");
+  assert.strictEqual(await typeOf("users->map(fn(User u): string => u->name)"), "ArrayList<string>");
+  assert.strictEqual(await typeOf("tags->union(tags)"), "Set<string>");
+  const context = await new Project().contextFor(path.join(os.tmpdir(), "qiq-collections.qiq"), text);
+  assert.strictEqual(context.variablesAt(text.indexOf("{\n}") + 1).find((v) => v.name === "u").type, "User");
+  assert.ok(context.members(context.findClass("ArrayList<User>"), "public").methods.some((m) => m.name === "any"));
+  assert.strictEqual(analysis.literalType("fn(int n, string s): bool => true"), "function(int, string): bool");
+  assert.strictEqual(analysis.literalType("fn(n) => n"), null);
+});
+
 test("calls for parameter hints", () => {
   const { text, offset } = cursor('file_put_contents("a", "b", |);');
   const call = analysis.callAt(text, offset);

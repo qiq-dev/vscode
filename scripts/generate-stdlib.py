@@ -139,11 +139,25 @@ def functions():
     return result
 
 
-MEMBER_START = re.compile(r"^\s*((?:(?:public|private|protected|static|final|abstract)\s+)*)function\s+(\w+)\s*\(")
+# A method, which may have type parameters of its own (`function map<U>(`).
+MEMBER_START = re.compile(r"^\s*((?:(?:public|private|protected|static|final|abstract)\s+)*)function\s+(\w+)\s*(?:<([^(]*)>)?\s*\(")
+
+
+def type_params(text):
+    """`T, U: key` -> (["T", "U"], {"T": None, "U": "key"})."""
+    names, bounds = [], {}
+    for part in re.split(r",(?![^<]*>)", text or ""):
+        if not part.strip():
+            continue
+        name, _, bound = part.partition(":")
+        names.append(name.strip())
+        bounds[name.strip()] = bound.strip() or None
+    return names, bounds
 
 
 def parse_member(line):
-    """(modifiers, name, parameter text, return type) for a method line, or None."""
+    """(modifiers, name, parameter text, return type, type parameter text)
+    for a method line, or None."""
     start = MEMBER_START.match(line)
     if not start:
         return None
@@ -156,11 +170,13 @@ def parse_member(line):
     returns = None
     if rest.startswith(":"):
         returns = re.split(r"\s*[{;]\s*$|\s*\{", rest[1:].strip())[0].strip()
-    return start.group(1), start.group(2), params, returns
+    return start.group(1), start.group(2), params, returns, start.group(3)
 PROPERTY = re.compile(r"^\s*((?:(?:public|private|protected|static|final|readonly)\s+)+)(.+?)\s+(\w+)\s*(?:=.*)?;")
 # A class or interface, with type parameters (`interface Iterator<T>`) and
 # generic interfaces (`implements Iterator<Row>`).
-CLASS = re.compile(r"^(?:(?:final|abstract)\s+)*(class|interface)\s+(\w+)(?:\s*<([^>{]*)>)?(?:\s+extends\s+(\w+))?(?:\s+implements\s+([\w\s,<>\[\]]+?))?\s*\{")
+# The parent (or, for an interface, the interfaces it extends) can be
+# generic too: `extends AbstractCollection<T>`.
+CLASS = re.compile(r"^(?:(?:final|abstract)\s+)*(class|interface)\s+(\w+)(?:\s*<([^{]*?)>)?(?:\s+extends\s+([\w\s,<>\[\]]+?))?(?:\s+implements\s+([\w\s,<>\[\]]+?))?\s*\{")
 
 
 def classes():
@@ -179,13 +195,18 @@ def classes():
             if depth == 0:
                 match = CLASS.match(line)
                 if match and not match.group(2).startswith("__"):
+                    parents = [part.strip() for part in re.split(r",(?![^<]*>)", match.group(4) or "") if part.strip()]
+                    interface = match.group(1) == "interface"
+                    names, bounds = type_params(match.group(3))
                     current = {
                         "name": match.group(2),
                         "kind": match.group(1),
-                        "extends": match.group(4),
-                        "typeParams": [part.split(":")[0].strip() for part in (match.group(3) or "").split(",") if part.strip()],
-                        "interfaces": [part.strip() for part in re.split(r",(?![^<]*>)", match.group(5) or "") if part.strip()],
+                        "extends": None if interface else (parents[0] if parents else None),
+                        "typeParams": names,
+                        "typeBounds": bounds,
+                        "interfaces": parents if interface else [part.strip() for part in re.split(r",(?![^<]*>)", match.group(5) or "") if part.strip()],
                         "final": line.lstrip().startswith("final"),
+                        "abstract": line.lstrip().startswith("abstract"),
                         "module": module,
                         "doc": " ".join(comment).strip(),
                         "properties": [],
@@ -198,11 +219,14 @@ def classes():
                 member = parse_member(line)
                 prop = PROPERTY.match(line) if not member else None
                 if member:
-                    modifiers, name, params, returns = member
+                    modifiers, name, params, returns, generic = member
                     visible = "private" not in modifiers and "protected" not in modifiers
                     if visible and (not name.startswith("__") or name == "__construct"):
+                        method_params, method_bounds = type_params(generic)
                         current["methods"].append({
                             "name": name,
+                            "typeParams": method_params,
+                            "typeBounds": method_bounds,
                             "static": "static" in modifiers,
                             "params": [parse_param(p) for p in split_params(params)],
                             "returns": (returns or "void").strip(),

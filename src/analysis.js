@@ -843,6 +843,18 @@ function literalType(text) {
   if (/^(true|false)\b/.test(value)) return "bool";
   const created = value.match(new RegExp(`^new\\s+(${IDENT})`));
   if (created) return created[1];
+  // An anonymous function with its types written, `fn(User u): string => ...`
+  // or `function(int n): bool { ... }`: its function type.
+  const closure = value.match(/^(?:fn|function)\s*\(/);
+  if (closure) {
+    const open = value.indexOf("(");
+    const close = matching(value, open);
+    const params = splitTopLevel(value.slice(open + 1, close)).map((part) => parseParameter(part));
+    const returns = value.slice(close + 1).match(/^\s*:\s*([^={]+?)\s*(?:=>|\{)/);
+    if (returns && params.every((param) => param && param.type)) {
+      return `function(${params.map((param) => param.type).join(", ")}): ${normalizeType(returns[1])}`;
+    }
+  }
   return null;
 }
 
