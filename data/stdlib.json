@@ -3609,6 +3609,44 @@
    "module": "std/async",
    "category": "Tasks"
   },
+  "with_timeout": {
+   "name": "with_timeout",
+   "params": [
+    {
+     "name": "seconds",
+     "type": "double",
+     "default": null,
+     "doc": "The time limit."
+    },
+    {
+     "name": "body",
+     "type": "function(): T",
+     "default": null,
+     "doc": "The function to run."
+    }
+   ],
+   "returns": "T",
+   "summary": "Run a function within a time limit",
+   "doc": "Runs `body` as a task and returns its result, cancelling it if it takes longer than `seconds`. Its exceptions come through as they are. If the code waiting here is cancelled itself, so is `body`.",
+   "module": "std/async",
+   "category": "Tasks"
+  },
+  "receive_any": {
+   "name": "receive_any",
+   "params": [
+    {
+     "name": "channels",
+     "type": "Channel<T>[]",
+     "default": null,
+     "doc": "The channels to wait on."
+    }
+   ],
+   "returns": "(int, T)",
+   "summary": "Receive from whichever channel has a value first",
+   "doc": "Waits until one of `channels` has a value and receives it, returning the channel's index in the array and the value, as a tuple. When several have values, the first in the array wins.",
+   "module": "std/async",
+   "category": "Tasks"
+  },
   "yield_now": {
    "name": "yield_now",
    "params": [],
@@ -8921,6 +8959,34 @@
    "abstract": false,
    "module": "std/async",
    "doc": "Thrown by sending on a closed channel, and by receiving from one that's closed and empty.",
+   "properties": [],
+   "methods": []
+  },
+  "CancelledException": {
+   "name": "CancelledException",
+   "kind": "class",
+   "extends": "RuntimeException",
+   "typeParams": [],
+   "typeBounds": {},
+   "interfaces": [],
+   "final": false,
+   "abstract": false,
+   "module": "std/async",
+   "doc": "Thrown in a task that was cancelled, by what it was waiting for (await, a channel, sleep, I/O, a database query) or will next wait for.",
+   "properties": [],
+   "methods": []
+  },
+  "TimeoutException": {
+   "name": "TimeoutException",
+   "kind": "class",
+   "extends": "RuntimeException",
+   "typeParams": [],
+   "typeBounds": {},
+   "interfaces": [],
+   "final": false,
+   "abstract": false,
+   "module": "std/async",
+   "doc": "Thrown by with_timeout when the function takes longer than the limit.",
    "properties": [],
    "methods": []
   },
