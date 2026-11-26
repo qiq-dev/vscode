@@ -416,6 +416,21 @@ test("std/collections", async () => {
   assert.strictEqual(analysis.literalType("fn(n) => n"), null);
 });
 
+test("std/async", async () => {
+  const text = "import spawn, launch, Channel from \"std/async\";\nclass User { public string name; }\nChannel<User> users = new Channel<User>();\nforeach (users as u) {\n}\n";
+  const typeOf = async (expression) => {
+    const source = text + expression;
+    const context = await new Project().contextFor(path.join(os.tmpdir(), "qiq-async.qiq"), source);
+    return context.typeOfExpression(text.length, source.length, source.length)?.type;
+  };
+  assert.strictEqual(await typeOf("spawn(function(): User { return null; })"), "Task<User>");
+  assert.strictEqual(await typeOf("spawn(function(): User { return null; })->await()->name"), "string");
+  assert.strictEqual(await typeOf("launch(function(): void {})"), "Job");
+  assert.strictEqual(await typeOf("users->receive()->name"), "string");
+  const context = await new Project().contextFor(path.join(os.tmpdir(), "qiq-async.qiq"), text);
+  assert.strictEqual(context.variablesAt(text.indexOf("{\n}") + 1).find((v) => v.name === "u").type, "User");
+});
+
 test("calls for parameter hints", () => {
   const { text, offset } = cursor('file_put_contents("a", "b", |);');
   const call = analysis.callAt(text, offset);

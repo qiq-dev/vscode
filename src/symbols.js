@@ -144,8 +144,15 @@ class Project {
 
 /** A stdlib function in the common shape: {name, params, returns, doc, module, origin}. */
 function stdlibFunction(fn) {
+  // The manual writes a generic function's type parameters as single
+  // capital letters (spawn's `function(): T` and `Task<T>`).
+  const letters = new Set();
+  for (const type of [fn.returns, ...fn.params.map((p) => p.type)]) {
+    for (const match of (type || "").matchAll(/\b([A-Z])\b/g)) letters.add(match[1]);
+  }
   return {
     name: fn.name,
+    typeParams: [...letters],
     params: fn.params.map((p) => ({ name: p.name, type: p.type, default: p.default, doc: p.doc })),
     returns: fn.returns,
     summary: fn.summary,
@@ -580,7 +587,9 @@ class Context {
         continue;
       }
       const resolved = this.resolveTypeParameter(current.type, offset);
-      const cls = current.context.findClass(resolved) || this.findClass(resolved);
+      // A standard library class reached through a value's type (spawn's
+      // Task<T>) needs no import.
+      const cls = current.context.findClass(resolved) || this.findClass(resolved) || stdlibClassNamed(resolved);
       if (!cls) return null;
       const access = enclosing && enclosing.name === cls.name ? "own" : "public";
       const { properties, methods } = this.members(cls, access === "own" ? "own" : current.parent ? "child" : "public");
@@ -600,4 +609,4 @@ class Context {
   }
 }
 
-module.exports = { Project, Context, STDLIB, parseModFile, cacheDirectory, stdlibFunction, stdlibClass };
+module.exports = { Project, Context, STDLIB, parseModFile, cacheDirectory, stdlibFunction, stdlibClass, stdlibClassNamed };

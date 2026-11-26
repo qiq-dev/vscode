@@ -8,7 +8,7 @@ const fs = require("fs");
 const path = require("path");
 const analysis = require("./analysis");
 const diagnostics = require("./diagnostics");
-const { Project, STDLIB, stdlibFunction, stdlibClass, cacheDirectory } = require("./symbols");
+const { Project, STDLIB, stdlibFunction, stdlibClass, stdlibClassNamed, cacheDirectory } = require("./symbols");
 
 const LANGUAGE = "qiq";
 
@@ -290,7 +290,7 @@ function classNameItem() {
 
 function memberItems(context, found, offset, wantStatic) {
   if (!found || !found.type) return [];
-  const cls = found.context.findClass(found.type) || context.findClass(found.type);
+  const cls = found.context.findClass(found.type) || context.findClass(found.type) || stdlibClassNamed(found.type);
   if (!cls) return [];
   const access = found.parent ? "child" : accessTo(context, cls, offset);
   const { properties, methods } = context.members(cls, access);
@@ -479,7 +479,7 @@ async function symbolAt(document, position) {
     if (!expression) return null;
     const found = context.typeOfExpression(expression.start, expression.end, start);
     if (!found || !found.type) return null;
-    const cls = found.context.findClass(found.type) || context.findClass(found.type);
+    const cls = found.context.findClass(found.type) || context.findClass(found.type) || stdlibClassNamed(found.type);
     if (!cls) return null;
     const { properties, methods } = context.members(cls, "own");
     const member = methods.find((m) => m.name === word) || properties.find((p) => p.name === word);
@@ -592,7 +592,7 @@ const signatureProvider = {
       // A method call: everything before the last step is the object.
       const receiver = context.typeOfSteps(parts.slice(0, -1), offset);
       if (!receiver || !receiver.type) return null;
-      const cls = receiver.context.findClass(receiver.type) || context.findClass(receiver.type);
+      const cls = receiver.context.findClass(receiver.type) || context.findClass(receiver.type) || stdlibClassNamed(receiver.type);
       if (!cls) return null;
       const method = context.members(cls, "own").methods.find((m) => m.name === last.name);
       if (!method) return null;

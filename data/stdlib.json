@@ -13,7 +13,8 @@
   "std/math",
   "std/testing",
   "std/csv",
-  "std/collections"
+  "std/collections",
+  "std/async"
  ],
  "functions": {
   "len": {
@@ -3575,6 +3576,47 @@
    "doc": "Runs `command` with `/bin/sh -c`, for pipes, redirects, wildcards, `&&`, and variables, and returns a ProcessResult. It's `exec([\"/bin/sh\", \"-c\", command], ...)`, with the same settings and errors.",
    "module": "std/os",
    "category": "Program"
+  },
+  "spawn": {
+   "name": "spawn",
+   "params": [
+    {
+     "name": "body",
+     "type": "function(): T",
+     "default": null,
+     "doc": "The function to run; what it returns is the task's result."
+    }
+   ],
+   "returns": "Task<T>",
+   "summary": "Start a function as a task",
+   "doc": "Starts `body` as a task, running concurrently with the code that started it, and returns the Task. The task first runs when the code that started it waits, as in `await`. Its `await()` gives the result, or throws the exception the task threw.",
+   "module": "std/async",
+   "category": "Tasks"
+  },
+  "launch": {
+   "name": "launch",
+   "params": [
+    {
+     "name": "body",
+     "type": "function(): void",
+     "default": null,
+     "doc": "The function to run."
+    }
+   ],
+   "returns": "Job",
+   "summary": "Start a function that returns nothing as a task",
+   "doc": "Starts `body` as a task, as spawn does, for a function that returns nothing, and returns the Job, whose `join()` waits for it.",
+   "module": "std/async",
+   "category": "Tasks"
+  },
+  "yield_now": {
+   "name": "yield_now",
+   "params": [],
+   "returns": "void",
+   "summary": "Let the other tasks run",
+   "doc": "Lets the other tasks that are ready to run go before this one goes on. Tasks take turns only when they wait, so a task that computes for a long time without waiting can call this now and then to let the others run.",
+   "module": "std/async",
+   "category": "Tasks"
   },
   "to_int": {
    "name": "to_int",
@@ -8865,6 +8907,169 @@
      "params": [],
      "returns": "void",
      "doc": "Removes every value."
+    }
+   ]
+  },
+  "ChannelClosedException": {
+   "name": "ChannelClosedException",
+   "kind": "class",
+   "extends": "RuntimeException",
+   "typeParams": [],
+   "typeBounds": {},
+   "interfaces": [],
+   "final": false,
+   "abstract": false,
+   "module": "std/async",
+   "doc": "Thrown by sending on a closed channel, and by receiving from one that's closed and empty.",
+   "properties": [],
+   "methods": []
+  },
+  "Task": {
+   "name": "Task",
+   "kind": "class",
+   "extends": "__Completion",
+   "typeParams": [
+    "T"
+   ],
+   "typeBounds": {
+    "T": null
+   },
+   "interfaces": [],
+   "final": true,
+   "abstract": false,
+   "module": "std/async",
+   "doc": "A function running as a task, which returns a T: spawn's result.",
+   "properties": [],
+   "methods": [
+    {
+     "name": "await",
+     "typeParams": [],
+     "typeBounds": {},
+     "static": false,
+     "params": [],
+     "returns": "T",
+     "doc": "Waits for the task to end and returns its result. If the task threw, this throws the same exception."
+    }
+   ]
+  },
+  "Job": {
+   "name": "Job",
+   "kind": "class",
+   "extends": "__Completion",
+   "typeParams": [],
+   "typeBounds": {},
+   "interfaces": [],
+   "final": true,
+   "abstract": false,
+   "module": "std/async",
+   "doc": "A function running as a task that returns nothing: launch's result.",
+   "properties": [],
+   "methods": [
+    {
+     "name": "join",
+     "typeParams": [],
+     "typeBounds": {},
+     "static": false,
+     "params": [],
+     "returns": "void",
+     "doc": "Waits for the job to end. If it threw, this throws the same exception."
+    }
+   ]
+  },
+  "Channel": {
+   "name": "Channel",
+   "kind": "class",
+   "extends": null,
+   "typeParams": [
+    "T"
+   ],
+   "typeBounds": {
+    "T": null
+   },
+   "interfaces": [
+    "Iterable<T>",
+    "__Receiver<T>"
+   ],
+   "final": true,
+   "abstract": false,
+   "module": "std/async",
+   "doc": "Passes values from tasks that send them to tasks that receive them, in order. A channel with a capacity holds up to that many values, so sending waits only when it's full; with none (0), each send waits until a task receives the value. close() says no more values are coming: receiving then gives the values still in it, and foreach ends after the last.",
+   "properties": [],
+   "methods": [
+    {
+     "name": "__construct",
+     "typeParams": [],
+     "typeBounds": {},
+     "static": false,
+     "params": [
+      {
+       "name": "capacity",
+       "type": "int",
+       "default": "0"
+      }
+     ],
+     "returns": "void",
+     "doc": ""
+    },
+    {
+     "name": "send",
+     "typeParams": [],
+     "typeBounds": {},
+     "static": false,
+     "params": [
+      {
+       "name": "value",
+       "type": "T",
+       "default": null
+      }
+     ],
+     "returns": "void",
+     "doc": "Sends `value`, waiting while the channel is full (or, with no capacity, until a task receives it). Throws ChannelClosedException if the channel is closed."
+    },
+    {
+     "name": "receive",
+     "typeParams": [],
+     "typeBounds": {},
+     "static": false,
+     "params": [],
+     "returns": "T",
+     "doc": "The next value, waiting for one to be sent. Throws ChannelClosedException when the channel is closed and empty."
+    },
+    {
+     "name": "close",
+     "typeParams": [],
+     "typeBounds": {},
+     "static": false,
+     "params": [],
+     "returns": "void",
+     "doc": "Says no more values will be sent. Tasks waiting to receive see the values still in it, then the end."
+    },
+    {
+     "name": "isClosed",
+     "typeParams": [],
+     "typeBounds": {},
+     "static": false,
+     "params": [],
+     "returns": "bool",
+     "doc": ""
+    },
+    {
+     "name": "size",
+     "typeParams": [],
+     "typeBounds": {},
+     "static": false,
+     "params": [],
+     "returns": "int",
+     "doc": "How many values are waiting to be received."
+    },
+    {
+     "name": "iterator",
+     "typeParams": [],
+     "typeBounds": {},
+     "static": false,
+     "params": [],
+     "returns": "Iterator<T>",
+     "doc": "Receives values until the channel is closed and empty: foreach."
     }
    ]
   }
