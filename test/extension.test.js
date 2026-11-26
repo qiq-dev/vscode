@@ -431,6 +431,13 @@ test("hovers", async () => {
   assert.ok(cls.includes("class Item") && cls.includes("Something to buy."), cls);
   const variable = await hover("int count = 1;\nprint(cou|nt);");
   assert.ok(variable.includes("int count"));
+  // A generic call: the declaration, then the types this call has.
+  const generic = await hover("function first<T>(T[] items, T fallback): T { return fallback; }\nclass Box<T> { function map2<U: Show>(function(T): U f): U[] { return []; } }\nstring s = fir|st([\"a\"], \"z\");");
+  assert.ok(generic.includes("function first<T>(T[] items, T fallback): T") && generic.includes("function first<string>(string[] items, string fallback): string"), generic);
+  const explicit = await hover("function emptyOf<T>(): T[] { return []; }\nint[] e = empty|Of<int>();");
+  assert.ok(explicit.includes("function emptyOf<int>(): int[]"), explicit);
+  const bounded = await hover("interface Show {}\nclass Box<T> { function m<U: Show>(U x): U { return x; } }\nBox<int> b = null;\nprint(b->|m(1));");
+  assert.ok(bounded.includes("function Box<int>::m<U: Show>(U x): U") && bounded.includes("m<int>(int x): int"), bounded);
 });
 
 test("parameter hints", async () => {

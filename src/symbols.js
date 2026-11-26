@@ -174,7 +174,7 @@ function stdlibClass(cls) {
 }
 
 function fileFunction(fn, file, context) {
-  return { name: fn.name, params: fn.params, returns: fn.returns, typeParams: fn.typeParams, doc: fn.doc, private: fn.private, file, offset: fn.nameOffset, origin: "file", context };
+  return { name: fn.name, params: fn.params, returns: fn.returns, typeParams: fn.typeParams, typeBounds: fn.typeBounds, doc: fn.doc, private: fn.private, file, offset: fn.nameOffset, origin: "file", context };
 }
 
 /** A generic class with its type parameters replaced by `types`, in its
@@ -200,6 +200,7 @@ function fileClass(cls, file, context) {
     name: cls.name,
     kind: cls.kind,
     typeParams: cls.typeParams,
+    typeBounds: cls.typeBounds,
     backing: cls.backing,
     extends: cls.extends,
     interfaces: cls.interfaces,
@@ -284,6 +285,46 @@ class Context {
     const prelude = STDLIB.functions[name];
     if (prelude && !prelude.module) return stdlibFunction(prelude);
     return null;
+  }
+
+  /** What `type` stands for at `offset` when it's a type parameter in scope
+   * there (of the enclosing class, function, or method) with a class or
+   * interface bound: the bound, so a `T: HasLength` value has HasLength's
+   * methods. Otherwise `type` itself. */
+  resolveTypeParameter(type, offset) {
+    if (!type || !/^[A-Za-z_][A-Za-z0-9_]*$/.test(type)) return type;
+    const scopes = [];
+    for (const fn of this.document.functions) if (fn.bodyStart < offset && offset < fn.bodyEnd) scopes.push(fn);
+    for (const cls of this.document.classes) {
+      if (!(cls.bodyStart < offset && offset < cls.bodyEnd)) continue;
+      for (const method of cls.methods) if (method.bodyStart < offset && offset < method.bodyEnd) scopes.push(method);
+      scopes.push(cls);
+    }
+    for (const scope of scopes) {
+      if (!(scope.typeParams || []).includes(type)) continue;
+      const bound = (scope.typeBounds || {})[type];
+      return bound && bound !== "key" && bound !== "object" ? bound : type;
+    }
+    return type;
+  }
+
+  /** The type arguments of a call of `fn` (a function or method with type
+   * parameters) at `step` (from analysis.steps): those the call gives, or
+   * those its arguments' types decide; a parameter neither decides stays
+   * its name. Null for a function without type parameters. */
+  callTypeArguments(fn, step, offset) {
+    const params = fn.typeParams || [];
+    if (!params.length) return null;
+    if (step.typeArgs) return step.typeArgs;
+    const bindings = {};
+    (step.args || []).forEach((text, index) => {
+      const named = text.match(/^\s*([A-Za-z_][A-Za-z0-9_]*)\s*:(?!:)([\s\S]*)$/);
+      const parameter = named ? (fn.params || []).find((p) => p.name === named[1]) : (fn.params || [])[index];
+      if (!parameter || !parameter.type) return;
+      const argumentType = this.typeOfText(named ? named[2] : text, offset);
+      analysis.unifyTypes(parameter.type, argumentType, params, bindings);
+    });
+    return params.map((param) => bindings[param] || param);
   }
 
   /** The class whose body contains `offset`. */
@@ -505,7 +546,7 @@ class Context {
       if (variable && variable.type) current = { type: analysis.functionReturnType(variable.type), context: this };
       else {
         const fn = this.findFunction(first.name);
-        if (fn) current = { type: analysis.withTypeArguments(fn.returns, fn.typeParams, first.typeArgs), context: fn.context || this };
+        if (fn) current = { type: analysis.withTypeArguments(fn.returns, fn.typeParams, this.callTypeArguments(fn, first, offset)), context: fn.context || this };
       }
     }
     for (const step of rest) {
@@ -523,7 +564,8 @@ class Context {
         current = { type: "string", context: current.context };
         continue;
       }
-      const cls = current.context.findClass(current.type) || this.findClass(current.type);
+      const resolved = this.resolveTypeParameter(current.type, offset);
+      const cls = current.context.findClass(resolved) || this.findClass(resolved);
       if (!cls) return null;
       const access = enclosing && enclosing.name === cls.name ? "own" : "public";
       const { properties, methods } = this.members(cls, access === "own" ? "own" : current.parent ? "child" : "public");
@@ -534,11 +576,12 @@ class Context {
       } else {
         const method = methods.find((m) => m.name === step.name);
         if (!method) return null;
-        const returns = method.returns === "static" ? cls.name : analysis.withTypeArguments(method.returns, method.typeParams, step.typeArgs);
+        const returns = method.returns === "static" ? cls.name : analysis.withTypeArguments(method.returns, method.typeParams, this.callTypeArguments(method, step, offset));
         current = { type: returns, context };
       }
     }
-    return current;
+    // A T with a bound is what its bound is, for the members after it.
+    return current && { ...current, type: this.resolveTypeParameter(current.type, offset) };
   }
 }
 

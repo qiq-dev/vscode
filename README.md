@@ -39,6 +39,11 @@ plus highlighting for `qiq.mod` and `qiq.sum`.
     and properties declared by constructor promotion
     (`function __construct(public readonly int x)`). Private and protected
     members only appear where they're accessible.
+  - **Generics**: a generic call's result has the type its arguments make
+    it (`first(users)->` completes a `User`'s members), or the type
+    arguments it gives (`emptyOf<User>()`), and inside generic code a `T`
+    with a bound (`T: HasLength`) has its bound's members. After `T:` in a
+    type parameter list, `key`, `object`, and interfaces complete.
   - **Static members and constants after `::`**, `class` after `Class::`
     and `value::`, and `parent::` / `self::` / `static::`.
   - **After `new`**: classes you can instantiate, with constructor hints.
@@ -49,6 +54,8 @@ plus highlighting for `qiq.mod` and `qiq.sum`.
     `try`, `switch`, `httpserver`, and more.
 - **Hovers** with signatures and docs, for the standard library and for
   your own code (from the `//` or `/** */` comment above a declaration).
+  Over a call of a generic function or method, the hover also shows the
+  signature with that call's type arguments: `first<User>(User[] items): User`.
 - **Parameter hints** for functions, methods, constructors, and function
   values, following named arguments such as `timeout: 5`, and the values
   after a query's SQL (`db->query(sql, ...values)`).

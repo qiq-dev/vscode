@@ -43,13 +43,51 @@ function parameterText(p) {
   return `${p.type} ${p.name}${p.default !== null && p.default !== undefined ? ` = ${p.default}` : ""}`;
 }
 
+/** `<T, U: Bound>` for a generic function or method, or "". */
+function typeParamsText(fn) {
+  const params = fn.typeParams || [];
+  if (!params.length) return "";
+  const bounds = fn.typeBounds || {};
+  return `<${params.map((param) => (bounds[param] ? `${param}: ${bounds[param]}` : param)).join(", ")}>`;
+}
+
+/** A generic function's or method's signature with the type arguments of
+ * one call filled in: `first<int>(int[] items): int`. */
+function appliedSignature(fn, typeArgs) {
+  const fill = (type) => analysis.withTypeArguments(type, fn.typeParams, typeArgs);
+  return signature(`${fn.name}<${typeArgs.join(", ")}>`, fn.params.map((p) => ({ ...p, type: fill(p.type) })), fill(fn.returns));
+}
+
+/** The call step (with `args` and any `typeArgs`) of a call whose name
+ * runs from `start` to `end` in masked text, or null when no `(` follows. */
+function callStepAt(masked, start, end) {
+  let i = end;
+  const skipSpace = () => {
+    while (i < masked.length && /\s/.test(masked[i])) i++;
+  };
+  skipSpace();
+  if (masked[i] === "<") {
+    let depth = 0;
+    for (; i < masked.length; i++) {
+      if (masked[i] === "<") depth++;
+      else if (masked[i] === ">" && --depth === 0) break;
+      else if (!/[A-Za-z0-9_\s,\[\]?():<>]/.test(masked[i])) return null;
+    }
+    i++;
+    skipSpace();
+  }
+  if (masked[i] !== "(") return null;
+  const parts = analysis.steps(masked, start, analysis.matching(masked, i) + 1);
+  return parts && parts.length === 1 ? parts[0] : null;
+}
+
 function signature(name, params, returns) {
   return `${name}(${params.map(parameterText).join(", ")})${returns && returns !== "void" ? `: ${returns}` : returns === "void" ? ": void" : ""}`;
 }
 
 function functionDocs(fn) {
   const markdown = new vscode.MarkdownString();
-  markdown.appendCodeblock(`function ${signature(fn.name, fn.params, fn.returns)}`, LANGUAGE);
+  markdown.appendCodeblock(`function ${signature(fn.name + typeParamsText(fn), fn.params, fn.returns)}`, LANGUAGE);
   if (fn.summary && fn.doc && !fn.doc.startsWith(fn.summary)) markdown.appendMarkdown(fn.summary + "\n\n");
   if (fn.doc) markdown.appendMarkdown(fn.doc + "\n\n");
   if (fn.module) markdown.appendMarkdown(`Import with \`import ${fn.name} from "${fn.module}";\``);
@@ -72,7 +110,7 @@ function memberDocs(member, owner) {
   const markdown = new vscode.MarkdownString();
   if (member.params) {
     const modifiers = `${member.visibility && member.visibility !== "public" ? member.visibility + " " : ""}${member.static ? "static " : ""}`;
-    markdown.appendCodeblock(`${modifiers}function ${owner}::${signature(member.name, member.params, member.returns)}`, LANGUAGE);
+    markdown.appendCodeblock(`${modifiers}function ${owner}::${signature(member.name + typeParamsText(member), member.params, member.returns)}`, LANGUAGE);
   } else if (member.enumCase) {
     // `case Status::Active = "active"`
     markdown.appendCodeblock(`case ${owner}::${member.name}${member.value !== null && member.value !== undefined ? ` = ${member.value}` : ""}`, LANGUAGE);
@@ -396,6 +434,19 @@ const completionProvider = {
         items.push(...stdlibItems(document, context, { classes: true, construct: true }));
         return items;
       }
+      case "bound": {
+        // `K: key`, `T: object`, or an interface or class.
+        const items = [];
+        for (const [word, detail] of [["key", "any type a map's keys can have: int, double, bool, string, or char"], ["object", "any class, interface, or enum type, so it can be null"]]) {
+          const item = new vscode.CompletionItem(word, vscode.CompletionItemKind.Keyword);
+          item.detail = detail;
+          item.sortText = "0";
+          items.push(item);
+        }
+        for (const [alias, cls] of knownClasses(context)) items.push(classItem(cls, "1", { alias }));
+        items.push(...stdlibItems(document, context, { classes: true }));
+        return items;
+      }
       case "type": {
         const items = [];
         for (const [alias, cls] of knownClasses(context)) items.push(classItem(cls, "0", { alias }));
@@ -434,13 +485,18 @@ async function symbolAt(document, position) {
     const member = methods.find((m) => m.name === word) || properties.find((p) => p.name === word);
     if (!member) return null;
     const owner = (member.owner && (cls.context || context).findClass(member.owner)) || cls;
-    return { kind: member.params ? "method" : "property", symbol: member, owner, range };
+    const step = member.params && member.typeParams && member.typeParams.length ? callStepAt(masked, start, end) : null;
+    const typeArgs = step ? context.callTypeArguments(member, step, start) : null;
+    return { kind: member.params ? "method" : "property", symbol: member, owner, range, typeArgs };
   }
   const variable = context.variablesAt(start).find((v) => v.name === word);
   const isCall = /^\s*\(/.test(masked.slice(end));
   if (variable && !(isCall && !variable.type?.startsWith("function"))) return { kind: "variable", symbol: variable, range, context };
   const fn = context.findFunction(word);
-  if (fn) return { kind: "function", symbol: fn, range };
+  if (fn) {
+    const step = fn.typeParams && fn.typeParams.length ? callStepAt(masked, start, end) : null;
+    return { kind: "function", symbol: fn, range, typeArgs: step ? context.callTypeArguments(fn, step, start) : null };
+  }
   const cls = context.findClass(word);
   if (cls) return { kind: "class", symbol: cls, range };
   // A standard library name that isn't imported yet.
@@ -449,18 +505,33 @@ async function symbolAt(document, position) {
   return null;
 }
 
+/** For a hover over a call of a generic function or method: its signature
+ * with the type arguments this call has, as in `first<int>(int[] items): int`. */
+function addTypeArguments(markdown, found, prefix) {
+  const typeArgs = found.typeArgs;
+  if (!typeArgs || typeArgs.every((type, index) => type === found.symbol.typeParams[index])) return;
+  markdown.appendMarkdown("\n\nIn this call:");
+  markdown.appendCodeblock(prefix + appliedSignature(found.symbol, typeArgs), LANGUAGE);
+}
+
 const hoverProvider = {
   async provideHover(document, position) {
     const found = await symbolAt(document, position);
     if (!found) return null;
     switch (found.kind) {
-      case "function":
-        return new vscode.Hover(functionDocs(found.symbol), found.range);
+      case "function": {
+        const markdown = functionDocs(found.symbol);
+        addTypeArguments(markdown, found, "function ");
+        return new vscode.Hover(markdown, found.range);
+      }
       case "class":
         return new vscode.Hover(classDocs(found.symbol), found.range);
       case "method":
-      case "property":
-        return new vscode.Hover(memberDocs(found.symbol, found.owner.name), found.range);
+      case "property": {
+        const markdown = memberDocs(found.symbol, found.owner.name);
+        addTypeArguments(markdown, found, `function ${found.owner.name}::`);
+        return new vscode.Hover(markdown, found.range);
+      }
       case "variable": {
         const markdown = new vscode.MarkdownString();
         markdown.appendCodeblock(`${found.symbol.type || "(type not known)"} ${found.symbol.name}`, LANGUAGE);

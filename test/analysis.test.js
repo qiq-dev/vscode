@@ -315,7 +315,7 @@ test("expression steps before ->", () => {
   assert.ok(expression);
   assert.deepStrictEqual(analysis.steps(masked, expression.start, end), [
     { kind: "new", name: "Basket" },
-    { kind: "method", name: "add" },
+    { kind: "method", name: "add", args: ["i", " 2"] },
     { kind: "member", name: "items" },
     { kind: "index" },
   ]);
@@ -329,9 +329,9 @@ test("calls that give type arguments", () => {
   assert.ok(expression);
   assert.strictEqual(expression.start, 4);
   assert.deepStrictEqual(analysis.steps(masked, expression.start, end), [
-    { kind: "call", name: "wrap", typeArgs: ["Box<int>"] },
+    { kind: "call", name: "wrap", args: ["b"], typeArgs: ["Box<int>"] },
     { kind: "index" },
-    { kind: "method", name: "apply", typeArgs: ["string"] },
+    { kind: "method", name: "apply", args: ["f"], typeArgs: ["string"] },
   ]);
   // A comparison isn't a call's type arguments.
   const compare = analysis.mask("ok = a < b && c > (d)->");
@@ -354,6 +354,25 @@ test("types of calls that give type arguments", async () => {
   assert.strictEqual(await typeOf("emptyList<int>()"), "int[]");
   assert.strictEqual(await typeOf("b->apply<string>(f)->value"), "string");
   assert.strictEqual(await typeOf("Maker::make<Box<int>>()"), "Box<int>[]");
+});
+
+test("type parameter bounds and inferred type arguments", async () => {
+  assert.deepStrictEqual(analysis.typeParamBounds("T, U: Comparable<U>, K: key"), { T: null, U: "Comparable<U>", K: "key" });
+  const bindings = {};
+  analysis.unifyTypes("map[K, function(V): W[]]", "map[string, function(int): bool[]]", ["K", "V", "W"], bindings);
+  assert.deepStrictEqual(bindings, { K: "string", V: "int", W: "bool" });
+  const text = "interface HasLength { function length(): int; }\nclass User { public string name; }\nfunction first<T>(T[] items): T { return items[0]; }\nfunction longest<T: HasLength>(T[] items): T {\n    T best = items[0];\n    return best;\n}\nclass Shelf<T: HasLength> {\n    public T[] items;\n    function top(): T { return this->items[0]; }\n}\nUser[] users = [];\n";
+  const context = await new Project().contextFor(path.join(os.tmpdir(), "qiq-bounds.qiq"), text + "first(users)->name");
+  const end = text.length + "first(users)->name".length;
+  assert.strictEqual(context.typeOfExpression(text.length, end - "->name".length, end)?.type, "User", "T from the argument");
+  assert.strictEqual(context.typeOfExpression(text.length, end, end)?.type, "string");
+  const best = text.indexOf("return best;") + "return ".length;
+  assert.strictEqual(context.typeOfExpression(best, best + 4, best)?.type, "HasLength", "a T is its bound");
+  const items = text.indexOf("this->items[0]");
+  assert.strictEqual(context.typeOfExpression(items, items + "this->items[0]".length, items)?.type, "HasLength", "so is a class's T");
+  assert.strictEqual(analysis.completionContext("function f<K: ", 14).kind, "bound");
+  assert.strictEqual(analysis.completionContext("class Box<T: Comparable<T>, U: Ha", 33).kind, "bound");
+  assert.strictEqual(analysis.completionContext("int a = b < c ? d : ", 20).kind, "general");
 });
 
 test("calls for parameter hints", () => {

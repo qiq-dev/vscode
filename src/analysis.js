@@ -261,6 +261,62 @@ function typeParamNames(text) {
   return splitTypeArguments(text).map((part) => part.split(":")[0].trim()).filter((name) => name !== "");
 }
 
+/** `T, U: Comparable<U>, K: key` -> {T: null, U: "Comparable<U>", K: "key"}:
+ * each type parameter's bound, as written (`key` and `object` included). */
+function typeParamBounds(text) {
+  const bounds = {};
+  if (!text) return bounds;
+  for (const part of splitTypeArguments(text)) {
+    const colon = part.indexOf(":");
+    const name = (colon < 0 ? part : part.slice(0, colon)).trim();
+    if (name) bounds[name] = colon < 0 ? null : normalizeType(part.slice(colon + 1)) || null;
+  }
+  return bounds;
+}
+
+/** Matches `pattern`, a type written with the type parameters `params`
+ * (`T[]`, `map[K, V]`, `function(T): U`, `Box<T>`), against `actual`, a
+ * type without them, adding what each parameter it reaches is to
+ * `bindings` (the first one found wins). */
+function unifyTypes(pattern, actual, params, bindings) {
+  if (!pattern || !actual) return;
+  pattern = normalizeType(pattern);
+  actual = normalizeType(actual);
+  if (params.includes(pattern)) {
+    if (!(pattern in bindings) && actual !== "null") bindings[pattern] = actual;
+    return;
+  }
+  if (pattern.endsWith("[]") && actual.endsWith("[]")) {
+    unifyTypes(pattern.slice(0, -2), actual.slice(0, -2), params, bindings);
+    return;
+  }
+  const map = /^map\[(.*)\]$/;
+  if (map.test(pattern) && map.test(actual)) {
+    const [patternKey, patternValue] = splitTypeArguments(pattern.match(map)[1]);
+    const [actualKey, actualValue] = splitTypeArguments(actual.match(map)[1]);
+    unifyTypes(patternKey, actualKey, params, bindings);
+    unifyTypes(patternValue, actualValue, params, bindings);
+    return;
+  }
+  if (pattern.startsWith("function(") && actual.startsWith("function(")) {
+    const parts = (type) => {
+      const close = matching(type, type.indexOf("("));
+      return [splitTopLevel(type.slice(type.indexOf("(") + 1, close)), functionReturnType(type)];
+    };
+    const [patternParams, patternReturns] = parts(pattern);
+    const [actualParams, actualReturns] = parts(actual);
+    patternParams.forEach((p, index) => unifyTypes(p, actualParams[index], params, bindings));
+    unifyTypes(patternReturns, actualReturns, params, bindings);
+    return;
+  }
+  const applied = /^([A-Za-z_][A-Za-z0-9_]*)<(.*)>$/;
+  const [patternApplied, actualApplied] = [pattern.match(applied), actual.match(applied)];
+  if (patternApplied && actualApplied && patternApplied[1] === actualApplied[1]) {
+    const actualArgs = splitTypeArguments(actualApplied[2]);
+    splitTypeArguments(patternApplied[2]).forEach((p, index) => unifyTypes(p, actualArgs[index], params, bindings));
+  }
+}
+
 /** The parts of a list of types, split at top-level commas: `int, Box<int, string>`. */
 function splitTypeArguments(text) {
   const parts = [];
@@ -356,6 +412,7 @@ function parseFunctionAt(text, masked, start) {
   return {
     name: match[1],
     typeParams: typeParamNames(match[2]),
+    typeBounds: typeParamBounds(match[2]),
     params,
     returns,
     start,
@@ -439,6 +496,7 @@ function parseDocument(text) {
       interfaces: isInterface ? parents : list(match[7]),
       // `class Box<T, U: Bound>`: the type parameters' names.
       typeParams: typeParamNames(match[4]),
+      typeBounds: typeParamBounds(match[4]),
       start: match.index,
       nameOffset: match.index + match[0].indexOf(match[3], match[1].length + match[2].length),
       bodyStart,
@@ -825,7 +883,8 @@ function typeArgumentsStart(masked, end) {
 
 /** Splits an expression such as `new A(1)->b->c(2)[0]` into steps:
  * {kind: "new"|"name"|"call"|"member"|"method"|"static"|"staticCall"|"index", name},
- * with `typeArgs` on a call that gives them (`first<int>(xs)`). */
+ * with `args` (the argument texts, as masked) on calls, and `typeArgs` on a
+ * call that gives them (`first<int>(xs)`). */
 function steps(masked, start, end) {
   const result = [];
   let i = start;
@@ -881,8 +940,11 @@ function steps(masked, start, end) {
     skipSpace();
     const typeArgs = readTypeArguments();
     if (i < end && masked[i] === "(") {
+      const open = i;
       skipBrackets();
-      result.push(typeArgs ? { kind: "call", name, typeArgs } : { kind: "call", name });
+      const step = { kind: "call", name, args: splitTopLevel(masked.slice(open + 1, i - 1)) };
+      if (typeArgs) step.typeArgs = typeArgs;
+      result.push(step);
     } else {
       result.push({ kind: "name", name });
     }
@@ -903,8 +965,9 @@ function steps(masked, start, end) {
       skipSpace();
       const typeArgs = readTypeArguments();
       if (i < end && masked[i] === "(") {
+        const open = i;
         skipBrackets();
-        const step = { kind: staticAccess ? "staticCall" : "method", name };
+        const step = { kind: staticAccess ? "staticCall" : "method", name, args: splitTopLevel(masked.slice(open + 1, i - 1)) };
         if (typeArgs) step.typeArgs = typeArgs;
         result.push(step);
       } else {
@@ -954,6 +1017,7 @@ function functionReturnType(type) {
  *   {kind: "static", expression, prefix}: after `Class::`
  *   {kind: "new", prefix}: after `new `
  *   {kind: "type", prefix}: after `extends`, `implements`, `catch (`
+ *   {kind: "bound", prefix}: after `T:` in a type parameter list
  *   {kind: "general", prefix}: anything else
  * `prefix` is the part of the word typed so far. */
 function completionContext(text, offset) {
@@ -990,6 +1054,8 @@ function completionContext(text, offset) {
     return expression ? { kind: "static", expression, prefix } : { kind: "general", prefix };
   }
   if (/\bnew\s+$/.test(lineBefore)) return { kind: "new", prefix };
+  // `function f<K: |` or `class Box<T: |`: a type parameter's bound.
+  if (/\b(?:function|class|interface)\s+[A-Za-z_][A-Za-z0-9_]*\s*<(?:[^<>]|<[^<>]*>)*:\s*$/.test(lineBefore)) return { kind: "bound", prefix };
   if (/\b(extends|implements)\s+(?:[A-Za-z_][A-Za-z0-9_]*\s*,\s*)*$/.test(lineBefore) || /\bcatch\s*\(\s*$/.test(lineBefore)) {
     return { kind: "type", prefix };
   }
@@ -1052,6 +1118,8 @@ module.exports = {
   splitTopLevel,
   parseParameter,
   splitTypeArguments,
+  typeParamBounds,
+  unifyTypes,
   parseDocument,
   enclosingFunctions,
   variablesAt,
